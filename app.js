@@ -535,8 +535,11 @@ document.getElementById('unmuteUserBtn').addEventListener('click', async () => {
 document.getElementById('resetPasswordBtn').addEventListener('click', () => {
     document.getElementById('passwordResetOptions').style.display = 'block';
     // İsteğe bağlı: input'u pasif hale getirebilirsin
-    document.getElementById('newPasswordInput').disabled = true;
-    document.getElementById('newPasswordInput').placeholder = 'Bu alan kullanılmıyor, mail ile link gönderilecek';
+    const input = document.getElementById('newPasswordInput');
+    if (input) {
+        input.disabled = true;
+        input.placeholder = 'Bu alan kullanılmıyor, mail ile link gönderilecek';
+    }
 });
 
 document.getElementById('confirmResetBtn').addEventListener('click', async () => {
