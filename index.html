@@ -4,14 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CyberSosyal | Oyun Platformu</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />[citation:2][citation:4]
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Ana CSS -->
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- Favicon (404 hatası için çözüm) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
 </head>
 <body>
+    <!-- Giriş Ekranı -->
     <div id="loginScreen" class="screen active">
         <div class="login-container">
             <div class="neon-logo">
@@ -39,11 +42,17 @@
                         <i class="fas fa-user-plus"></i> Kayıt Ol
                     </button>
                 </div>
+                
+                <p class="info-text">
+                    <i class="fas fa-info-circle"></i>
+                    Demo hesap: demo@test.com / demo123
+                </p>
             </div>
             
             <div class="neon-border"></div>
         </div>
         
+        <!-- Arkaplan Efektleri -->
         <div class="bg-grid"></div>
         <div class="floating-shapes">
             <div class="shape shape-1"></div>
@@ -52,6 +61,7 @@
         </div>
     </div>
     
+    <!-- Ana Panel -->
     <div id="mainScreen" class="screen">
         <header class="dashboard-header">
             <div class="header-left">
@@ -76,11 +86,11 @@
         </header>
         
         <main class="dashboard-main">
+            <!-- Sol Panel: Oyunlar -->
             <section class="games-section">
-                <h2 class="section-title">
-                    <i class="fas fa-gamepad"></i> Oyunlar
-                </h2>
+                <h2 class="section-title"><i class="fas fa-gamepad"></i> Oyunlar</h2>
                 
+                <!-- Çarkıfelek Oyunu -->
                 <div class="game-card">
                     <h3><i class="fas fa-redo-alt"></i> Çarkıfelek</h3>
                     <p>Çarkı çevir, puan kazan!</p>
@@ -105,6 +115,7 @@
                     <p class="wheel-result" id="wheelResult"></p>
                 </div>
                 
+                <!-- Taş Kağıt Makas Oyunu -->
                 <div class="game-card">
                     <h3><i class="fas fa-hand-rock"></i> Taş Kağıt Makas</h3>
                     <p>Bot'a karşı oyna, kazanana 5 puan!</p>
@@ -144,10 +155,9 @@
                 </div>
             </section>
             
+            <!-- Sağ Panel: Global Sohbet -->
             <section class="chat-section">
-                <h2 class="section-title">
-                    <i class="fas fa-comments"></i> Global Sohbet
-                </h2>
+                <h2 class="section-title"><i class="fas fa-comments"></i> Global Sohbet</h2>
                 
                 <div class="chat-container">
                     <div class="chat-messages" id="chatMessages">
@@ -168,6 +178,7 @@
         </main>
     </div>
     
+    <!-- Profil Modal -->
     <div id="profileModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -224,7 +235,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Firebase ve Diğer SDK'lar -->
+    <!-- Firebase App & Analytics (Mevcut kodun) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        // Mevcut Firebase konfigürasyonun
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
+            authDomain: "ali23-cfd02.firebaseapp.com",
+            projectId: "ali23-cfd02",
+            storageBucket: "ali23-cfd02.firebasestorage.app",
+            messagingSenderId: "759021285078",
+            appId: "1:759021285078:web:f7673f89125ff3dad66377",
+            measurementId: "G-NNCQQQFWD6"
+        };
+
+        // Firebase'i başlat
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global değişkenler olarak window objesine ekle
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.firebaseApp = app;
+        console.log("Firebase başlatıldı!");
+    </script>
+
+    <!-- Gun.js (Decentralized Chat için) -->
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     
+    <!-- CryptoJS (Şifreleme için) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>[citation:1]
+    
+    <!-- Ana Uygulama JavaScript'i -->
     <script src="app.js"></script>
 </body>
 </html>
