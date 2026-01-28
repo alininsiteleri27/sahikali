@@ -10,9 +10,9 @@ import {
     signOut,
     updatePassword,
     setPersistence,
-    inMemoryPersistence
+    inMemoryPersistence,
+    sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { 
     getFirestore, 
     doc, 
     setDoc, 
@@ -531,23 +531,44 @@ document.getElementById('unmuteUserBtn').addEventListener('click', async () => {
     }
 });
 
-// Reset Password (simüle)
+// Reset Password (email ile gerçek sıfırlama linki)
 document.getElementById('resetPasswordBtn').addEventListener('click', () => {
     document.getElementById('passwordResetOptions').style.display = 'block';
+    // İsteğe bağlı: input'u pasif hale getirebilirsin
+    document.getElementById('newPasswordInput').disabled = true;
+    document.getElementById('newPasswordInput').placeholder = 'Bu alan kullanılmıyor, mail ile link gönderilecek';
 });
 
 document.getElementById('confirmResetBtn').addEventListener('click', async () => {
-    const newPassword = document.getElementById('newPasswordInput').value;
     const messageEl = document.getElementById('adminActionMessage');
-    
-    if (!newPassword || newPassword.length < 6) {
+    const uid = document.getElementById('adminActionModal').dataset.uid;
+
+    try {
+        // Firestore'dan kullanıcının email'ini al
+        const userSnap = await getDoc(doc(db, 'users', uid));
+        if (!userSnap.exists()) {
+            messageEl.className = 'admin-message error';
+            messageEl.textContent = 'Kullanıcı bulunamadı.';
+            return;
+        }
+
+        const email = userSnap.data().email;
+        if (!email) {
+            messageEl.className = 'admin-message error';
+            messageEl.textContent = 'Bu kullanıcı için e-posta bulunamadı.';
+            return;
+        }
+
+        // Firebase Auth üzerinden reset maili gönder
+        await sendPasswordResetEmail(auth, email);
+
+        messageEl.className = 'admin-message success';
+        messageEl.textContent = `✅ Şifre sıfırlama bağlantısı ${email} adresine gönderildi.`;
+    } catch (error) {
+        console.error(error);
         messageEl.className = 'admin-message error';
-        messageEl.textContent = 'Şifre en az 6 karakter olmalı';
-        return;
+        messageEl.textContent = error.message || 'Şifre sıfırlama linki gönderilirken hata oluştu.';
     }
-    
-    messageEl.className = 'admin-message success';
-    messageEl.textContent = '✅ Şifre değiştirildi (simüle edildi - gerçek uygulamada Firebase Admin SDK gerekli)';
 });
 
 // Load Presence Data
