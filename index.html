@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSosyal | Oyun Platformu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="neon-logo">
+                <i class="fas fa-gamepad"></i>
+                <h1>CYBERSOSYAL</h1>
+                <p class="tagline">Oyna • Kazan • Sohbet Et</p>
+            </div>
+            
+            <div class="login-form">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="emailInput" placeholder="E-posta" autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-key"></i>
+                    <input type="password" id="passwordInput" placeholder="Şifre" autocomplete="off">
+                </div>
+                
+                <div class="button-group">
+                    <button id="loginBtn" class="btn-login">
+                        <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                    </button>
+                    <button id="registerBtn" class="btn-register">
+                        <i class="fas fa-user-plus"></i> Kayıt Ol
+                    </button>
+                </div>
+            </div>
+            
+            <div class="neon-border"></div>
+        </div>
+        
+        <div class="bg-grid"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+    
+    <div id="mainScreen" class="screen">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="logo-small">
+                    <i class="fas fa-gamepad"></i>
+                    <span>CYBERSOSYAL</span>
+                </div>
+            </div>
+            
+            <div class="header-center">
+                <div class="puan-display">
+                    <i class="fas fa-coins"></i>
+                    <span id="userPuan">0</span> Puan
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <button id="profileBtn" class="profile-btn">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+            </div>
+        </header>
+        
+        <main class="dashboard-main">
+            <section class="games-section">
+                <h2 class="section-title">
+                    <i class="fas fa-gamepad"></i> Oyunlar
+                </h2>
+                
+                <div class="game-card">
+                    <h3><i class="fas fa-redo-alt"></i> Çarkıfelek</h3>
+                    <p>Çarkı çevir, puan kazan!</p>
+                    
+                    <div class="wheel-container">
+                        <div class="wheel" id="wheel">
+                            <div class="wheel-inner">
+                                <div class="wheel-section" style="--i:0">5</div>
+                                <div class="wheel-section" style="--i:1">10</div>
+                                <div class="wheel-section" style="--i:2">15</div>
+                                <div class="wheel-section" style="--i:3">5</div>
+                                <div class="wheel-section" style="--i:4">10</div>
+                                <div class="wheel-section" style="--i:5">15</div>
+                            </div>
+                            <div class="wheel-pointer"></div>
+                        </div>
+                    </div>
+                    
+                    <button id="spinWheelBtn" class="game-btn">
+                        <i class="fas fa-redo-alt"></i> Çarkı Çevir (5 Puan)
+                    </button>
+                    <p class="wheel-result" id="wheelResult"></p>
+                </div>
+                
+                <div class="game-card">
+                    <h3><i class="fas fa-hand-rock"></i> Taş Kağıt Makas</h3>
+                    <p>Bot'a karşı oyna, kazanana 5 puan!</p>
+                    
+                    <div class="rps-game">
+                        <div class="rps-choices">
+                            <button class="rps-btn" data-choice="rock">
+                                <i class="fas fa-hand-rock"></i>
+                                <span>Taş</span>
+                            </button>
+                            <button class="rps-btn" data-choice="paper">
+                                <i class="fas fa-hand-paper"></i>
+                                <span>Kağıt</span>
+                            </button>
+                            <button class="rps-btn" data-choice="scissors">
+                                <i class="fas fa-hand-scissors"></i>
+                                <span>Makas</span>
+                            </button>
+                        </div>
+                        
+                        <div class="rps-result">
+                            <div class="rps-player">
+                                <h4>Sen</h4>
+                                <div class="rps-icon" id="playerChoice">-</div>
+                            </div>
+                            <div class="rps-vs">VS</div>
+                            <div class="rps-player">
+                                <h4>Bot</h4>
+                                <div class="rps-icon" id="botChoice">-</div>
+                            </div>
+                        </div>
+                        
+                        <div class="rps-outcome" id="rpsOutcome">
+                            Seçim yaparak oyuna başla!
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="chat-section">
+                <h2 class="section-title">
+                    <i class="fas fa-comments"></i> Global Sohbet
+                </h2>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-welcome">
+                            <i class="fas fa-satellite-dish"></i>
+                            <p>Global sohbete hoş geldin! Mesaj göndermek için aşağıyı kullan.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Mesaj yaz..." autocomplete="off">
+                        <button id="sendMessageBtn">
+                            <i class="fas fa-paper-plane"></i> Gönder
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-id-card"></i> Profil Bilgileri</h2>
+                <button id="closeModalBtn" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="profile-info">
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <span class="info-label">E-posta</span>
+                            <span id="profileEmail" class="info-value">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-calendar-plus"></i>
+                        <div>
+                            <span class="info-label">Kayıt Tarihi</span>
+                            <span id="profileRegDate" class="info-value">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <div>
+                            <span class="info-label">Son Giriş</span>
+                            <span id="profileLastLogin" class="info-value">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <i class="fas fa-coins"></i>
+                        <div>
+                            <span class="info-label">Puan</span>
+                            <span id="profilePuan" class="info-value">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button id="friendsBtn" class="modal-btn">
+                        <i class="fas fa-users"></i> Arkadaşlar
+                    </button>
+                    <button id="marketBtn" class="modal-btn">
+                        <i class="fas fa-store"></i> Market
+                    </button>
+                    <button id="logoutBtn" class="modal-btn logout">
+                        <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
