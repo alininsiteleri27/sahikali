@@ -1,6 +1,6 @@
-// app.js - FIREBASE İLE TAM ENTEGRE - DÜZELTMELİ SÜRÜM
+// app.js - TAMAMEN GÜNCEL FIREBASE ENTEGRASYONLU
 
-// ========== FIREBASE IMPORTLARI (EN ÜSTTE OLMALI) ==========
+// Firebase Importları
 import { 
     getAuth, 
     createUserWithEmailAndPassword, 
@@ -25,7 +25,7 @@ import {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 
-// ========== FIREBASE KONFİGÜRASYONU ==========
+// Firebase Konfigürasyonu (SENİN KONFİG'İN)
 const firebaseConfig = {
     apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
     authDomain: "ali23-cfd02.firebaseapp.com",
@@ -36,14 +36,13 @@ const firebaseConfig = {
     measurementId: "G-NNCQQQFWD6"
 };
 
-// ========== FIREBASE BAŞLATMA ==========
+// Firebase'i Başlat
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ========== ANA UYGULAMA KODU ==========
+// Ana Uygulama
 document.addEventListener('DOMContentLoaded', function() {
-    
     // DOM Elementleri
     const loginScreen = document.getElementById('loginScreen');
     const mainScreen = document.getElementById('mainScreen');
@@ -83,11 +82,11 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             showAlert('Kayıt yapılıyor...', 'info');
             
-            // 1. Firebase Authentication'da kullanıcı oluştur
+            // Firebase Authentication'da kullanıcı oluştur
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             
-            // 2. Firestore'da kullanıcı belgesi oluştur
+            // Firestore'da kullanıcı belgesi oluştur
             const userData = {
                 email: email,
                 createdAt: new Date().toISOString(),
@@ -100,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             await setDoc(doc(db, "users", user.uid), userData);
             
-            // 3. Global kullanıcı verilerini güncelle
+            // Global kullanıcı verilerini güncelle
             currentUser = user;
             currentUserData = userData;
             
@@ -121,17 +120,17 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             showAlert('Giriş yapılıyor...', 'info');
             
-            // 1. Firebase Authentication ile giriş
+            // Firebase Authentication ile giriş
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             
-            // 2. Firestore'dan kullanıcı verilerini çek
+            // Firestore'dan kullanıcı verilerini çek
             const userDoc = await getDoc(doc(db, "users", user.uid));
             
             if (userDoc.exists()) {
                 currentUserData = userDoc.data();
                 
-                // 3. Son giriş tarihini güncelle
+                // Son giriş tarihini güncelle
                 await updateDoc(doc(db, "users", user.uid), {
                     lastLogin: new Date().toISOString()
                 });
@@ -174,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('Çıkış yapıldı', 'info');
         } catch (error) {
             console.error('Çıkış hatası:', error);
-            showAlert('Çıkış yapılamadı: ' + error.message, 'error');
+            showAlert('Çıkış yapılamadı', 'error');
         }
     }
     
@@ -272,20 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Stiller
         const styles = {
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            padding: '15px 25px',
-            background: 'rgba(10, 15, 35, 0.95)',
-            color: 'white',
-            borderRadius: '8px',
-            zIndex: '10000',
-            boxShadow: '0 5px 20px rgba(0,0,0,0.5)',
-            fontFamily: "'Exo 2', sans-serif",
-            fontSize: '16px',
-            borderLeft: '4px solid',
-            transform: 'translateX(150%)',
-            transition: 'transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+            borderLeft: '4px solid'
         };
         
         // Türüne göre renk
@@ -298,6 +284,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         Object.assign(alertDiv.style, styles);
         alertDiv.style.borderLeftColor = colors[type] || colors.info;
+        
+        // Ekstra efektler
+        if (type === 'success') {
+            alertDiv.style.boxShadow = '0 0 15px rgba(0, 255, 136, 0.3)';
+        } else if (type === 'error') {
+            alertDiv.style.boxShadow = '0 0 15px rgba(255, 0, 85, 0.3)';
+        } else if (type === 'warning') {
+            alertDiv.style.boxShadow = '0 0 15px rgba(255, 170, 0, 0.3)';
+        }
         
         document.body.appendChild(alertDiv);
         
@@ -330,6 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loginScreen.classList.add('active');
         emailInput.value = '';
         passwordInput.value = '';
+        emailInput.focus();
     }
     
     function updateUI() {
@@ -467,12 +463,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ========== GLOBAL SOHBET (Gun.js) ==========
+    // ========== GLOBAL SOHBET ==========
     
     function initChat() {
         try {
             // Gun.js başlat
-            gun = Gun({
+            gun = window.Gun({
                 peers: [
                     'https://gun-manhattan.herokuapp.com/gun',
                     'https://gun-us.herokuapp.com/gun'
@@ -504,14 +500,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Firestore'dan eski mesajları yükle
         try {
             const chatRef = collection(db, "chatMessages");
-            const q = query(chatRef, orderBy("timestamp", "desc"));
+            const q = query(chatRef, orderBy("timestamp", "desc"), limit(20));
             
             onSnapshot(q, (snapshot) => {
-                // Önce temizle
+                // Önce temizle (welcome mesajı hariç)
                 const existingMessages = chatMessages.querySelectorAll('.message:not(.chat-welcome)');
                 existingMessages.forEach(msg => msg.remove());
                 
-                // Yeni mesajları ekle (tersten sıralı)
+                // Yeni mesajları ekle
                 const messages = [];
                 snapshot.forEach((doc) => {
                     messages.push(doc.data());
@@ -520,10 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Tarihe göre sırala (en eskiden en yeniye)
                 messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
                 
-                // Sadece son 20 mesajı göster
-                const recentMessages = messages.slice(-20);
-                
-                recentMessages.forEach(data => {
+                messages.forEach(data => {
                     addMessageToChat(data.sender, data.message, data.timestamp, data.sender === currentUserData?.email);
                 });
             });
@@ -533,17 +526,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function addMessageToChat(sender, message, timestamp, isOwn = false) {
-        // Eğer bu mesaj zaten ekliyse, ekleme
-        const existingMessages = chatMessages.querySelectorAll('.message');
-        for (let msg of existingMessages) {
-            const msgSender = msg.querySelector('.message-sender')?.textContent;
-            const msgText = msg.querySelector('.message-text')?.textContent;
-            if (msgSender === (isOwn ? 'Sen' : sender.split('@')[0]) && 
-                msgText === (message.length > 100 ? message.substring(0, 100) + '...' : message)) {
-                return;
-            }
-        }
-        
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isOwn ? 'own' : ''}`;
         
@@ -728,57 +710,55 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ========== DEMO HESAP OLUŞTURMA ==========
+    // ========== DEMO HESAP İŞLEMLERİ ==========
     
+    // Demo hesap giriş butonu
     function createDemoButton() {
-        // Demo hesap oluşturma butonu (geliştirme için)
+        if (!loginScreen.classList.contains('active')) return;
+        
         const demoBtn = document.createElement('button');
         demoBtn.innerHTML = '<i class="fas fa-user-secret"></i> Demo Giriş';
+        demoBtn.id = 'demoBtn';
         demoBtn.style.cssText = `
             position: fixed;
             bottom: 20px;
             left: 20px;
-            padding: 10px 20px;
+            padding: 12px 20px;
             background: linear-gradient(45deg, #ff00ff, #00f3ff);
             color: white;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             z-index: 9999;
-            opacity: 0.8;
+            opacity: 0.9;
             font-family: 'Exo 2', sans-serif;
             font-weight: 600;
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
             transition: all 0.3s;
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 14px;
         `;
         
         demoBtn.onmouseover = () => demoBtn.style.opacity = '1';
-        demoBtn.onmouseout = () => demoBtn.style.opacity = '0.8';
+        demoBtn.onmouseout = () => demoBtn.style.opacity = '0.9';
         
         demoBtn.onclick = async () => {
             emailInput.value = 'demo@cybersosyal.com';
             passwordInput.value = 'demo123';
-            
-            // Demo hesabı oluştur veya giriş yap
-            try {
-                await loginUser('demo@cybersosyal.com', 'demo123');
-            } catch (error) {
-                // Eğer kullanıcı yoksa, kayıt ol
-                await registerUser('demo@cybersosyal.com', 'demo123');
-            }
+            loginUser('demo@cybersosyal.com', 'demo123');
         };
         
-        if (loginScreen.classList.contains('active')) {
-            document.body.appendChild(demoBtn);
-            setTimeout(() => {
-                if (demoBtn.parentNode) {
-                    demoBtn.parentNode.removeChild(demoBtn);
-                }
-            }, 30000); // 30 saniye sonra kaldır
-        }
+        document.body.appendChild(demoBtn);
+        
+        // 30 saniye sonra kaldır
+        setTimeout(() => {
+            const btn = document.getElementById('demoBtn');
+            if (btn && btn.parentNode) {
+                btn.parentNode.removeChild(btn);
+            }
+        }, 30000);
     }
     
     // Demo butonunu oluştur
@@ -791,5 +771,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 500);
     
-    console.log('Uygulama başlatıldı! Firebase aktif.');
+    console.log('✅ Uygulama başlatıldı! Firebase aktif.');
+    console.log('📧 Demo hesap: demo@cybersosyal.com / demo123');
 });
