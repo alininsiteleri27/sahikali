@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oyun Platformu</title>
+    <title>Satranç Oyun Platformu - Pro Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -48,6 +48,11 @@
                         <span>✏️</span> Profili Düzenle
                     </div>
                     <div class="dropdown-divider"></div>
+                    <!-- Admin Panel Button - Only visible for admins -->
+                    <div class="dropdown-item admin-only" id="adminPanelBtn" style="display: none;">
+                        <span>👨‍💼</span> Admin Paneli
+                    </div>
+                    <div class="dropdown-divider admin-only" style="display: none;"></div>
                     <div class="dropdown-item" id="themeToggleItem">
                         <span>🌓</span> 
                         <div class="theme-toggle">
@@ -131,18 +136,137 @@
             <!-- Chat Sidebar -->
             <div class="chat-sidebar" id="chatSidebar">
                 <div class="chat-header">
-                    <div class="chat-title">💬 Global Chat</div>
-                    <button class="chat-toggle-mobile" id="chatToggleMobile">▼</button>
+                    <div class="chat-title">💬 <span id="chatHeaderTitle">Global Chat</span></div>
+                    <div class="chat-header-buttons">
+                        <button class="chat-dm-btn" id="chatDmBtn" title="Özel Mesajlar">📩</button>
+                        <button class="chat-toggle-mobile" id="chatToggleMobile">▼</button>
+                    </div>
                 </div>
                 <div class="chat-content">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-welcome">Global chat'e hoş geldin! 🎮</div>
+                    <!-- Tab Buttons -->
+                    <div class="chat-tabs">
+                        <button class="chat-tab-btn active" data-tab="global">Global</button>
+                        <button class="chat-tab-btn" data-tab="dm">DM</button>
                     </div>
-                    <div class="chat-input-container">
-                        <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput" maxlength="200">
-                        <button class="chat-send" id="chatSend">📤</button>
+
+                    <!-- Global Chat Tab -->
+                    <div class="chat-tab-content active" id="globalChatTab">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-welcome">Global chat'e hoş geldin! 🎮</div>
+                        </div>
+                        <div class="chat-load-more" id="chatLoadMore" style="display: none;">
+                            <button class="load-more-btn" id="loadMoreBtn">Daha Fazla Yükle</button>
+                        </div>
+                        <div class="chat-input-container">
+                            <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput" maxlength="200">
+                            <button class="chat-send" id="chatSend">📤</button>
+                        </div>
+                    </div>
+
+                    <!-- DM Chat Tab -->
+                    <div class="chat-tab-content" id="dmChatTab">
+                        <div class="dm-user-list" id="dmUserList">
+                            <div class="chat-welcome">Kullanıcıları yükleniyor...</div>
+                        </div>
+                        <div class="dm-conversation" id="dmConversation" style="display: none;">
+                            <div class="dm-header">
+                                <button class="dm-back-btn" id="dmBackBtn">← Geri</button>
+                                <div class="dm-user-name" id="dmUserName">Kullanıcı</div>
+                            </div>
+                            <div class="chat-messages" id="dmMessages"></div>
+                            <div class="chat-input-container">
+                                <input type="text" class="chat-input" placeholder="Özel mesajınızı yazın..." id="dmInput" maxlength="200">
+                                <button class="chat-send" id="dmSend">📤</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div class="game-modal" id="adminModal" style="display: none;">
+        <div class="modal-content admin-modal-content">
+            <div class="modal-header">
+                <h2>👨‍💼 Admin Paneli</h2>
+                <span class="modal-close" data-modal="adminModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Admin Tabs -->
+                <div class="admin-tabs">
+                    <button class="admin-tab-btn active" data-tab="users">👥 Kullanıcılar</button>
+                    <button class="admin-tab-btn" data-tab="presence">📊 Aktiflik</button>
+                </div>
+
+                <!-- Users Management Tab -->
+                <div class="admin-tab-content active" id="adminUsersTab">
+                    <div class="admin-search">
+                        <input type="text" id="adminUserSearch" class="search-input" placeholder="🔍 Kullanıcı ara...">
+                    </div>
+                    <div class="admin-user-list" id="adminUserList">
+                        <div class="loading">Kullanıcılar yükleniyor...</div>
+                    </div>
+                </div>
+
+                <!-- Presence Tab -->
+                <div class="admin-tab-content" id="adminPresenceTab">
+                    <div class="presence-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="onlineCount">0</div>
+                            <div class="stat-label">🟢 Online</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="offlineCount">0</div>
+                            <div class="stat-label">⚫ Offline</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalCount">0</div>
+                            <div class="stat-label">👥 Toplam</div>
+                        </div>
+                    </div>
+                    <div class="presence-list" id="presenceList">
+                        <div class="loading">Aktiflik verileri yükleniyor...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Action Modal -->
+    <div class="game-modal" id="adminActionModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="adminActionTitle">Kullanıcı İşlemi</h2>
+                <span class="modal-close" data-modal="adminActionModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="admin-action-user">
+                    <strong>Kullanıcı:</strong> <span id="actionUserName">-</span>
+                </div>
+                <div class="admin-actions">
+                    <button class="admin-action-btn ban-btn" id="banUserBtn">🚫 Ban</button>
+                    <button class="admin-action-btn unban-btn" id="unbanUserBtn" style="display: none;">✅ Ban Kaldır</button>
+                    <button class="admin-action-btn mute-btn" id="muteUserBtn">🔇 Sustur</button>
+                    <button class="admin-action-btn unmute-btn" id="unmuteUserBtn" style="display: none;">🔊 Susturmayı Kaldır</button>
+                    <button class="admin-action-btn reset-btn" id="resetPasswordBtn">🔑 Şifre Sıfırla</button>
+                </div>
+                <div id="muteOptions" style="display: none;">
+                    <label>Susturma Süresi:</label>
+                    <select id="muteDuration" class="profile-input">
+                        <option value="3600000">1 Saat</option>
+                        <option value="86400000">24 Saat</option>
+                        <option value="604800000">7 Gün</option>
+                        <option value="2592000000">30 Gün</option>
+                    </select>
+                    <button class="admin-action-btn confirm-btn" id="confirmMuteBtn">Onayla</button>
+                </div>
+                <div id="passwordResetOptions" style="display: none;">
+                    <label>Yeni Şifre:</label>
+                    <input type="password" id="newPasswordInput" class="profile-input" placeholder="Min 6 karakter">
+                    <button class="admin-action-btn confirm-btn" id="confirmResetBtn">Şifreyi Değiştir</button>
+                </div>
+                <div class="admin-message" id="adminActionMessage"></div>
             </div>
         </div>
     </div>
@@ -345,12 +469,20 @@
             </div>
             <div class="modal-body">
                 <div class="chess-info">
-                    <div class="chess-status" id="chessStatus">Beyaz Hamle</div>
+                    <div class="chess-status" id="chessStatus">Oyunu Başlat</div>
                     <div class="bet-info">Bahis: <span id="chessBetDisplay">100</span> 💎</div>
                 </div>
                 <div class="bet-input-container">
                     <label>Bahis Miktarı (Min: 50)</label>
                     <input type="number" id="chessBetAmount" min="50" value="100" class="bet-input">
+                    <div class="chess-difficulty">
+                        <label>Bot Zorluğu:</label>
+                        <select id="chessDifficulty" class="bet-input">
+                            <option value="easy">Kolay</option>
+                            <option value="medium" selected>Orta</option>
+                            <option value="hard">Zor</option>
+                        </select>
+                    </div>
                     <button class="chess-start-btn" id="chessStartBtn">Oyunu Başlat</button>
                 </div>
                 <div id="chessBoard" class="chess-board"></div>
@@ -360,6 +492,6 @@
     </div>
 
     <!-- Firebase SDK -->
-    <script type="module" src="app.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
