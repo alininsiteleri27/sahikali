@@ -1,9 +1,48 @@
-// app.js - FIREBASE İLE TAM ENTEGRE SON SÜRÜM
+// app.js - FIREBASE İLE TAM ENTEGRE - DÜZELTMELİ SÜRÜM
 
+// ========== FIREBASE IMPORTLARI (EN ÜSTTE OLMALI) ==========
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+
+import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    getDoc, 
+    updateDoc, 
+    collection, 
+    addDoc, 
+    query, 
+    orderBy, 
+    limit,
+    onSnapshot 
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+
+// ========== FIREBASE KONFİGÜRASYONU ==========
+const firebaseConfig = {
+    apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
+    authDomain: "ali23-cfd02.firebaseapp.com",
+    projectId: "ali23-cfd02",
+    storageBucket: "ali23-cfd02.firebasestorage.app",
+    messagingSenderId: "759021285078",
+    appId: "1:759021285078:web:f7673f89125ff3dad66377",
+    measurementId: "G-NNCQQQFWD6"
+};
+
+// ========== FIREBASE BAŞLATMA ==========
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ========== ANA UYGULAMA KODU ==========
 document.addEventListener('DOMContentLoaded', function() {
-    // Firebase servislerine global erişim
-    const auth = window.firebaseAuth;
-    const db = window.firebaseDb;
     
     // DOM Elementleri
     const loginScreen = document.getElementById('loginScreen');
@@ -53,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 email: email,
                 createdAt: new Date().toISOString(),
                 lastLogin: new Date().toISOString(),
-                points: 100, // Başlangıç puanı
+                points: 100,
                 gamesPlayed: 0,
                 gamesWon: 0,
                 displayName: email.split('@')[0]
@@ -69,9 +108,12 @@ document.addEventListener('DOMContentLoaded', function() {
             switchToMainScreen();
             updateUI();
             
+            return true;
+            
         } catch (error) {
             console.error('Kayıt hatası:', error);
             handleFirebaseError(error);
+            return false;
         }
     }
     
@@ -103,7 +145,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     lastLogin: new Date().toISOString(),
                     points: 100,
                     gamesPlayed: 0,
-                    gamesWon: 0
+                    gamesWon: 0,
+                    displayName: email.split('@')[0]
                 };
                 await setDoc(doc(db, "users", user.uid), currentUserData);
             }
@@ -113,9 +156,12 @@ document.addEventListener('DOMContentLoaded', function() {
             switchToMainScreen();
             updateUI();
             
+            return true;
+            
         } catch (error) {
             console.error('Giriş hatası:', error);
             handleFirebaseError(error);
+            return false;
         }
     }
     
@@ -128,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('Çıkış yapıldı', 'info');
         } catch (error) {
             console.error('Çıkış hatası:', error);
+            showAlert('Çıkış yapılamadı: ' + error.message, 'error');
         }
     }
     
@@ -137,6 +184,11 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const newPoints = currentUserData.points + pointsChange;
             
+            if (newPoints < 0) {
+                showAlert('Yetersiz puan!', 'error');
+                return false;
+            }
+            
             // Firestore'da güncelle
             await updateDoc(doc(db, "users", currentUser.uid), {
                 points: newPoints,
@@ -145,10 +197,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Oyun istatistiklerini güncelle
             if (gameType) {
-                await updateDoc(doc(db, "users", currentUser.uid), {
-                    gamesPlayed: (currentUserData.gamesPlayed || 0) + 1,
-                    gamesWon: pointsChange > 0 ? (currentUserData.gamesWon || 0) + 1 : (currentUserData.gamesWon || 0)
-                });
+                const updateData = {
+                    gamesPlayed: (currentUserData.gamesPlayed || 0) + 1
+                };
+                
+                if (pointsChange > 0) {
+                    updateData.gamesWon = (currentUserData.gamesWon || 0) + 1;
+                }
+                
+                await updateDoc(doc(db, "users", currentUser.uid), updateData);
                 
                 // Oyun geçmişine kaydet
                 await addDoc(collection(db, "gameHistory"), {
@@ -197,12 +254,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 message = 'Hatalı şifre';
                 break;
             default:
-                message = error.message;
+                message = error.message || 'Bilinmeyen hata';
         }
         
         showAlert(message, 'error');
     }
-    
+
     // ========== ARAYÜZ İŞLEMLERİ ==========
     
     function showAlert(message, type = 'info') {
@@ -252,7 +309,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // 4 saniye sonra kaldır
         setTimeout(() => {
             alertDiv.style.transform = 'translateX(150%)';
-            setTimeout(() => alertDiv.remove(), 500);
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 500);
         }, 4000);
     }
     
@@ -280,14 +341,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Tarih formatı
         const formatDate = (dateString) => {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('tr-TR') + ' ' + 
+                       date.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+            } catch (e) {
+                return dateString || '-';
+            }
         };
         
         profileRegDate.textContent = formatDate(currentUserData.createdAt);
         profileLastLogin.textContent = formatDate(currentUserData.lastLogin);
     }
-    
+
     // ========== ÇARKIFELEK OYUNU ==========
     
     spinWheelBtn.addEventListener('click', async function() {
@@ -309,6 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         isSpinning = true;
         spinWheelBtn.disabled = true;
+        spinWheelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Çark Dönüyor...';
         
         // Rastgele dönüş
         const randomRotation = 1080 + Math.floor(Math.random() * 720);
@@ -324,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             wheelResult.textContent = `🎉 Tebrikler! ${prize} puan kazandınız!`;
             wheelResult.style.color = '#00ff88';
+            wheelResult.style.fontWeight = 'bold';
             
             // Kazanılan puanı ekle
             await updateUserPoints(prize, 'wheel_spin_win');
@@ -337,6 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     wheel.style.transition = 'transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)';
                     isSpinning = false;
                     spinWheelBtn.disabled = false;
+                    spinWheelBtn.innerHTML = '<i class="fas fa-redo-alt"></i> Çarkı Çevir (5 Puan)';
                     
                     setTimeout(() => {
                         wheelResult.textContent = '';
@@ -345,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 1000);
         }, 3000);
     });
-    
+
     // ========== TAŞ KAĞIT MAKAS OYUNU ==========
     
     const rpsChoices = ['rock', 'paper', 'scissors'];
@@ -397,12 +466,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     // ========== GLOBAL SOHBET (Gun.js) ==========
     
     function initChat() {
         try {
-            // Gun.js başlat[citation:3]
+            // Gun.js başlat
             gun = Gun({
                 peers: [
                     'https://gun-manhattan.herokuapp.com/gun',
@@ -431,20 +500,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    async function loadChatHistory() {
-        // Firestore'dan eski mesajları yükle (isteğe bağlı)
+    function loadChatHistory() {
+        // Firestore'dan eski mesajları yükle
         try {
-            if (!db) return;
-            
             const chatRef = collection(db, "chatMessages");
-            const q = query(chatRef, orderBy("timestamp", "desc"), limit(20));
+            const q = query(chatRef, orderBy("timestamp", "desc"));
             
             onSnapshot(q, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        const data = change.doc.data();
-                        addMessageToChat(data.sender, data.message, data.timestamp, data.sender === currentUserData?.email);
-                    }
+                // Önce temizle
+                const existingMessages = chatMessages.querySelectorAll('.message:not(.chat-welcome)');
+                existingMessages.forEach(msg => msg.remove());
+                
+                // Yeni mesajları ekle (tersten sıralı)
+                const messages = [];
+                snapshot.forEach((doc) => {
+                    messages.push(doc.data());
+                });
+                
+                // Tarihe göre sırala (en eskiden en yeniye)
+                messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                
+                // Sadece son 20 mesajı göster
+                const recentMessages = messages.slice(-20);
+                
+                recentMessages.forEach(data => {
+                    addMessageToChat(data.sender, data.message, data.timestamp, data.sender === currentUserData?.email);
                 });
             });
         } catch (error) {
@@ -453,6 +533,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function addMessageToChat(sender, message, timestamp, isOwn = false) {
+        // Eğer bu mesaj zaten ekliyse, ekleme
+        const existingMessages = chatMessages.querySelectorAll('.message');
+        for (let msg of existingMessages) {
+            const msgSender = msg.querySelector('.message-sender')?.textContent;
+            const msgText = msg.querySelector('.message-text')?.textContent;
+            if (msgSender === (isOwn ? 'Sen' : sender.split('@')[0]) && 
+                msgText === (message.length > 100 ? message.substring(0, 100) + '...' : message)) {
+                return;
+            }
+        }
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isOwn ? 'own' : ''}`;
         
@@ -503,12 +594,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // 2. Firestore'a kaydet (backup için)
-            if (db) {
-                await addDoc(collection(db, "chatMessages"), {
-                    ...chatData,
-                    userId: currentUser.uid
-                });
-            }
+            await addDoc(collection(db, "chatMessages"), {
+                ...chatData,
+                userId: currentUser.uid
+            });
             
             // 3. Ekranda göster
             addMessageToChat(currentUserData.email, message, timestamp, true);
@@ -528,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     messageInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') sendMessage();
     });
-    
+
     // ========== MODAL İŞLEMLERİ ==========
     
     profileBtn.addEventListener('click', function() {
@@ -537,6 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         profileModal.style.display = 'flex';
+        updateUI();
     });
     
     closeModalBtn.addEventListener('click', function() {
@@ -563,7 +653,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('marketBtn').addEventListener('click', function() {
         showAlert('🛒 Market özelliği yakında eklenecek!', 'info');
     });
-    
+
     // ========== GİRİŞ/KAYIT BUTONLARI ==========
     
     loginBtn.addEventListener('click', function() {
@@ -588,10 +678,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (email && password) loginUser(email, password);
         }
     });
-    
+
     // ========== FIREBASE AUTH DURUM TAKİBİ ==========
     
+    // Kullanıcı oturum durumunu izle
     onAuthStateChanged(auth, async (user) => {
+        console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+        
         if (user) {
             // Kullanıcı oturum açmış
             try {
@@ -599,11 +692,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (userDoc.exists()) {
                     currentUser = user;
                     currentUserData = userDoc.data();
+                    
+                    // Eksik verileri kontrol et
+                    if (!currentUserData.points) currentUserData.points = 100;
+                    if (!currentUserData.createdAt) currentUserData.createdAt = new Date().toISOString();
+                    if (!currentUserData.lastLogin) currentUserData.lastLogin = new Date().toISOString();
+                    
+                    switchToMainScreen();
+                    updateUI();
+                } else {
+                    // Belge yoksa oluştur
+                    currentUserData = {
+                        email: user.email,
+                        createdAt: new Date().toISOString(),
+                        lastLogin: new Date().toISOString(),
+                        points: 100,
+                        gamesPlayed: 0,
+                        gamesWon: 0,
+                        displayName: user.email.split('@')[0]
+                    };
+                    await setDoc(doc(db, "users", user.uid), currentUserData);
+                    currentUser = user;
                     switchToMainScreen();
                     updateUI();
                 }
             } catch (error) {
                 console.error('Kullanıcı verisi yüklenemedi:', error);
+                showAlert('Kullanıcı verileri yüklenemedi', 'error');
             }
         } else {
             // Kullanıcı oturum açmamış
@@ -612,40 +727,62 @@ document.addEventListener('DOMContentLoaded', function() {
             switchToLoginScreen();
         }
     });
+
+    // ========== DEMO HESAP OLUŞTURMA ==========
     
-    // ========== DEMO HESAP OLUŞTURMA (İsteğe Bağlı) ==========
-    
-    async function createDemoAccount() {
+    function createDemoButton() {
         // Demo hesap oluşturma butonu (geliştirme için)
         const demoBtn = document.createElement('button');
-        demoBtn.textContent = 'Demo Girişi';
+        demoBtn.innerHTML = '<i class="fas fa-user-secret"></i> Demo Giriş';
         demoBtn.style.cssText = `
             position: fixed;
             bottom: 20px;
             left: 20px;
-            padding: 10px 15px;
-            background: #ff00ff;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #ff00ff, #00f3ff);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
             z-index: 9999;
-            opacity: 0.7;
+            opacity: 0.8;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         `;
-        demoBtn.onclick = () => {
-            emailInput.value = 'demo@test.com';
+        
+        demoBtn.onmouseover = () => demoBtn.style.opacity = '1';
+        demoBtn.onmouseout = () => demoBtn.style.opacity = '0.8';
+        
+        demoBtn.onclick = async () => {
+            emailInput.value = 'demo@cybersosyal.com';
             passwordInput.value = 'demo123';
-            loginUser('demo@test.com', 'demo123');
+            
+            // Demo hesabı oluştur veya giriş yap
+            try {
+                await loginUser('demo@cybersosyal.com', 'demo123');
+            } catch (error) {
+                // Eğer kullanıcı yoksa, kayıt ol
+                await registerUser('demo@cybersosyal.com', 'demo123');
+            }
         };
         
         if (loginScreen.classList.contains('active')) {
             document.body.appendChild(demoBtn);
-            setTimeout(() => demoBtn.remove(), 10000);
+            setTimeout(() => {
+                if (demoBtn.parentNode) {
+                    demoBtn.parentNode.removeChild(demoBtn);
+                }
+            }, 30000); // 30 saniye sonra kaldır
         }
     }
     
     // Demo butonunu oluştur
-    setTimeout(createDemoAccount, 2000);
+    setTimeout(createDemoButton, 1000);
     
     // Sayfa yüklendiğinde input'a focus
     setTimeout(() => {
@@ -654,5 +791,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 500);
     
-    console.log('Uygulama başlatıldı!');
+    console.log('Uygulama başlatıldı! Firebase aktif.');
 });
