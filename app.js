@@ -82,8 +82,8 @@ const adTimer = document.getElementById('adTimer');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    setupEventListeners();
     checkThemePreference();
+    setupEventListeners();
 });
 
 // Auth state observer
@@ -103,37 +103,41 @@ onAuthStateChanged(auth, (user) => {
 // Setup event listeners
 function setupEventListeners() {
     // Login/Register
-    loginButton.addEventListener('click', handleAuth);
-    loginToggle.addEventListener('click', toggleLoginMode);
+    if (loginButton) loginButton.addEventListener('click', handleAuth);
+    if (loginToggle) loginToggle.addEventListener('click', toggleLoginMode);
     
     // Profile dropdown
-    profileIcon.addEventListener('click', toggleDropdown);
-    logoutBtn.addEventListener('click', handleLogout);
-    themeToggleItem.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleTheme();
-    });
+    if (profileIcon) profileIcon.addEventListener('click', toggleDropdown);
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    if (themeToggleItem) {
+        themeToggleItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleTheme();
+        });
+    }
     
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target) && !profileIcon.contains(e.target)) {
+        if (dropdown && profileIcon && !dropdown.contains(e.target) && !profileIcon.contains(e.target)) {
             dropdown.classList.remove('active');
         }
     });
     
     // Game cards
-    coinFlipCard.addEventListener('click', () => openGameModal('coinFlipModal'));
-    rpsCard.addEventListener('click', () => openGameModal('rpsModal'));
-    spinWheelCard.addEventListener('click', () => openGameModal('spinWheelModal'));
+    if (coinFlipCard) coinFlipCard.addEventListener('click', () => openGameModal('coinFlipModal'));
+    if (rpsCard) rpsCard.addEventListener('click', () => openGameModal('rpsModal'));
+    if (spinWheelCard) spinWheelCard.addEventListener('click', () => openGameModal('spinWheelModal'));
     
     // Chat
-    chatSend.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+    if (chatSend) chatSend.addEventListener('click', sendMessage);
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
     
     // Ad button
-    watchAdBtn.addEventListener('click', watchAd);
+    if (watchAdBtn) watchAdBtn.addEventListener('click', watchAd);
     
     // Modal close buttons
     document.querySelectorAll('.modal-close').forEach(btn => {
@@ -153,10 +157,11 @@ function setupEventListeners() {
     });
     
     // Spin Wheel
-    document.getElementById('spinBtn').addEventListener('click', spinWheel);
+    const spinBtn = document.getElementById('spinBtn');
+    if (spinBtn) spinBtn.addEventListener('click', spinWheel);
     
-    // Initialize wheel
-    initWheel();
+    // Initialize wheel after DOM is ready
+    setTimeout(initWheel, 100);
 }
 
 // Authentication functions
@@ -447,6 +452,11 @@ function startAdCooldown() {
 // Game modal functions
 function openGameModal(modalId) {
     document.getElementById(modalId).style.display = 'flex';
+    
+    // Initialize wheel if opening wheel modal
+    if (modalId === 'spinWheelModal' && !wheelCtx) {
+        setTimeout(initWheel, 100);
+    }
 }
 
 function closeGameModal(modalId) {
@@ -575,7 +585,10 @@ const wheelSegments = [
 
 function initWheel() {
     wheelCanvas = document.getElementById('wheelCanvas');
-    if (!wheelCanvas) return;
+    if (!wheelCanvas) {
+        console.log('Wheel canvas not found, will initialize when modal opens');
+        return;
+    }
     
     wheelCtx = wheelCanvas.getContext('2d');
     drawWheel(0);
