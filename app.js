@@ -23,7 +23,7 @@ import {
 const firebaseConfig = {
     apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
     authDomain: "ali23-cfd02.firebaseapp.com",
-    databaseURL: "https://ali23-cfd02-default-rtdb.firebaseio.com",
+    databaseURL: "https://ali23-cfd02-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "ali23-cfd02",
     storageBucket: "ali23-cfd02.firebasestorage.app",
     messagingSenderId: "759021285078",
@@ -258,12 +258,12 @@ async function handleLogout() {
 // Screen functions
 function showLoginScreen() {
     loginScreen.style.display = 'flex';
-    mainApp.style.display = 'none';
+    mainApp.classList.remove('show');
 }
 
 function showMainApp() {
     loginScreen.style.display = 'none';
-    mainApp.style.display = 'block';
+    mainApp.classList.add('show');
 }
 
 // User data functions
