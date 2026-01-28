@@ -65,6 +65,9 @@
             </div>
 
             <div class="header-right">
+                <button class="leaderboard-btn" id="leaderboardBtn">
+                    🏆 Liderlik
+                </button>
                 <button class="market-btn" id="marketBtn">
                     🛒 Market
                 </button>
@@ -138,6 +141,42 @@
                     <div class="chat-input-container">
                         <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput" maxlength="200">
                         <button class="chat-send" id="chatSend">📤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="game-modal" id="leaderboardModal" style="display: none;">
+        <div class="modal-content leaderboard-modal-content">
+            <div class="modal-header">
+                <h2>🏆 Liderlik Tablosu</h2>
+                <span class="modal-close" data-modal="leaderboardModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Search Bar -->
+                <div class="leaderboard-search">
+                    <input type="text" id="userSearchInput" class="search-input" placeholder="🔍 Kullanıcı adı ara...">
+                </div>
+                
+                <!-- Tabs -->
+                <div class="leaderboard-tabs">
+                    <button class="tab-btn active" data-tab="top">En İyiler</button>
+                    <button class="tab-btn" data-tab="search">Arama Sonuçları</button>
+                </div>
+                
+                <!-- Top Users -->
+                <div class="leaderboard-content" id="topUsersTab">
+                    <div class="leaderboard-list" id="leaderboardList">
+                        <div class="loading">Yükleniyor...</div>
+                    </div>
+                </div>
+                
+                <!-- Search Results -->
+                <div class="leaderboard-content" id="searchResultsTab" style="display: none;">
+                    <div class="leaderboard-list" id="searchResultsList">
+                        <div class="search-placeholder">Kullanıcı adı girin...</div>
                     </div>
                 </div>
             </div>
