@@ -10,7 +10,7 @@ import {
     signOut,
     updatePassword,
     setPersistence,
-    browserLocalPersistence
+    inMemoryPersistence
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { 
     getFirestore, 
@@ -57,8 +57,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
-// Oturum tarayıcıda kalıcı olsun (sayfa yenilense bile)
-setPersistence(auth, browserLocalPersistence).catch((err) => {
+// Oturum sadece sayfa açıkken geçerli olsun (yenileyince logout)
+setPersistence(auth, inMemoryPersistence).catch((err) => {
     console.error('Auth persistence hatası:', err);
 });
 
