@@ -1,34 +1,29 @@
-// app.js - TAMAMEN GÜNCEL FIREBASE ENTEGRASYONLU
-
-// Firebase Importları
+// Firebase imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
     getAuth, 
     createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged 
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut,
+    updateProfile
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    getDoc, 
-    updateDoc, 
-    collection, 
-    addDoc, 
-    query, 
-    orderBy, 
-    limit,
-    onSnapshot 
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+    getDatabase, 
+    ref, 
+    set, 
+    get, 
+    onValue,
+    push,
+    update,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-
-// Firebase Konfigürasyonu (SENİN KONFİG'İN)
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
     authDomain: "ali23-cfd02.firebaseapp.com",
+    databaseURL: "https://ali23-cfd02-default-rtdb.firebaseio.com",
     projectId: "ali23-cfd02",
     storageBucket: "ali23-cfd02.firebasestorage.app",
     messagingSenderId: "759021285078",
@@ -36,741 +31,676 @@ const firebaseConfig = {
     measurementId: "G-NNCQQQFWD6"
 };
 
-// Firebase'i Başlat
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const database = getDatabase(app);
 
-// Ana Uygulama
-document.addEventListener('DOMContentLoaded', function() {
-    // DOM Elementleri
-    const loginScreen = document.getElementById('loginScreen');
-    const mainScreen = document.getElementById('mainScreen');
-    const profileModal = document.getElementById('profileModal');
-    const emailInput = document.getElementById('emailInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-    const registerBtn = document.getElementById('registerBtn');
-    const profileBtn = document.getElementById('profileBtn');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const spinWheelBtn = document.getElementById('spinWheelBtn');
-    const wheel = document.getElementById('wheel');
-    const wheelResult = document.getElementById('wheelResult');
-    const userPuan = document.getElementById('userPuan');
-    const rpsBtns = document.querySelectorAll('.rps-btn');
-    const playerChoiceEl = document.getElementById('playerChoice');
-    const botChoiceEl = document.getElementById('botChoice');
-    const rpsOutcome = document.getElementById('rpsOutcome');
-    const chatMessages = document.getElementById('chatMessages');
-    const messageInput = document.getElementById('messageInput');
-    const sendMessageBtn = document.getElementById('sendMessageBtn');
-    const profileEmail = document.getElementById('profileEmail');
-    const profileRegDate = document.getElementById('profileRegDate');
-    const profileLastLogin = document.getElementById('profileLastLogin');
-    const profilePuan = document.getElementById('profilePuan');
+// Global variables
+let currentUser = null;
+let isLoginMode = true;
+let adCooldown = false;
+const AD_COOLDOWN_TIME = 60; // seconds
 
-    // Global değişkenler
-    let currentUser = null;
-    let currentUserData = null;
-    let gun = null;
-    let isSpinning = false;
+// DOM Elements
+const loginScreen = document.getElementById('loginScreen');
+const mainApp = document.getElementById('mainApp');
+const loginButton = document.getElementById('loginButton');
+const loginToggle = document.getElementById('loginToggle');
+const loginEmail = document.getElementById('loginEmail');
+const loginPassword = document.getElementById('loginPassword');
+const loginUsername = document.getElementById('loginUsername');
+const loginError = document.getElementById('loginError');
+const loginTitle = document.getElementById('loginTitle');
 
-    // ========== FIREBASE İŞLEMLERİ ==========
+// Header elements
+const profileIcon = document.getElementById('profileIcon');
+const dropdown = document.getElementById('dropdown');
+const logoutBtn = document.getElementById('logoutBtn');
+const themeToggle = document.getElementById('themeToggle');
+const themeToggleItem = document.getElementById('themeToggleItem');
+const userScore = document.getElementById('userScore');
+const headerUsername = document.getElementById('headerUsername');
+const headerEmail = document.getElementById('headerEmail');
+const dropdownUsername = document.getElementById('dropdownUsername');
+const dropdownEmail = document.getElementById('dropdownEmail');
+
+// Game cards
+const coinFlipCard = document.getElementById('coinFlipCard');
+const rpsCard = document.getElementById('rpsCard');
+const spinWheelCard = document.getElementById('spinWheelCard');
+
+// Chat elements
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const chatSend = document.getElementById('chatSend');
+
+// Ad elements
+const watchAdBtn = document.getElementById('watchAdBtn');
+const adCooldownDiv = document.getElementById('adCooldown');
+const adTimer = document.getElementById('adTimer');
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+    checkThemePreference();
+});
+
+// Auth state observer
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        showMainApp();
+        loadUserData();
+        listenToChat();
+        listenToScore();
+    } else {
+        currentUser = null;
+        showLoginScreen();
+    }
+});
+
+// Setup event listeners
+function setupEventListeners() {
+    // Login/Register
+    loginButton.addEventListener('click', handleAuth);
+    loginToggle.addEventListener('click', toggleLoginMode);
     
-    async function registerUser(email, password) {
-        try {
-            showAlert('Kayıt yapılıyor...', 'info');
-            
-            // Firebase Authentication'da kullanıcı oluştur
+    // Profile dropdown
+    profileIcon.addEventListener('click', toggleDropdown);
+    logoutBtn.addEventListener('click', handleLogout);
+    themeToggleItem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleTheme();
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && !profileIcon.contains(e.target)) {
+            dropdown.classList.remove('active');
+        }
+    });
+    
+    // Game cards
+    coinFlipCard.addEventListener('click', () => openGameModal('coinFlipModal'));
+    rpsCard.addEventListener('click', () => openGameModal('rpsModal'));
+    spinWheelCard.addEventListener('click', () => openGameModal('spinWheelModal'));
+    
+    // Chat
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    // Ad button
+    watchAdBtn.addEventListener('click', watchAd);
+    
+    // Modal close buttons
+    document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            closeGameModal(e.target.dataset.modal);
+        });
+    });
+    
+    // Coin Flip
+    document.querySelectorAll('#coinFlipModal .choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => playCoinFlip(btn.dataset.choice));
+    });
+    
+    // RPS
+    document.querySelectorAll('#rpsModal .choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => playRPS(btn.dataset.choice));
+    });
+    
+    // Spin Wheel
+    document.getElementById('spinBtn').addEventListener('click', spinWheel);
+    
+    // Initialize wheel
+    initWheel();
+}
+
+// Authentication functions
+async function handleAuth() {
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value.trim();
+    const username = loginUsername.value.trim();
+    
+    loginError.textContent = '';
+    
+    if (!email || !password) {
+        loginError.textContent = 'Email ve şifre gerekli!';
+        return;
+    }
+    
+    if (!isLoginMode && !username) {
+        loginError.textContent = 'Kullanıcı adı gerekli!';
+        return;
+    }
+    
+    if (password.length < 6) {
+        loginError.textContent = 'Şifre en az 6 karakter olmalı!';
+        return;
+    }
+    
+    loginButton.disabled = true;
+    
+    try {
+        if (isLoginMode) {
+            // Login
+            await signInWithEmailAndPassword(auth, email, password);
+        } else {
+            // Register
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             
-            // Firestore'da kullanıcı belgesi oluştur
-            const userData = {
+            // Update profile with username
+            await updateProfile(user, { displayName: username });
+            
+            // Create user in database with starting score
+            await set(ref(database, 'users/' + user.uid), {
+                username: username,
                 email: email,
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString(),
-                points: 100,
-                gamesPlayed: 0,
-                gamesWon: 0,
-                displayName: email.split('@')[0]
-            };
-            
-            await setDoc(doc(db, "users", user.uid), userData);
-            
-            // Global kullanıcı verilerini güncelle
-            currentUser = user;
-            currentUserData = userData;
-            
-            showAlert('🎉 Kayıt başarılı! Hoş geldiniz!', 'success');
-            switchToMainScreen();
-            updateUI();
-            
-            return true;
-            
-        } catch (error) {
-            console.error('Kayıt hatası:', error);
-            handleFirebaseError(error);
-            return false;
-        }
-    }
-    
-    async function loginUser(email, password) {
-        try {
-            showAlert('Giriş yapılıyor...', 'info');
-            
-            // Firebase Authentication ile giriş
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            
-            // Firestore'dan kullanıcı verilerini çek
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            
-            if (userDoc.exists()) {
-                currentUserData = userDoc.data();
-                
-                // Son giriş tarihini güncelle
-                await updateDoc(doc(db, "users", user.uid), {
-                    lastLogin: new Date().toISOString()
-                });
-                
-                currentUserData.lastLogin = new Date().toISOString();
-            } else {
-                // Eğer belge yoksa, oluştur
-                currentUserData = {
-                    email: email,
-                    createdAt: new Date().toISOString(),
-                    lastLogin: new Date().toISOString(),
-                    points: 100,
-                    gamesPlayed: 0,
-                    gamesWon: 0,
-                    displayName: email.split('@')[0]
-                };
-                await setDoc(doc(db, "users", user.uid), currentUserData);
-            }
-            
-            currentUser = user;
-            showAlert('✅ Giriş başarılı!', 'success');
-            switchToMainScreen();
-            updateUI();
-            
-            return true;
-            
-        } catch (error) {
-            console.error('Giriş hatası:', error);
-            handleFirebaseError(error);
-            return false;
-        }
-    }
-    
-    async function logoutUser() {
-        try {
-            await signOut(auth);
-            currentUser = null;
-            currentUserData = null;
-            switchToLoginScreen();
-            showAlert('Çıkış yapıldı', 'info');
-        } catch (error) {
-            console.error('Çıkış hatası:', error);
-            showAlert('Çıkış yapılamadı', 'error');
-        }
-    }
-    
-    async function updateUserPoints(pointsChange, gameType = '') {
-        if (!currentUser || !currentUserData) return false;
-        
-        try {
-            const newPoints = currentUserData.points + pointsChange;
-            
-            if (newPoints < 0) {
-                showAlert('Yetersiz puan!', 'error');
-                return false;
-            }
-            
-            // Firestore'da güncelle
-            await updateDoc(doc(db, "users", currentUser.uid), {
-                points: newPoints,
-                lastActivity: new Date().toISOString()
+                score: 20,
+                createdAt: serverTimestamp()
             });
-            
-            // Oyun istatistiklerini güncelle
-            if (gameType) {
-                const updateData = {
-                    gamesPlayed: (currentUserData.gamesPlayed || 0) + 1
-                };
-                
-                if (pointsChange > 0) {
-                    updateData.gamesWon = (currentUserData.gamesWon || 0) + 1;
-                }
-                
-                await updateDoc(doc(db, "users", currentUser.uid), updateData);
-                
-                // Oyun geçmişine kaydet
-                await addDoc(collection(db, "gameHistory"), {
-                    userId: currentUser.uid,
-                    gameType: gameType,
-                    pointsChange: pointsChange,
-                    playedAt: new Date().toISOString(),
-                    userEmail: currentUserData.email
-                });
-            }
-            
-            // Local veriyi güncelle
-            currentUserData.points = newPoints;
-            updateUI();
-            return true;
-            
-        } catch (error) {
-            console.error('Puan güncelleme hatası:', error);
-            return false;
         }
-    }
-    
-    function handleFirebaseError(error) {
-        let message = 'Bir hata oluştu';
+    } catch (error) {
+        console.error('Auth error:', error);
+        let errorMessage = 'Bir hata oluştu!';
         
-        switch(error.code) {
-            case 'auth/email-already-in-use':
-                message = 'Bu e-posta adresi zaten kayıtlı';
-                break;
-            case 'auth/invalid-email':
-                message = 'Geçersiz e-posta adresi';
-                break;
-            case 'auth/operation-not-allowed':
-                message = 'Bu işlem şu anda devre dışı';
-                break;
-            case 'auth/weak-password':
-                message = 'Şifre en az 6 karakter olmalıdır';
-                break;
-            case 'auth/user-disabled':
-                message = 'Bu hesap devre dışı bırakılmış';
-                break;
-            case 'auth/user-not-found':
-                message = 'Kullanıcı bulunamadı';
-                break;
-            case 'auth/wrong-password':
-                message = 'Hatalı şifre';
-                break;
-            default:
-                message = error.message || 'Bilinmeyen hata';
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'Bu email zaten kullanımda!';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'Geçersiz email adresi!';
+        } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+            errorMessage = 'Email veya şifre hatalı!';
+        } else if (error.code === 'auth/invalid-credential') {
+            errorMessage = 'Giriş bilgileri hatalı!';
         }
         
-        showAlert(message, 'error');
+        loginError.textContent = errorMessage;
+        loginButton.disabled = false;
     }
+}
 
-    // ========== ARAYÜZ İŞLEMLERİ ==========
+function toggleLoginMode() {
+    isLoginMode = !isLoginMode;
     
-    function showAlert(message, type = 'info') {
-        // Mevcut alert'leri temizle
-        document.querySelectorAll('.alert-message').forEach(alert => alert.remove());
-        
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert-message';
-        alertDiv.textContent = message;
-        
-        // Stiller
-        const styles = {
-            borderLeft: '4px solid'
-        };
-        
-        // Türüne göre renk
-        const colors = {
-            success: '#00ff88',
-            error: '#ff0055',
-            warning: '#ffaa00',
-            info: '#00aaff'
-        };
-        
-        Object.assign(alertDiv.style, styles);
-        alertDiv.style.borderLeftColor = colors[type] || colors.info;
-        
-        // Ekstra efektler
-        if (type === 'success') {
-            alertDiv.style.boxShadow = '0 0 15px rgba(0, 255, 136, 0.3)';
-        } else if (type === 'error') {
-            alertDiv.style.boxShadow = '0 0 15px rgba(255, 0, 85, 0.3)';
-        } else if (type === 'warning') {
-            alertDiv.style.boxShadow = '0 0 15px rgba(255, 170, 0, 0.3)';
-        }
-        
-        document.body.appendChild(alertDiv);
-        
-        // Animasyon
-        setTimeout(() => {
-            alertDiv.style.transform = 'translateX(0)';
-        }, 10);
-        
-        // 4 saniye sonra kaldır
-        setTimeout(() => {
-            alertDiv.style.transform = 'translateX(150%)';
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.parentNode.removeChild(alertDiv);
-                }
-            }, 500);
-        }, 4000);
+    if (isLoginMode) {
+        loginTitle.textContent = '🎮 Giriş Yap';
+        loginButton.textContent = 'Giriş Yap';
+        loginToggle.textContent = 'Hesabın yok mu? Kayıt ol';
+        loginUsername.style.display = 'none';
+    } else {
+        loginTitle.textContent = '🎮 Kayıt Ol';
+        loginButton.textContent = 'Kayıt Ol';
+        loginToggle.textContent = 'Hesabın var mı? Giriş yap';
+        loginUsername.style.display = 'block';
     }
     
-    function switchToMainScreen() {
-        loginScreen.classList.remove('active');
-        mainScreen.classList.add('active');
-        initChat();
-        loadChatHistory();
-    }
-    
-    function switchToLoginScreen() {
-        mainScreen.classList.remove('active');
-        profileModal.style.display = 'none';
-        loginScreen.classList.add('active');
-        emailInput.value = '';
-        passwordInput.value = '';
-        emailInput.focus();
-    }
-    
-    function updateUI() {
-        if (!currentUserData) return;
-        
-        userPuan.textContent = currentUserData.points;
-        profilePuan.textContent = currentUserData.points;
-        profileEmail.textContent = currentUserData.email;
-        
-        // Tarih formatı
-        const formatDate = (dateString) => {
-            try {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('tr-TR') + ' ' + 
-                       date.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-            } catch (e) {
-                return dateString || '-';
-            }
-        };
-        
-        profileRegDate.textContent = formatDate(currentUserData.createdAt);
-        profileLastLogin.textContent = formatDate(currentUserData.lastLogin);
-    }
+    loginError.textContent = '';
+}
 
-    // ========== ÇARKIFELEK OYUNU ==========
+async function handleLogout() {
+    try {
+        await signOut(auth);
+        dropdown.classList.remove('active');
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+}
+
+// Screen functions
+function showLoginScreen() {
+    loginScreen.style.display = 'flex';
+    mainApp.style.display = 'none';
+}
+
+function showMainApp() {
+    loginScreen.style.display = 'none';
+    mainApp.style.display = 'block';
+}
+
+// User data functions
+async function loadUserData() {
+    if (!currentUser) return;
     
-    spinWheelBtn.addEventListener('click', async function() {
-        if (isSpinning) return;
-        
-        if (!currentUser) {
-            showAlert('Önce giriş yapmalısınız!', 'error');
-            return;
-        }
-        
-        if (currentUserData.points < 5) {
-            showAlert('Yetersiz puan! Çarkı çevirmek için 5 puan gereklidir.', 'error');
-            return;
-        }
-        
-        // 5 puan kes
-        const success = await updateUserPoints(-5, 'wheel_spin_cost');
-        if (!success) return;
-        
-        isSpinning = true;
-        spinWheelBtn.disabled = true;
-        spinWheelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Çark Dönüyor...';
-        
-        // Rastgele dönüş
-        const randomRotation = 1080 + Math.floor(Math.random() * 720);
-        wheel.style.transition = 'transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)';
-        wheel.style.transform = `rotate(${randomRotation}deg)`;
-        
-        // Sonuç hesapla
-        setTimeout(async () => {
-            const normalizedRotation = randomRotation % 360;
-            const sectionIndex = Math.floor(normalizedRotation / 60);
-            const prizes = [5, 10, 15, 5, 10, 15];
-            const prize = prizes[sectionIndex];
-            
-            wheelResult.textContent = `🎉 Tebrikler! ${prize} puan kazandınız!`;
-            wheelResult.style.color = '#00ff88';
-            wheelResult.style.fontWeight = 'bold';
-            
-            // Kazanılan puanı ekle
-            await updateUserPoints(prize, 'wheel_spin_win');
-            
-            // Çarkı resetle
-            setTimeout(() => {
-                wheel.style.transition = 'none';
-                wheel.style.transform = 'rotate(0deg)';
-                
-                setTimeout(() => {
-                    wheel.style.transition = 'transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)';
-                    isSpinning = false;
-                    spinWheelBtn.disabled = false;
-                    spinWheelBtn.innerHTML = '<i class="fas fa-redo-alt"></i> Çarkı Çevir (5 Puan)';
-                    
-                    setTimeout(() => {
-                        wheelResult.textContent = '';
-                    }, 3000);
-                }, 50);
-            }, 1000);
-        }, 3000);
+    const username = currentUser.displayName || 'Kullanıcı';
+    const email = currentUser.email;
+    
+    headerUsername.textContent = username;
+    headerEmail.textContent = email;
+    dropdownUsername.textContent = username;
+    dropdownEmail.textContent = email;
+}
+
+function listenToScore() {
+    if (!currentUser) return;
+    
+    const scoreRef = ref(database, 'users/' + currentUser.uid + '/score');
+    onValue(scoreRef, (snapshot) => {
+        const score = snapshot.val() || 0;
+        userScore.textContent = score;
     });
+}
 
-    // ========== TAŞ KAĞIT MAKAS OYUNU ==========
+async function updateScore(newScore) {
+    if (!currentUser) return;
     
-    const rpsChoices = ['rock', 'paper', 'scissors'];
-    const rpsIcons = {
-        rock: '<i class="fas fa-hand-rock"></i>',
-        paper: '<i class="fas fa-hand-paper"></i>',
-        scissors: '<i class="fas fa-hand-scissors"></i>'
-    };
-    
-    rpsBtns.forEach(btn => {
-        btn.addEventListener('click', async function() {
-            if (!currentUser) {
-                showAlert('Önce giriş yapmalısınız!', 'error');
-                return;
-            }
-            
-            const playerChoice = this.dataset.choice;
-            const botChoice = rpsChoices[Math.floor(Math.random() * 3)];
-            
-            playerChoiceEl.innerHTML = rpsIcons[playerChoice];
-            botChoiceEl.innerHTML = rpsIcons[botChoice];
-            
-            let result, resultColor, pointsChange = 0;
-            
-            if (playerChoice === botChoice) {
-                result = 'Berabere!';
-                resultColor = '#ffaa00';
-                showAlert('Berabere! Tekrar deneyin.', 'warning');
-            } else if (
-                (playerChoice === 'rock' && botChoice === 'scissors') ||
-                (playerChoice === 'paper' && botChoice === 'rock') ||
-                (playerChoice === 'scissors' && botChoice === 'paper')
-            ) {
-                result = 'Kazandınız! +5 Puan';
-                resultColor = '#00ff88';
-                pointsChange = 5;
-                showAlert('🎉 Tebrikler! 5 puan kazandınız!', 'success');
-            } else {
-                result = 'Kaybettiniz!';
-                resultColor = '#ff0055';
-                showAlert('Maalesef kaybettiniz. Tekrar deneyin!', 'error');
-            }
-            
-            rpsOutcome.innerHTML = `<span style="color: ${resultColor}; font-weight: bold;">${result}</span>`;
-            
-            // Puanları güncelle
-            if (pointsChange !== 0) {
-                await updateUserPoints(pointsChange, 'rock_paper_scissors');
-            }
+    try {
+        await update(ref(database, 'users/' + currentUser.uid), {
+            score: newScore
         });
-    });
+    } catch (error) {
+        console.error('Score update error:', error);
+    }
+}
 
-    // ========== GLOBAL SOHBET ==========
+async function getCurrentScore() {
+    if (!currentUser) return 0;
     
-    function initChat() {
-        try {
-            // Gun.js başlat
-            gun = window.Gun({
-                peers: [
-                    'https://gun-manhattan.herokuapp.com/gun',
-                    'https://gun-us.herokuapp.com/gun'
-                ]
-            });
-            
-            // Chat odası
-            const chatRoom = gun.get('cybersosyal_chat_room_v2');
-            
-            // Yeni mesajları dinle
-            chatRoom.map().on((data, key) => {
-                if (data && data.sender && data.message && data.timestamp) {
-                    // Kendi mesajımızı tekrar gösterme
-                    if (data.sender !== currentUserData?.email) {
-                        addMessageToChat(data.sender, data.message, data.timestamp, false);
-                    }
-                }
-            });
-            
-            console.log('Gun.js sohbet başlatıldı');
-            
-        } catch (error) {
-            console.warn('Gun.js başlatılamadı:', error);
-            showAlert('Sohbet sistemi başlatılamadı', 'warning');
-        }
+    try {
+        const snapshot = await get(ref(database, 'users/' + currentUser.uid + '/score'));
+        return snapshot.val() || 0;
+    } catch (error) {
+        console.error('Get score error:', error);
+        return 0;
     }
+}
+
+// Theme functions
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    themeToggle.classList.toggle('active');
     
-    function loadChatHistory() {
-        // Firestore'dan eski mesajları yükle
-        try {
-            const chatRef = collection(db, "chatMessages");
-            const q = query(chatRef, orderBy("timestamp", "desc"), limit(20));
-            
-            onSnapshot(q, (snapshot) => {
-                // Önce temizle (welcome mesajı hariç)
-                const existingMessages = chatMessages.querySelectorAll('.message:not(.chat-welcome)');
-                existingMessages.forEach(msg => msg.remove());
-                
-                // Yeni mesajları ekle
-                const messages = [];
-                snapshot.forEach((doc) => {
-                    messages.push(doc.data());
-                });
-                
-                // Tarihe göre sırala (en eskiden en yeniye)
-                messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-                
-                messages.forEach(data => {
-                    addMessageToChat(data.sender, data.message, data.timestamp, data.sender === currentUserData?.email);
-                });
-            });
-        } catch (error) {
-            console.log("Firestore chat history yüklenemedi:", error);
-        }
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDark);
+    document.getElementById('themeLabel').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+}
+
+function checkThemePreference() {
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+        themeToggle.classList.add('active');
+        document.getElementById('themeLabel').textContent = 'Light Mode';
     }
+}
+
+function toggleDropdown() {
+    dropdown.classList.toggle('active');
+}
+
+// Chat functions
+function listenToChat() {
+    const chatRef = ref(database, 'chat');
     
-    function addMessageToChat(sender, message, timestamp, isOwn = false) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isOwn ? 'own' : ''}`;
+    onValue(chatRef, (snapshot) => {
+        chatMessages.innerHTML = '';
         
-        const time = new Date(timestamp).toLocaleTimeString('tr-TR', {
-            hour: '2-digit',
-            minute: '2-digit'
+        const messages = [];
+        snapshot.forEach((childSnapshot) => {
+            messages.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            });
         });
         
-        const displayName = isOwn ? 'Sen' : sender.split('@')[0];
-        const shortMessage = message.length > 100 ? message.substring(0, 100) + '...' : message;
+        // Sort by timestamp and show last 50 messages
+        messages.sort((a, b) => a.timestamp - b.timestamp);
+        const recentMessages = messages.slice(-50);
         
-        messageDiv.innerHTML = `
-            <div class="message-header">
-                <span class="message-sender">${displayName}</span>
-                <span class="message-time">${time}</span>
-            </div>
-            <div class="message-text">${shortMessage}</div>
-        `;
-        
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    
-    async function sendMessage() {
-        const message = messageInput.value.trim();
-        
-        if (!message) {
-            showAlert('Mesaj yazın!', 'error');
-            return;
-        }
-        
-        if (!currentUser || !currentUserData) {
-            showAlert('Önce giriş yapmalısınız!', 'error');
-            return;
-        }
-        
-        const timestamp = new Date().toISOString();
-        const chatData = {
-            sender: currentUserData.email,
-            message: message,
-            timestamp: timestamp
-        };
-        
-        try {
-            // 1. Gun.js ile gönder (real-time)
-            if (gun) {
-                gun.get('cybersosyal_chat_room_v2').set(chatData);
-            }
-            
-            // 2. Firestore'a kaydet (backup için)
-            await addDoc(collection(db, "chatMessages"), {
-                ...chatData,
-                userId: currentUser.uid
-            });
-            
-            // 3. Ekranda göster
-            addMessageToChat(currentUserData.email, message, timestamp, true);
-            
-            // 4. Input'u temizle
-            messageInput.value = '';
-            messageInput.focus();
-            
-        } catch (error) {
-            console.error('Mesaj gönderme hatası:', error);
-            showAlert('Mesaj gönderilemedi', 'error');
-        }
-    }
-    
-    // Mesaj gönderme event'leri
-    sendMessageBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendMessage();
-    });
-
-    // ========== MODAL İŞLEMLERİ ==========
-    
-    profileBtn.addEventListener('click', function() {
-        if (!currentUser) {
-            showAlert('Önce giriş yapmalısınız!', 'error');
-            return;
-        }
-        profileModal.style.display = 'flex';
-        updateUI();
-    });
-    
-    closeModalBtn.addEventListener('click', function() {
-        profileModal.style.display = 'none';
-    });
-    
-    logoutBtn.addEventListener('click', function() {
-        profileModal.style.display = 'none';
-        logoutUser();
-    });
-    
-    // Pencere dışına tıklayınca modalı kapat
-    window.addEventListener('click', function(event) {
-        if (event.target === profileModal) {
-            profileModal.style.display = 'none';
-        }
-    });
-    
-    // Diğer modal butonları
-    document.getElementById('friendsBtn').addEventListener('click', function() {
-        showAlert('👥 Arkadaşlar özelliği yakında eklenecek!', 'info');
-    });
-    
-    document.getElementById('marketBtn').addEventListener('click', function() {
-        showAlert('🛒 Market özelliği yakında eklenecek!', 'info');
-    });
-
-    // ========== GİRİŞ/KAYIT BUTONLARI ==========
-    
-    loginBtn.addEventListener('click', function() {
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        if (email && password) loginUser(email, password);
-        else showAlert('Lütfen tüm alanları doldurun', 'error');
-    });
-    
-    registerBtn.addEventListener('click', function() {
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        if (email && password) registerUser(email, password);
-        else showAlert('Lütfen tüm alanları doldurun', 'error');
-    });
-    
-    // Enter tuşu ile giriş
-    passwordInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-            if (email && password) loginUser(email, password);
-        }
-    });
-
-    // ========== FIREBASE AUTH DURUM TAKİBİ ==========
-    
-    // Kullanıcı oturum durumunu izle
-    onAuthStateChanged(auth, async (user) => {
-        console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
-        
-        if (user) {
-            // Kullanıcı oturum açmış
-            try {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    currentUser = user;
-                    currentUserData = userDoc.data();
-                    
-                    // Eksik verileri kontrol et
-                    if (!currentUserData.points) currentUserData.points = 100;
-                    if (!currentUserData.createdAt) currentUserData.createdAt = new Date().toISOString();
-                    if (!currentUserData.lastLogin) currentUserData.lastLogin = new Date().toISOString();
-                    
-                    switchToMainScreen();
-                    updateUI();
-                } else {
-                    // Belge yoksa oluştur
-                    currentUserData = {
-                        email: user.email,
-                        createdAt: new Date().toISOString(),
-                        lastLogin: new Date().toISOString(),
-                        points: 100,
-                        gamesPlayed: 0,
-                        gamesWon: 0,
-                        displayName: user.email.split('@')[0]
-                    };
-                    await setDoc(doc(db, "users", user.uid), currentUserData);
-                    currentUser = user;
-                    switchToMainScreen();
-                    updateUI();
-                }
-            } catch (error) {
-                console.error('Kullanıcı verisi yüklenemedi:', error);
-                showAlert('Kullanıcı verileri yüklenemedi', 'error');
-            }
+        if (recentMessages.length === 0) {
+            chatMessages.innerHTML = '<div class="chat-welcome">Global chat\'e hoş geldin! 🎮</div>';
         } else {
-            // Kullanıcı oturum açmamış
-            currentUser = null;
-            currentUserData = null;
-            switchToLoginScreen();
+            recentMessages.forEach(msg => {
+                displayMessage(msg);
+            });
         }
+        
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     });
+}
 
-    // ========== DEMO HESAP İŞLEMLERİ ==========
+function displayMessage(msg) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message';
     
-    // Demo hesap giriş butonu
-    function createDemoButton() {
-        if (!loginScreen.classList.contains('active')) return;
+    const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : '';
+    
+    messageDiv.innerHTML = `
+        <div class="message-user">${escapeHtml(msg.username)}</div>
+        <div class="message-text">${escapeHtml(msg.message)}</div>
+        <div class="message-time">${time}</div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+}
+
+async function sendMessage() {
+    const message = chatInput.value.trim();
+    
+    if (!message || !currentUser) return;
+    
+    try {
+        const chatRef = ref(database, 'chat');
+        await push(chatRef, {
+            username: currentUser.displayName || 'Kullanıcı',
+            message: message,
+            timestamp: serverTimestamp(),
+            userId: currentUser.uid
+        });
         
-        const demoBtn = document.createElement('button');
-        demoBtn.innerHTML = '<i class="fas fa-user-secret"></i> Demo Giriş';
-        demoBtn.id = 'demoBtn';
-        demoBtn.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            padding: 12px 20px;
-            background: linear-gradient(45deg, #ff00ff, #00f3ff);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            z-index: 9999;
-            opacity: 0.9;
-            font-family: 'Exo 2', sans-serif;
-            font-weight: 600;
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        `;
+        chatInput.value = '';
+    } catch (error) {
+        console.error('Send message error:', error);
+    }
+}
+
+// Ad watch function
+async function watchAd() {
+    if (adCooldown) return;
+    
+    // Simulate ad watching
+    watchAdBtn.disabled = true;
+    watchAdBtn.textContent = 'Reklam izleniyor...';
+    
+    setTimeout(async () => {
+        const currentScore = await getCurrentScore();
+        await updateScore(currentScore + 50);
         
-        demoBtn.onmouseover = () => demoBtn.style.opacity = '1';
-        demoBtn.onmouseout = () => demoBtn.style.opacity = '0.9';
+        watchAdBtn.textContent = '+50 Puan Kazandın! 🎉';
         
-        demoBtn.onclick = async () => {
-            emailInput.value = 'demo@cybersosyal.com';
-            passwordInput.value = 'demo123';
-            loginUser('demo@cybersosyal.com', 'demo123');
-        };
+        // Start cooldown
+        startAdCooldown();
         
-        document.body.appendChild(demoBtn);
-        
-        // 30 saniye sonra kaldır
         setTimeout(() => {
-            const btn = document.getElementById('demoBtn');
-            if (btn && btn.parentNode) {
-                btn.parentNode.removeChild(btn);
-            }
-        }, 30000);
+            watchAdBtn.textContent = '+50 Puan Kazan';
+        }, 2000);
+    }, 3000);
+}
+
+function startAdCooldown() {
+    adCooldown = true;
+    let timeLeft = AD_COOLDOWN_TIME;
+    
+    adCooldownDiv.style.display = 'block';
+    watchAdBtn.style.display = 'none';
+    
+    const interval = setInterval(() => {
+        timeLeft--;
+        adTimer.textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            adCooldown = false;
+            adCooldownDiv.style.display = 'none';
+            watchAdBtn.style.display = 'block';
+            watchAdBtn.disabled = false;
+        }
+    }, 1000);
+}
+
+// Game modal functions
+function openGameModal(modalId) {
+    document.getElementById(modalId).style.display = 'flex';
+}
+
+function closeGameModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    
+    // Clear results
+    const results = document.querySelectorAll('.game-result');
+    results.forEach(result => {
+        result.textContent = '';
+        result.className = 'game-result';
+    });
+}
+
+// Coin Flip Game
+async function playCoinFlip(choice) {
+    const betAmount = parseInt(document.getElementById('coinBetAmount').value);
+    const currentScore = await getCurrentScore();
+    
+    if (betAmount < 10) {
+        showGameResult('coinResult', 'Minimum bahis 10 puan!', 'lose');
+        return;
     }
     
-    // Demo butonunu oluştur
-    setTimeout(createDemoButton, 1000);
+    if (betAmount > currentScore) {
+        showGameResult('coinResult', 'Yetersiz puan!', 'lose');
+        return;
+    }
     
-    // Sayfa yüklendiğinde input'a focus
-    setTimeout(() => {
-        if (loginScreen.classList.contains('active')) {
-            emailInput.focus();
+    // Disable buttons
+    const buttons = document.querySelectorAll('#coinFlipModal .choice-btn');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    // Simulate coin flip
+    showGameResult('coinResult', '🪙 Atılıyor...', '');
+    
+    setTimeout(async () => {
+        const result = Math.random() < 0.5 ? 'heads' : 'tails';
+        const won = result === choice;
+        
+        const resultText = result === 'heads' ? 'Yazı 📄' : 'Tura 🪙';
+        
+        if (won) {
+            const winAmount = betAmount * 2;
+            await updateScore(currentScore - betAmount + winAmount);
+            showGameResult('coinResult', `${resultText} geldi! +${betAmount} puan kazandın! 🎉`, 'win');
+        } else {
+            await updateScore(currentScore - betAmount);
+            showGameResult('coinResult', `${resultText} geldi! -${betAmount} puan kaybettin 😢`, 'lose');
         }
-    }, 500);
+        
+        buttons.forEach(btn => btn.disabled = false);
+    }, 1500);
+}
+
+// Rock Paper Scissors Game
+async function playRPS(playerChoice) {
+    const betAmount = parseInt(document.getElementById('rpsBetAmount').value);
+    const currentScore = await getCurrentScore();
     
-    console.log('✅ Uygulama başlatıldı! Firebase aktif.');
-    console.log('📧 Demo hesap: demo@cybersosyal.com / demo123');
-});
+    if (betAmount < 10) {
+        showGameResult('rpsResult', 'Minimum bahis 10 puan!', 'lose');
+        return;
+    }
+    
+    if (betAmount > currentScore) {
+        showGameResult('rpsResult', 'Yetersiz puan!', 'lose');
+        return;
+    }
+    
+    const buttons = document.querySelectorAll('#rpsModal .choice-btn');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    showGameResult('rpsResult', '🤔 Düşünüyor...', '');
+    
+    setTimeout(async () => {
+        const choices = ['rock', 'paper', 'scissors'];
+        const computerChoice = choices[Math.floor(Math.random() * 3)];
+        
+        const icons = {
+            rock: '🪨',
+            paper: '📄',
+            scissors: '✂️'
+        };
+        
+        let result = '';
+        if (playerChoice === computerChoice) {
+            result = 'draw';
+        } else if (
+            (playerChoice === 'rock' && computerChoice === 'scissors') ||
+            (playerChoice === 'paper' && computerChoice === 'rock') ||
+            (playerChoice === 'scissors' && computerChoice === 'paper')
+        ) {
+            result = 'win';
+        } else {
+            result = 'lose';
+        }
+        
+        if (result === 'win') {
+            const winAmount = betAmount * 2;
+            await updateScore(currentScore - betAmount + winAmount);
+            showGameResult('rpsResult', `Bilgisayar: ${icons[computerChoice]} - Kazandın! +${betAmount} puan 🎉`, 'win');
+        } else if (result === 'lose') {
+            await updateScore(currentScore - betAmount);
+            showGameResult('rpsResult', `Bilgisayar: ${icons[computerChoice]} - Kaybettin! -${betAmount} puan 😢`, 'lose');
+        } else {
+            showGameResult('rpsResult', `Bilgisayar: ${icons[computerChoice]} - Berabere! Puanın iade edildi`, '');
+        }
+        
+        buttons.forEach(btn => btn.disabled = false);
+    }, 1500);
+}
+
+// Spin Wheel Game
+let wheelCanvas, wheelCtx;
+let isSpinning = false;
+const wheelSegments = [
+    { text: '0.5x', multiplier: 0.5, color: '#f5576c' },
+    { text: '1.5x', multiplier: 1.5, color: '#4ecdc4' },
+    { text: '0x', multiplier: 0, color: '#ff6b6b' },
+    { text: '2x', multiplier: 2, color: '#95e1d3' },
+    { text: '0.5x', multiplier: 0.5, color: '#f5576c' },
+    { text: '3x', multiplier: 3, color: '#feca57' },
+    { text: '0x', multiplier: 0, color: '#ff6b6b' },
+    { text: '5x', multiplier: 5, color: '#48dbfb' }
+];
+
+function initWheel() {
+    wheelCanvas = document.getElementById('wheelCanvas');
+    if (!wheelCanvas) return;
+    
+    wheelCtx = wheelCanvas.getContext('2d');
+    drawWheel(0);
+}
+
+function drawWheel(rotation) {
+    const centerX = wheelCanvas.width / 2;
+    const centerY = wheelCanvas.height / 2;
+    const radius = wheelCanvas.width / 2 - 10;
+    
+    wheelCtx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+    
+    const segmentAngle = (2 * Math.PI) / wheelSegments.length;
+    
+    wheelSegments.forEach((segment, index) => {
+        const startAngle = rotation + index * segmentAngle;
+        const endAngle = startAngle + segmentAngle;
+        
+        // Draw segment
+        wheelCtx.beginPath();
+        wheelCtx.arc(centerX, centerY, radius, startAngle, endAngle);
+        wheelCtx.lineTo(centerX, centerY);
+        wheelCtx.fillStyle = segment.color;
+        wheelCtx.fill();
+        wheelCtx.strokeStyle = '#fff';
+        wheelCtx.lineWidth = 2;
+        wheelCtx.stroke();
+        
+        // Draw text
+        wheelCtx.save();
+        wheelCtx.translate(centerX, centerY);
+        wheelCtx.rotate(startAngle + segmentAngle / 2);
+        wheelCtx.textAlign = 'center';
+        wheelCtx.fillStyle = '#fff';
+        wheelCtx.font = 'bold 20px Arial';
+        wheelCtx.fillText(segment.text, radius / 1.5, 0);
+        wheelCtx.restore();
+    });
+    
+    // Draw center circle
+    wheelCtx.beginPath();
+    wheelCtx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+    wheelCtx.fillStyle = '#fff';
+    wheelCtx.fill();
+    wheelCtx.strokeStyle = '#667eea';
+    wheelCtx.lineWidth = 3;
+    wheelCtx.stroke();
+}
+
+async function spinWheel() {
+    if (isSpinning) return;
+    
+    const betAmount = parseInt(document.getElementById('wheelBetAmount').value);
+    const currentScore = await getCurrentScore();
+    
+    if (betAmount < 10) {
+        showGameResult('wheelResult', 'Minimum bahis 10 puan!', 'lose');
+        return;
+    }
+    
+    if (betAmount > currentScore) {
+        showGameResult('wheelResult', 'Yetersiz puan!', 'lose');
+        return;
+    }
+    
+    isSpinning = true;
+    document.getElementById('spinBtn').disabled = true;
+    showGameResult('wheelResult', '🎡 Çark dönüyor...', '');
+    
+    const spinDuration = 3000;
+    const startTime = Date.now();
+    let currentRotation = 0;
+    
+    // Random result
+    const resultIndex = Math.floor(Math.random() * wheelSegments.length);
+    const targetRotation = (2 * Math.PI * 5) + (resultIndex * (2 * Math.PI / wheelSegments.length));
+    
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        
+        // Easing function
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        currentRotation = targetRotation * easeOut;
+        
+        drawWheel(currentRotation);
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            finishSpin(resultIndex, betAmount, currentScore);
+        }
+    }
+    
+    animate();
+}
+
+async function finishSpin(resultIndex, betAmount, currentScore) {
+    const result = wheelSegments[resultIndex];
+    const winAmount = Math.floor(betAmount * result.multiplier);
+    const netChange = winAmount - betAmount;
+    
+    await updateScore(currentScore + netChange);
+    
+    if (netChange > 0) {
+        showGameResult('wheelResult', `${result.text} geldi! +${netChange} puan kazandın! 🎉`, 'win');
+    } else if (netChange < 0) {
+        showGameResult('wheelResult', `${result.text} geldi! ${netChange} puan kaybettin 😢`, 'lose');
+    } else {
+        showGameResult('wheelResult', `${result.text} geldi! Puanın iade edildi`, '');
+    }
+    
+    isSpinning = false;
+    document.getElementById('spinBtn').disabled = false;
+}
+
+// Helper functions
+function showGameResult(elementId, message, className) {
+    const element = document.getElementById(elementId);
+    element.textContent = message;
+    element.className = 'game-result ' + className;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
