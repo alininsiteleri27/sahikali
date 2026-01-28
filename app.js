@@ -17,7 +17,10 @@ import {
     onValue,
     push,
     update,
-    serverTimestamp
+    serverTimestamp,
+    query,
+    orderByChild,
+    limitToLast
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // Firebase configuration
@@ -43,6 +46,7 @@ let isLoginMode = true;
 let adCooldown = false;
 const AD_COOLDOWN_TIME = 1200; // 20 dakika (saniye cinsinden)
 let currentMultiplier = 1;
+let allUsers = [];
 
 // DOM Elements
 const loginScreen = document.getElementById('loginScreen');
@@ -70,6 +74,7 @@ const dropdownUsername = document.getElementById('dropdownUsername');
 const dropdownEmail = document.getElementById('dropdownEmail');
 const editProfileBtn = document.getElementById('editProfileBtn');
 const marketBtn = document.getElementById('marketBtn');
+const leaderboardBtn = document.getElementById('leaderboardBtn');
 
 // Game cards
 const coinFlipCard = document.getElementById('coinFlipCard');
@@ -88,6 +93,11 @@ const chatSidebar = document.getElementById('chatSidebar');
 const watchAdBtn = document.getElementById('watchAdBtn');
 const adCooldownDiv = document.getElementById('adCooldown');
 const adTimer = document.getElementById('adTimer');
+
+// Leaderboard elements
+const userSearchInput = document.getElementById('userSearchInput');
+const leaderboardList = document.getElementById('leaderboardList');
+const searchResultsList = document.getElementById('searchResultsList');
 
 // Session Management - Logout on page refresh
 sessionStorage.setItem('shouldLogout', 'true');
@@ -115,6 +125,7 @@ onAuthStateChanged(auth, (user) => {
         listenToChat();
         listenToScore();
         listenToMultiplier();
+        loadAllUsers();
     } else {
         currentUser = null;
         showLoginScreen();
@@ -132,6 +143,10 @@ function setupEventListeners() {
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     if (editProfileBtn) editProfileBtn.addEventListener('click', () => openGameModal('profileModal'));
     if (marketBtn) marketBtn.addEventListener('click', () => openGameModal('marketModal'));
+    if (leaderboardBtn) leaderboardBtn.addEventListener('click', () => {
+        openGameModal('leaderboardModal');
+        loadTopUsers();
+    });
     
     if (themeToggleItem) {
         themeToggleItem.addEventListener('click', (e) => {
@@ -171,6 +186,31 @@ function setupEventListeners() {
     
     // Ad button
     if (watchAdBtn) watchAdBtn.addEventListener('click', watchAd);
+    
+    // Leaderboard tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const tab = btn.dataset.tab;
+            if (tab === 'top') {
+                document.getElementById('topUsersTab').style.display = 'block';
+                document.getElementById('searchResultsTab').style.display = 'none';
+                loadTopUsers();
+            } else {
+                document.getElementById('topUsersTab').style.display = 'none';
+                document.getElementById('searchResultsTab').style.display = 'block';
+            }
+        });
+    });
+    
+    // User search
+    if (userSearchInput) {
+        userSearchInput.addEventListener('input', (e) => {
+            searchUsers(e.target.value);
+        });
+    }
     
     // Modal close buttons
     document.querySelectorAll('.modal-close').forEach(btn => {
@@ -221,6 +261,96 @@ function setupEventListeners() {
     
     // Initialize wheel after DOM is ready
     setTimeout(initWheel, 100);
+}
+
+// Leaderboard Functions
+async function loadAllUsers() {
+    const usersRef = ref(database, 'users');
+    onValue(usersRef, (snapshot) => {
+        allUsers = [];
+        snapshot.forEach((childSnapshot) => {
+            const userData = childSnapshot.val();
+            allUsers.push({
+                uid: childSnapshot.key,
+                username: userData.username || 'Kullanıcı',
+                score: userData.score || 0,
+                profileImage: userData.profileImage || null
+            });
+        });
+        
+        // Sort by score descending
+        allUsers.sort((a, b) => b.score - a.score);
+    });
+}
+
+async function loadTopUsers() {
+    leaderboardList.innerHTML = '<div class="loading">Yükleniyor...</div>';
+    
+    // Wait a bit for allUsers to be populated
+    setTimeout(() => {
+        if (allUsers.length === 0) {
+            leaderboardList.innerHTML = '<div class="search-placeholder">Henüz kullanıcı yok</div>';
+            return;
+        }
+        
+        const topUsers = allUsers.slice(0, 100); // Top 100
+        displayUsers(topUsers, leaderboardList);
+    }, 500);
+}
+
+function searchUsers(searchTerm) {
+    if (!searchTerm.trim()) {
+        searchResultsList.innerHTML = '<div class="search-placeholder">Kullanıcı adı girin...</div>';
+        return;
+    }
+    
+    const term = searchTerm.toLowerCase();
+    const results = allUsers.filter(user => 
+        user.username.toLowerCase().includes(term)
+    );
+    
+    if (results.length === 0) {
+        searchResultsList.innerHTML = '<div class="search-placeholder">Kullanıcı bulunamadı</div>';
+    } else {
+        displayUsers(results, searchResultsList);
+    }
+}
+
+function displayUsers(users, container) {
+    container.innerHTML = '';
+    
+    users.forEach((user, index) => {
+        const item = document.createElement('div');
+        item.className = 'leaderboard-item';
+        
+        // Add rank class for top 3
+        const globalRank = allUsers.findIndex(u => u.uid === user.uid) + 1;
+        if (globalRank === 1) item.classList.add('rank-1');
+        else if (globalRank === 2) item.classList.add('rank-2');
+        else if (globalRank === 3) item.classList.add('rank-3');
+        
+        const rankDisplay = globalRank;
+        let rankEmoji = '';
+        if (globalRank === 1) rankEmoji = '🥇';
+        else if (globalRank === 2) rankEmoji = '🥈';
+        else if (globalRank === 3) rankEmoji = '🥉';
+        
+        item.innerHTML = `
+            <div class="rank-number">${rankEmoji || rankDisplay}</div>
+            <div class="user-avatar">
+                ${user.profileImage ? 
+                    `<img src="${user.profileImage}" alt="${user.username}">` : 
+                    '👤'
+                }
+            </div>
+            <div class="user-info">
+                <div class="user-name">${escapeHtml(user.username)}</div>
+                <div class="user-score">💎 ${user.score}</div>
+            </div>
+        `;
+        
+        container.appendChild(item);
+    });
 }
 
 // Authentication functions
