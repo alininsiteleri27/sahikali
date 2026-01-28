@@ -3,247 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberSosyal | Oyun Platformu</title>
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <!-- Ana CSS -->
+    <title>Oyun Platformu</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
 </head>
 <body>
-    <!-- Giriş Ekranı -->
-    <div id="loginScreen" class="screen active">
-        <div class="login-container">
-            <div class="neon-logo">
-                <i class="fas fa-gamepad"></i>
-                <h1>CYBERSOSYAL</h1>
-                <p class="tagline">Oyna • Kazan • Sohbet Et</p>
-            </div>
-            
-            <div class="login-form">
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="emailInput" placeholder="E-posta" autocomplete="off">
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-key"></i>
-                    <input type="password" id="passwordInput" placeholder="Şifre" autocomplete="off">
-                </div>
-                
-                <div class="button-group">
-                    <button id="loginBtn" class="btn-login">
-                        <i class="fas fa-sign-in-alt"></i> Giriş Yap
-                    </button>
-                    <button id="registerBtn" class="btn-register">
-                        <i class="fas fa-user-plus"></i> Kayıt Ol
-                    </button>
-                </div>
-                
-                <p class="info-text">
-                    <i class="fas fa-info-circle"></i>
-                    Demo hesap: demo@cybersosyal.com / demo123
-                </p>
-            </div>
-            
-            <div class="neon-border"></div>
-        </div>
-        
-        <!-- Arkaplan Efektleri -->
-        <div class="bg-grid"></div>
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="login-title" id="loginTitle">🎮 Giriş Yap</div>
+            <input type="email" class="login-input" placeholder="Email" id="loginEmail" autocomplete="email">
+            <input type="password" class="login-input" placeholder="Şifre (min 6 karakter)" id="loginPassword" autocomplete="current-password">
+            <input type="text" class="login-input" placeholder="Kullanıcı Adı" id="loginUsername" style="display: none;">
+            <button class="login-button" id="loginButton">Giriş Yap</button>
+            <div class="login-error" id="loginError"></div>
+            <div class="login-toggle" id="loginToggle">Hesabın yok mu? Kayıt ol</div>
         </div>
     </div>
-    
-    <!-- Ana Panel -->
-    <div id="mainScreen" class="screen">
-        <header class="dashboard-header">
-            <div class="header-left">
-                <div class="logo-small">
-                    <i class="fas fa-gamepad"></i>
-                    <span>CYBERSOSYAL</span>
-                </div>
-            </div>
-            
-            <div class="header-center">
-                <div class="puan-display">
-                    <i class="fas fa-coins"></i>
-                    <span id="userPuan">0</span> Puan
-                </div>
-            </div>
-            
-            <div class="header-right">
-                <button id="profileBtn" class="profile-btn">
-                    <i class="fas fa-user-circle"></i>
-                </button>
-            </div>
-        </header>
-        
-        <main class="dashboard-main">
-            <!-- Sol Panel: Oyunlar -->
-            <section class="games-section">
-                <h2 class="section-title"><i class="fas fa-gamepad"></i> Oyunlar</h2>
-                
-                <!-- Çarkıfelek Oyunu -->
-                <div class="game-card">
-                    <h3><i class="fas fa-redo-alt"></i> Çarkıfelek</h3>
-                    <p>Çarkı çevir, puan kazan!</p>
-                    
-                    <div class="wheel-container">
-                        <div class="wheel" id="wheel">
-                            <div class="wheel-inner">
-                                <div class="wheel-section" style="--i:0">5</div>
-                                <div class="wheel-section" style="--i:1">10</div>
-                                <div class="wheel-section" style="--i:2">15</div>
-                                <div class="wheel-section" style="--i:3">5</div>
-                                <div class="wheel-section" style="--i:4">10</div>
-                                <div class="wheel-section" style="--i:5">15</div>
-                            </div>
-                            <div class="wheel-pointer"></div>
-                        </div>
-                    </div>
-                    
-                    <button id="spinWheelBtn" class="game-btn">
-                        <i class="fas fa-redo-alt"></i> Çarkı Çevir (5 Puan)
-                    </button>
-                    <p class="wheel-result" id="wheelResult"></p>
+
+    <!-- Main App -->
+    <div class="container" id="mainApp" style="display: none;">
+        <!-- Header -->
+        <div class="header">
+            <div class="profile-section">
+                <div class="profile-icon" id="profileIcon">👤</div>
+                <div>
+                    <div class="username" id="headerUsername">Yükleniyor...</div>
+                    <div class="user-email" id="headerEmail">loading...</div>
                 </div>
                 
-                <!-- Taş Kağıt Makas Oyunu -->
-                <div class="game-card">
-                    <h3><i class="fas fa-hand-rock"></i> Taş Kağıt Makas</h3>
-                    <p>Bot'a karşı oyna, kazanana 5 puan!</p>
-                    
-                    <div class="rps-game">
-                        <div class="rps-choices">
-                            <button class="rps-btn" data-choice="rock">
-                                <i class="fas fa-hand-rock"></i>
-                                <span>Taş</span>
-                            </button>
-                            <button class="rps-btn" data-choice="paper">
-                                <i class="fas fa-hand-paper"></i>
-                                <span>Kağıt</span>
-                            </button>
-                            <button class="rps-btn" data-choice="scissors">
-                                <i class="fas fa-hand-scissors"></i>
-                                <span>Makas</span>
-                            </button>
-                        </div>
-                        
-                        <div class="rps-result">
-                            <div class="rps-player">
-                                <h4>Sen</h4>
-                                <div class="rps-icon" id="playerChoice">-</div>
-                            </div>
-                            <div class="rps-vs">VS</div>
-                            <div class="rps-player">
-                                <h4>Bot</h4>
-                                <div class="rps-icon" id="botChoice">-</div>
-                            </div>
-                        </div>
-                        
-                        <div class="rps-outcome" id="rpsOutcome">
-                            Seçim yaparak oyuna başla!
+                <!-- Dropdown Menu -->
+                <div class="dropdown" id="dropdown">
+                    <div class="dropdown-item" id="profileInfo">
+                        <span>👤</span> 
+                        <div>
+                            <div style="font-weight: bold;" id="dropdownUsername">Kullanıcı</div>
+                            <div style="font-size: 12px; opacity: 0.7;" id="dropdownEmail">email</div>
                         </div>
                     </div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item" id="themeToggleItem">
+                        <span>🌓</span> 
+                        <div class="theme-toggle">
+                            <span id="themeLabel">Dark Mode</span>
+                            <div class="toggle-switch" id="themeToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item" id="depositBtn">
+                        <span>💰</span> Para Yatır
+                    </div>
+                    <div class="dropdown-item" id="withdrawBtn">
+                        <span>💸</span> Para Çek
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item logout-item" id="logoutBtn">
+                        <span>🚪</span> Çıkış Yap
+                    </div>
                 </div>
-            </section>
+            </div>
+
+            <div class="score-section">
+                <span>💎</span>
+                <div>
+                    <div class="score-label">Puanın</div>
+                    <div class="score-value" id="userScore">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="section-title">🎮 Oyunlar</div>
             
-            <!-- Sağ Panel: Global Sohbet -->
-            <section class="chat-section">
-                <h2 class="section-title"><i class="fas fa-comments"></i> Global Sohbet</h2>
-                
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-welcome">
-                            <i class="fas fa-satellite-dish"></i>
-                            <p>Global sohbete hoş geldin! Mesaj göndermek için aşağıyı kullan.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="chat-input">
-                        <input type="text" id="messageInput" placeholder="Mesaj yaz..." autocomplete="off">
-                        <button id="sendMessageBtn">
-                            <i class="fas fa-paper-plane"></i> Gönder
-                        </button>
-                    </div>
+            <!-- Games Grid -->
+            <div class="games-grid">
+                <div class="game-card" id="spinWheelCard">
+                    <div class="game-icon">🎡</div>
+                    <div class="game-title">Çarkıfelek</div>
+                    <div class="game-desc">Şansını dene, büyük ödüller kazan!</div>
+                    <div class="game-play-btn">Oyna</div>
                 </div>
-            </section>
-        </main>
+                
+                <div class="game-card" id="chessCard">
+                    <div class="game-icon">♟️</div>
+                    <div class="game-title">Satranç</div>
+                    <div class="game-desc">Strateji oyunu oyna, kazanç kat!</div>
+                    <div class="game-play-btn">Yakında</div>
+                </div>
+                
+                <div class="game-card" id="coinFlipCard">
+                    <div class="game-icon">🪙</div>
+                    <div class="game-title">Yazı Tura</div>
+                    <div class="game-desc">Basit ama heyecanlı, hızlı kazan!</div>
+                    <div class="game-play-btn">Oyna</div>
+                </div>
+                
+                <div class="game-card" id="rpsCard">
+                    <div class="game-icon">✊</div>
+                    <div class="game-title">Taş-Kağıt-Makas</div>
+                    <div class="game-desc">Klasik oyun, modern kazanç!</div>
+                    <div class="game-play-btn">Oyna</div>
+                </div>
+            </div>
+
+            <!-- Ad Section -->
+            <div class="ad-section" id="adSection">
+                <div class="ad-title">📺 Reklam İzle & Puan Kazan</div>
+                <button class="ad-button" id="watchAdBtn">+50 Puan Kazan</button>
+                <div class="ad-cooldown" id="adCooldown" style="display: none;">
+                    Sonraki reklam: <span id="adTimer">0</span>s
+                </div>
+            </div>
+
+            <!-- Chat Section -->
+            <div class="section-title">💬 Global Chat</div>
+            <div class="chat-section">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-welcome">Global chat'e hoş geldin! 🎮</div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput" maxlength="200">
+                    <button class="chat-send" id="chatSend">Gönder</button>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <!-- Profil Modal -->
-    <div id="profileModal" class="modal">
+
+    <!-- Game Modals -->
+    <!-- Coin Flip Modal -->
+    <div class="game-modal" id="coinFlipModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-id-card"></i> Profil Bilgileri</h2>
-                <button id="closeModalBtn" class="close-btn">&times;</button>
+                <h2>🪙 Yazı Tura</h2>
+                <span class="modal-close" data-modal="coinFlipModal">&times;</span>
             </div>
-            
             <div class="modal-body">
-                <div class="profile-info">
-                    <div class="info-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <span class="info-label">E-posta</span>
-                            <span id="profileEmail" class="info-value">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <i class="fas fa-calendar-plus"></i>
-                        <div>
-                            <span class="info-label">Kayıt Tarihi</span>
-                            <span id="profileRegDate" class="info-value">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <div>
-                            <span class="info-label">Son Giriş</span>
-                            <span id="profileLastLogin" class="info-value">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <i class="fas fa-coins"></i>
-                        <div>
-                            <span class="info-label">Puan</span>
-                            <span id="profilePuan" class="info-value">0</span>
-                        </div>
-                    </div>
+                <div class="bet-input-container">
+                    <label>Bahis Miktarı (Min: 10)</label>
+                    <input type="number" id="coinBetAmount" min="10" value="10" class="bet-input">
                 </div>
-                
-                <div class="modal-buttons">
-                    <button id="friendsBtn" class="modal-btn">
-                        <i class="fas fa-users"></i> Arkadaşlar
-                    </button>
-                    <button id="marketBtn" class="modal-btn">
-                        <i class="fas fa-store"></i> Market
-                    </button>
-                    <button id="logoutBtn" class="modal-btn logout">
-                        <i class="fas fa-sign-out-alt"></i> Çıkış Yap
-                    </button>
+                <div class="coin-choices">
+                    <button class="choice-btn" data-choice="heads">Yazı 📄</button>
+                    <button class="choice-btn" data-choice="tails">Tura 🪙</button>
                 </div>
+                <div class="game-result" id="coinResult"></div>
             </div>
         </div>
     </div>
-    
-    <!-- Gun.js (Decentralized Chat için) -->
-    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
-    
-    <!-- Ana Uygulama JavaScript'i (MODÜL olarak) -->
+
+    <!-- RPS Modal -->
+    <div class="game-modal" id="rpsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✊ Taş-Kağıt-Makas</h2>
+                <span class="modal-close" data-modal="rpsModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="bet-input-container">
+                    <label>Bahis Miktarı (Min: 10)</label>
+                    <input type="number" id="rpsBetAmount" min="10" value="10" class="bet-input">
+                </div>
+                <div class="rps-choices">
+                    <button class="choice-btn" data-choice="rock">🪨 Taş</button>
+                    <button class="choice-btn" data-choice="paper">📄 Kağıt</button>
+                    <button class="choice-btn" data-choice="scissors">✂️ Makas</button>
+                </div>
+                <div class="game-result" id="rpsResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spin Wheel Modal -->
+    <div class="game-modal" id="spinWheelModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎡 Çarkıfelek</h2>
+                <span class="modal-close" data-modal="spinWheelModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="bet-input-container">
+                    <label>Bahis Miktarı (Min: 10)</label>
+                    <input type="number" id="wheelBetAmount" min="10" value="10" class="bet-input">
+                </div>
+                <div class="wheel-container">
+                    <canvas id="wheelCanvas" width="300" height="300"></canvas>
+                    <div class="wheel-pointer">▼</div>
+                </div>
+                <button class="spin-btn" id="spinBtn">ÇEVİR!</button>
+                <div class="game-result" id="wheelResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
