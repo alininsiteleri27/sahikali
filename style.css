@@ -21,6 +21,9 @@
     --accent-color: #667eea;
     --success-color: #10b981;
     --error-color: #ef4444;
+    --gold-color: #ffd700;
+    --silver-color: #c0c0c0;
+    --bronze-color: #cd7f32;
 }
 
 body.dark-mode {
@@ -40,6 +43,9 @@ body.dark-mode {
     --accent-color: #6366f1;
     --success-color: #10b981;
     --error-color: #ef4444;
+    --gold-color: #ffd700;
+    --silver-color: #c0c0c0;
+    --bronze-color: #cd7f32;
 }
 
 body {
@@ -85,7 +91,8 @@ body {
     gap: 16px;
 }
 
-.market-btn {
+.market-btn,
+.leaderboard-btn {
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -98,7 +105,8 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.market-btn:hover {
+.market-btn:hover,
+.leaderboard-btn:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
@@ -545,6 +553,166 @@ body {
     margin-top: 12px;
     font-size: 16px;
     font-weight: 600;
+}
+
+/* Leaderboard Modal */
+.leaderboard-modal-content {
+    max-width: 700px;
+}
+
+.leaderboard-search {
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 14px 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 16px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s;
+}
+
+.search-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+.leaderboard-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+}
+
+.leaderboard-content {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    transition: all 0.3s;
+    border-left: 4px solid transparent;
+}
+
+.leaderboard-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-item.rank-1 {
+    border-left-color: var(--gold-color);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, var(--bg-primary) 100%);
+}
+
+.leaderboard-item.rank-2 {
+    border-left-color: var(--silver-color);
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.1) 0%, var(--bg-primary) 100%);
+}
+
+.leaderboard-item.rank-3 {
+    border-left-color: var(--bronze-color);
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.1) 0%, var(--bg-primary) 100%);
+}
+
+.rank-number {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-secondary);
+    min-width: 40px;
+    text-align: center;
+}
+
+.leaderboard-item.rank-1 .rank-number {
+    color: var(--gold-color);
+}
+
+.leaderboard-item.rank-2 .rank-number {
+    color: var(--silver-color);
+}
+
+.leaderboard-item.rank-3 .rank-number {
+    color: var(--bronze-color);
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--bg-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    overflow: hidden;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.user-score {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent-color);
+}
+
+.loading,
+.search-placeholder {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-style: italic;
 }
 
 /* Login Screen */
@@ -1214,6 +1382,7 @@ body {
     }
 
     .market-btn,
+    .leaderboard-btn,
     .score-section {
         width: 100%;
         justify-content: center;
@@ -1242,6 +1411,10 @@ body {
 
     .chess-square {
         font-size: 28px;
+    }
+    
+    .leaderboard-modal-content {
+        max-width: 95%;
     }
 }
 
