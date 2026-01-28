@@ -25,7 +25,10 @@
         <!-- Header -->
         <div class="header">
             <div class="profile-section">
-                <div class="profile-icon" id="profileIcon">👤</div>
+                <div class="profile-icon" id="profileIcon">
+                    <img id="profileImage" src="" alt="👤" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    <span id="profileEmoji">👤</span>
+                </div>
                 <div>
                     <div class="username" id="headerUsername">Yükleniyor...</div>
                     <div class="user-email" id="headerEmail">loading...</div>
@@ -41,6 +44,10 @@
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
+                    <div class="dropdown-item" id="editProfileBtn">
+                        <span>✏️</span> Profili Düzenle
+                    </div>
+                    <div class="dropdown-divider"></div>
                     <div class="dropdown-item" id="themeToggleItem">
                         <span>🌓</span> 
                         <div class="theme-toggle">
@@ -51,82 +58,175 @@
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
-                    <div class="dropdown-item" id="depositBtn">
-                        <span>💰</span> Para Yatır
-                    </div>
-                    <div class="dropdown-item" id="withdrawBtn">
-                        <span>💸</span> Para Çek
-                    </div>
-                    <div class="dropdown-divider"></div>
                     <div class="dropdown-item logout-item" id="logoutBtn">
                         <span>🚪</span> Çıkış Yap
                     </div>
                 </div>
             </div>
 
-            <div class="score-section">
-                <span>💎</span>
-                <div>
-                    <div class="score-label">Puanın</div>
-                    <div class="score-value" id="userScore">0</div>
+            <div class="header-right">
+                <button class="market-btn" id="marketBtn">
+                    🛒 Market
+                </button>
+                <div class="score-section">
+                    <span>💎</span>
+                    <div>
+                        <div class="score-label">Puanın</div>
+                        <div class="score-value" id="userScore">0</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="section-title">🎮 Oyunlar</div>
-            
-            <!-- Games Grid -->
-            <div class="games-grid">
-                <div class="game-card" id="spinWheelCard">
-                    <div class="game-icon">🎡</div>
-                    <div class="game-title">Çarkıfelek</div>
-                    <div class="game-desc">Şansını dene, büyük ödüller kazan!</div>
-                    <div class="game-play-btn">Oyna</div>
-                </div>
+        <!-- Main Content with Chat Sidebar -->
+        <div class="main-layout">
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="section-title">🎮 Oyunlar</div>
                 
-                <div class="game-card" id="chessCard">
-                    <div class="game-icon">♟️</div>
-                    <div class="game-title">Satranç</div>
-                    <div class="game-desc">Strateji oyunu oyna, kazanç kat!</div>
-                    <div class="game-play-btn">Yakında</div>
+                <!-- Games Grid -->
+                <div class="games-grid">
+                    <div class="game-card" id="spinWheelCard">
+                        <div class="game-icon">🎡</div>
+                        <div class="game-title">Çarkıfelek</div>
+                        <div class="game-desc">Şansını dene, büyük ödüller kazan!</div>
+                        <div class="game-play-btn">Oyna</div>
+                    </div>
+                    
+                    <div class="game-card" id="chessCard">
+                        <div class="game-icon">♟️</div>
+                        <div class="game-title">Satranç</div>
+                        <div class="game-desc">Strateji oyunu oyna, kazanç kat!</div>
+                        <div class="game-play-btn">Oyna</div>
+                    </div>
+                    
+                    <div class="game-card" id="coinFlipCard">
+                        <div class="game-icon">🪙</div>
+                        <div class="game-title">Yazı Tura</div>
+                        <div class="game-desc">Basit ama heyecanlı, hızlı kazan!</div>
+                        <div class="game-play-btn">Oyna</div>
+                    </div>
+                    
+                    <div class="game-card" id="rpsCard">
+                        <div class="game-icon">✊</div>
+                        <div class="game-title">Taş-Kağıt-Makas</div>
+                        <div class="game-desc">Klasik oyun, modern kazanç!</div>
+                        <div class="game-play-btn">Oyna</div>
+                    </div>
                 </div>
-                
-                <div class="game-card" id="coinFlipCard">
-                    <div class="game-icon">🪙</div>
-                    <div class="game-title">Yazı Tura</div>
-                    <div class="game-desc">Basit ama heyecanlı, hızlı kazan!</div>
-                    <div class="game-play-btn">Oyna</div>
-                </div>
-                
-                <div class="game-card" id="rpsCard">
-                    <div class="game-icon">✊</div>
-                    <div class="game-title">Taş-Kağıt-Makas</div>
-                    <div class="game-desc">Klasik oyun, modern kazanç!</div>
-                    <div class="game-play-btn">Oyna</div>
+
+                <!-- Ad Section -->
+                <div class="ad-section" id="adSection">
+                    <div class="ad-title">📺 Reklam İzle & Puan Kazan</div>
+                    <button class="ad-button" id="watchAdBtn">+50 Puan Kazan</button>
+                    <div class="ad-cooldown" id="adCooldown" style="display: none;">
+                        Sonraki reklam: <span id="adTimer">0</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Ad Section -->
-            <div class="ad-section" id="adSection">
-                <div class="ad-title">📺 Reklam İzle & Puan Kazan</div>
-                <button class="ad-button" id="watchAdBtn">+50 Puan Kazan</button>
-                <div class="ad-cooldown" id="adCooldown" style="display: none;">
-                    Sonraki reklam: <span id="adTimer">0</span>s
+            <!-- Chat Sidebar -->
+            <div class="chat-sidebar" id="chatSidebar">
+                <div class="chat-header">
+                    <div class="chat-title">💬 Global Chat</div>
+                    <button class="chat-toggle-mobile" id="chatToggleMobile">▼</button>
+                </div>
+                <div class="chat-content">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-welcome">Global chat'e hoş geldin! 🎮</div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput" maxlength="200">
+                        <button class="chat-send" id="chatSend">📤</button>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Chat Section -->
-            <div class="section-title">💬 Global Chat</div>
-            <div class="chat-section">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="chat-welcome">Global chat'e hoş geldin! 🎮</div>
+    <!-- Profile Edit Modal -->
+    <div class="game-modal" id="profileModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Profili Düzenle</h2>
+                <span class="modal-close" data-modal="profileModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="profile-edit-section">
+                    <label>Profil Resmi URL</label>
+                    <input type="url" id="profileImageUrl" class="profile-input" placeholder="https://example.com/image.jpg">
+                    <div class="profile-preview">
+                        <img id="profilePreview" src="" alt="Önizleme" style="display: none;">
+                    </div>
                 </div>
-                <div class="chat-input-container">
-                    <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput" maxlength="200">
-                    <button class="chat-send" id="chatSend">Gönder</button>
+                
+                <div class="profile-edit-section">
+                    <label>Kullanıcı Adı</label>
+                    <input type="text" id="newUsername" class="profile-input" placeholder="Yeni kullanıcı adı">
                 </div>
+                
+                <div class="profile-edit-section">
+                    <label>Yeni Şifre</label>
+                    <input type="password" id="newPassword" class="profile-input" placeholder="Yeni şifre (min 6 karakter)">
+                </div>
+                
+                <button class="save-profile-btn" id="saveProfileBtn">Kaydet</button>
+                <div class="profile-message" id="profileMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Modal -->
+    <div class="game-modal" id="marketModal" style="display: none;">
+        <div class="modal-content market-modal-content">
+            <div class="modal-header">
+                <h2>🛒 Market - Şans Kutuları</h2>
+                <span class="modal-close" data-modal="marketModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="market-grid">
+                    <div class="market-item" data-box="bronze">
+                        <div class="box-icon">📦</div>
+                        <div class="box-name">Bronz Kutu</div>
+                        <div class="box-rewards">
+                            • 50-200 Puan<br>
+                            • %10 x2 Katlayıcı
+                        </div>
+                        <div class="box-price">💎 50</div>
+                        <button class="buy-box-btn" data-box="bronze">Satın Al</button>
+                    </div>
+                    
+                    <div class="market-item" data-box="silver">
+                        <div class="box-icon">🎁</div>
+                        <div class="box-name">Gümüş Kutu</div>
+                        <div class="box-rewards">
+                            • 200-500 Puan<br>
+                            • %20 x2 Katlayıcı<br>
+                            • %5 x5 Katlayıcı
+                        </div>
+                        <div class="box-price">💎 150</div>
+                        <button class="buy-box-btn" data-box="silver">Satın Al</button>
+                    </div>
+                    
+                    <div class="market-item gold-box" data-box="gold">
+                        <div class="box-icon">✨</div>
+                        <div class="box-name">Altın Kutu</div>
+                        <div class="box-rewards">
+                            • 500-1500 Puan<br>
+                            • %30 x2 Katlayıcı<br>
+                            • %15 x5 Katlayıcı<br>
+                            • %5 x10 Katlayıcı
+                        </div>
+                        <div class="box-price">💎 400</div>
+                        <button class="buy-box-btn" data-box="gold">Satın Al</button>
+                    </div>
+                </div>
+                
+                <div class="active-multiplier" id="activeMultiplier" style="display: none;">
+                    🎯 Aktif Katlayıcı: <span id="multiplierValue">x1</span>
+                </div>
+                
+                <div class="box-result" id="boxResult"></div>
             </div>
         </div>
     </div>
@@ -193,6 +293,29 @@
                 </div>
                 <button class="spin-btn" id="spinBtn">ÇEVİR!</button>
                 <div class="game-result" id="wheelResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chess Modal -->
+    <div class="game-modal" id="chessModal" style="display: none;">
+        <div class="modal-content chess-modal-content">
+            <div class="modal-header">
+                <h2>♟️ Satranç</h2>
+                <span class="modal-close" data-modal="chessModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="chess-info">
+                    <div class="chess-status" id="chessStatus">Beyaz Hamle</div>
+                    <div class="bet-info">Bahis: <span id="chessBetDisplay">100</span> 💎</div>
+                </div>
+                <div class="bet-input-container">
+                    <label>Bahis Miktarı (Min: 50)</label>
+                    <input type="number" id="chessBetAmount" min="50" value="100" class="bet-input">
+                    <button class="chess-start-btn" id="chessStartBtn">Oyunu Başlat</button>
+                </div>
+                <div id="chessBoard" class="chess-board"></div>
+                <div class="game-result" id="chessResult"></div>
             </div>
         </div>
     </div>
