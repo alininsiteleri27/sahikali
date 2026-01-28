@@ -21,9 +21,12 @@
     --accent-color: #667eea;
     --success-color: #10b981;
     --error-color: #ef4444;
+    --warning-color: #f59e0b;
     --gold-color: #ffd700;
     --silver-color: #c0c0c0;
     --bronze-color: #cd7f32;
+    --online-color: #10b981;
+    --offline-color: #6b7280;
 }
 
 body.dark-mode {
@@ -43,9 +46,12 @@ body.dark-mode {
     --accent-color: #6366f1;
     --success-color: #10b981;
     --error-color: #ef4444;
+    --warning-color: #f59e0b;
     --gold-color: #ffd700;
     --silver-color: #c0c0c0;
     --bronze-color: #cd7f32;
+    --online-color: #10b981;
+    --offline-color: #6b7280;
 }
 
 body {
@@ -292,7 +298,7 @@ body {
 
 /* Chat Sidebar */
 .chat-sidebar {
-    width: 350px;
+    width: 380px;
     background: var(--chat-bg);
     border-left: 1px solid var(--border-color);
     display: flex;
@@ -314,6 +320,28 @@ body {
     font-weight: 700;
 }
 
+.chat-header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.chat-dm-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s;
+}
+
+.chat-dm-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
 .chat-toggle-mobile {
     display: none;
     background: rgba(255, 255, 255, 0.2);
@@ -330,6 +358,48 @@ body {
     display: flex;
     flex-direction: column;
     padding: 20px;
+    overflow: hidden;
+}
+
+/* Chat Tabs */
+.chat-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.chat-tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+}
+
+.chat-tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.chat-tab-btn.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+}
+
+.chat-tab-content {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.chat-tab-content.active {
+    display: flex;
 }
 
 .chat-messages {
@@ -388,6 +458,28 @@ body {
     margin-top: 4px;
 }
 
+.chat-load-more {
+    text-align: center;
+    padding: 10px;
+}
+
+.load-more-btn {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.load-more-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
 .chat-input-container {
     display: flex;
     gap: 10px;
@@ -424,6 +516,102 @@ body {
 .chat-send:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* DM User List */
+.dm-user-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.dm-user-item {
+    padding: 12px;
+    background: var(--message-bg);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dm-user-item:hover {
+    background: var(--accent-color);
+    color: white;
+    transform: translateX(4px);
+}
+
+.dm-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    overflow: hidden;
+}
+
+.dm-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dm-user-info {
+    flex: 1;
+}
+
+.dm-user-name-display {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.dm-user-status {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.dm-conversation {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.dm-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--message-bg);
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.dm-back-btn {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.dm-back-btn:hover {
+    transform: scale(1.05);
+}
+
+.dm-user-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
 }
 
 /* Games Grid */
@@ -553,6 +741,326 @@ body {
     margin-top: 12px;
     font-size: 16px;
     font-weight: 600;
+}
+
+/* Admin Panel Styles */
+.admin-modal-content {
+    max-width: 900px;
+    max-height: 85vh;
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.admin-tab-btn {
+    flex: 1;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+}
+
+.admin-tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.admin-tab-btn.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+}
+
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+.admin-search {
+    margin-bottom: 20px;
+}
+
+.admin-user-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.admin-user-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+}
+
+.admin-user-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.admin-user-info-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.admin-user-details {
+    flex: 1;
+}
+
+.admin-user-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.admin-user-email {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.admin-user-score {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.admin-user-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.admin-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.admin-badge.admin {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.admin-badge.banned {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.admin-badge.muted {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-user-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-action-quick-btn {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.admin-action-quick-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.presence-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--bg-primary);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--accent-color);
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.presence-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.presence-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.presence-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.presence-status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.presence-status-dot.online {
+    background: var(--online-color);
+    box-shadow: 0 0 10px var(--online-color);
+}
+
+.presence-status-dot.offline {
+    background: var(--offline-color);
+}
+
+.presence-user-name {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.presence-last-seen {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.admin-action-user {
+    padding: 16px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.admin-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.admin-action-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.admin-action-btn.ban-btn {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.admin-action-btn.unban-btn {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.admin-action-btn.mute-btn {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-action-btn.unmute-btn {
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
+.admin-action-btn.reset-btn {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.admin-action-btn.confirm-btn {
+    background: var(--accent-color);
+    color: white;
+    margin-top: 12px;
+    width: 100%;
+}
+
+.admin-action-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#muteOptions,
+#passwordResetOptions {
+    margin-top: 16px;
+}
+
+#muteOptions label,
+#passwordResetOptions label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.admin-message {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.admin-message.success {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success-color);
+}
+
+.admin-message.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--error-color);
 }
 
 /* Leaderboard Modal */
@@ -1272,6 +1780,17 @@ body {
     color: var(--accent-color);
 }
 
+.chess-difficulty {
+    margin-top: 12px;
+}
+
+.chess-difficulty label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
 .chess-start-btn {
     width: 100%;
     background: var(--bg-gradient);
@@ -1311,6 +1830,7 @@ body {
     font-size: 36px;
     cursor: pointer;
     transition: all 0.2s;
+    user-select: none;
 }
 
 .chess-square.light {
@@ -1363,6 +1883,14 @@ body {
     .chat-sidebar.minimized .chat-content {
         display: none;
     }
+
+    .presence-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-actions {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1413,8 +1941,23 @@ body {
         font-size: 28px;
     }
     
-    .leaderboard-modal-content {
+    .leaderboard-modal-content,
+    .admin-modal-content {
         max-width: 95%;
+    }
+
+    .admin-user-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-user-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .admin-action-quick-btn {
+        flex: 1;
     }
 }
 
