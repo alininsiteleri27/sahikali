@@ -42,6 +42,15 @@ body {
     transition: all 0.3s ease;
 }
 
+/* Hide main app by default until auth check completes */
+.container {
+    display: none;
+}
+
+.container.show {
+    display: block;
+}
+
 .container {
     max-width: 1400px;
     margin: 0 auto;
