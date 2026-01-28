@@ -40,13 +40,13 @@ import {
 
 // Firebase Config (ASLA BOZMA!)
 const firebaseConfig = {
-    apiKey: "AIzaSyD7p6hrOW_vnhaIsuSlGG5e7n8MYLMkE98",
-    authDomain: "gamebetzone-38e7c.firebaseapp.com",
-    projectId: "gamebetzone-38e7c",
-    storageBucket: "gamebetzone-38e7c.firebasestorage.app",
-    messagingSenderId: "426872291876",
-    appId: "1:426872291876:web:2e2c8b9a33e9e9e9e9e9e9",
-    databaseURL: "https://gamebetzone-38e7c-default-rtdb.firebaseio.com"
+    apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
+    authDomain: "ali23-cfd02.firebaseapp.com",
+    projectId: "ali23-cfd02",
+    storageBucket: "ali23-cfd02.firebasestorage.app",
+    messagingSenderId: "759021285078",
+    appId: "1:759021285078:web:f7673f89125ff3dad66377",
+    databaseURL: "https://ali23-cfd02-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
 const app = initializeApp(firebaseConfig);
