@@ -3,44 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Satranç ve mini oyunlar platformu - Global chat, liderlik tablosu ve heyecanlı oyunlar!">
-    <meta name="keywords" content="satranç, oyun, chat, liderlik, puan, multiplayer">
-    <meta http-equiv="Cache-Control" content="max-age=31536000">
     <title>Satranç Oyun Platformu - Pro Edition</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♟️</text></svg>">
 </head>
 <body>
-    <!-- Toast Notification System -->
-    <div id="toastContainer" class="toast-container"></div>
-
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Yükleniyor...</div>
-    </div>
-
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-box">
             <div class="login-title" id="loginTitle">🎮 Giriş Yap</div>
-            <input type="email" class="login-input" placeholder="Email" id="loginEmail" autocomplete="email" aria-label="Email adresi">
-            <input type="password" class="login-input" placeholder="Şifre (min 6 karakter)" id="loginPassword" autocomplete="current-password" aria-label="Şifre">
-            <input type="text" class="login-input" placeholder="Kullanıcı Adı" id="loginUsername" style="display: none;" aria-label="Kullanıcı adı">
-            <button class="login-button" id="loginButton" aria-label="Giriş yap">Giriş Yap</button>
-            <div class="login-error" id="loginError" role="alert" aria-live="assertive"></div>
-            <div class="login-toggle" id="loginToggle" tabindex="0" role="button" aria-label="Kayıt ol">Hesabın yok mu? Kayıt ol</div>
+            <input type="email" class="login-input" placeholder="Email" id="loginEmail" autocomplete="email">
+            <input type="password" class="login-input" placeholder="Şifre (min 6 karakter)" id="loginPassword" autocomplete="current-password">
+            <input type="text" class="login-input" placeholder="Kullanıcı Adı" id="loginUsername" style="display: none;">
+            <button class="login-button" id="loginButton">Giriş Yap</button>
+            <div class="login-error" id="loginError"></div>
+            <div class="login-toggle" id="loginToggle">Hesabın yok mu? Kayıt ol</div>
         </div>
     </div>
 
     <!-- Main App -->
-    <div class="container" id="mainApp" aria-hidden="true">
+    <div class="container" id="mainApp">
         <!-- Header -->
-        <header class="header">
+        <div class="header">
             <div class="profile-section">
-                <div class="profile-icon" id="profileIcon" role="button" aria-label="Profil menüsü" aria-expanded="false" aria-controls="dropdown">
-                    <img id="profileImage" src="" alt="Profil resmi" style="display: none;">
-                    <span id="profileEmoji" aria-hidden="true">👤</span>
+                <div class="profile-icon" id="profileIcon">
+                    <img id="profileImage" src="" alt="👤" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    <span id="profileEmoji">👤</span>
                 </div>
                 <div>
                     <div class="username" id="headerUsername">Yükleniyor...</div>
@@ -48,88 +35,88 @@
                 </div>
                 
                 <!-- Dropdown Menu -->
-                <div class="dropdown" id="dropdown" role="menu" aria-hidden="true">
+                <div class="dropdown" id="dropdown">
                     <div class="dropdown-item" id="profileInfo">
-                        <span aria-hidden="true">👤</span> 
+                        <span>👤</span> 
                         <div>
                             <div style="font-weight: bold;" id="dropdownUsername">Kullanıcı</div>
                             <div style="font-size: 12px; opacity: 0.7;" id="dropdownEmail">email</div>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
-                    <button class="dropdown-item" id="editProfileBtn" role="menuitem">
-                        <span aria-hidden="true">✏️</span> Profili Düzenle
-                    </button>
+                    <div class="dropdown-item" id="editProfileBtn">
+                        <span>✏️</span> Profili Düzenle
+                    </div>
                     <div class="dropdown-divider"></div>
                     <!-- Admin Panel Button - Only visible for admins -->
-                    <button class="dropdown-item admin-only" id="adminPanelBtn" style="display: none;" role="menuitem">
-                        <span aria-hidden="true">👨‍💼</span> Admin Paneli
-                    </button>
+                    <div class="dropdown-item admin-only" id="adminPanelBtn" style="display: none;">
+                        <span>👨‍💼</span> Admin Paneli
+                    </div>
                     <div class="dropdown-divider admin-only" style="display: none;"></div>
                     <div class="dropdown-item" id="themeToggleItem">
-                        <span aria-hidden="true">🌓</span> 
+                        <span>🌓</span> 
                         <div class="theme-toggle">
                             <span id="themeLabel">Dark Mode</span>
-                            <div class="toggle-switch" id="themeToggle" role="switch" aria-checked="false" tabindex="0">
+                            <div class="toggle-switch" id="themeToggle">
                                 <div class="toggle-slider"></div>
                             </div>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
-                    <button class="dropdown-item logout-item" id="logoutBtn" role="menuitem">
-                        <span aria-hidden="true">🚪</span> Çıkış Yap
-                    </button>
+                    <div class="dropdown-item logout-item" id="logoutBtn">
+                        <span>🚪</span> Çıkış Yap
+                    </div>
                 </div>
             </div>
 
             <div class="header-right">
-                <button class="leaderboard-btn" id="leaderboardBtn" aria-label="Liderlik tablosu">
+                <button class="leaderboard-btn" id="leaderboardBtn">
                     🏆 Liderlik
                 </button>
-                <button class="market-btn" id="marketBtn" aria-label="Market">
+                <button class="market-btn" id="marketBtn">
                     🛒 Market
                 </button>
-                <div class="score-section" aria-label="Puanınız">
-                    <span aria-hidden="true">💎</span>
+                <div class="score-section">
+                    <span>💎</span>
                     <div>
                         <div class="score-label">Puanın</div>
                         <div class="score-value" id="userScore">0</div>
                     </div>
                 </div>
             </div>
-        </header>
+        </div>
 
         <!-- Main Content with Chat Sidebar -->
-        <main class="main-layout">
+        <div class="main-layout">
             <!-- Main Content -->
-            <section class="main-content" aria-label="Oyunlar">
-                <h1 class="section-title">🎮 Oyunlar</h1>
+            <div class="main-content">
+                <div class="section-title">🎮 Oyunlar</div>
                 
                 <!-- Games Grid -->
                 <div class="games-grid">
-                    <div class="game-card" id="spinWheelCard" role="button" tabindex="0" aria-label="Çarkıfelek oyunu">
-                        <div class="game-icon" aria-hidden="true">🎡</div>
+                    <div class="game-card" id="spinWheelCard">
+                        <div class="game-icon">🎡</div>
                         <div class="game-title">Çarkıfelek</div>
                         <div class="game-desc">Şansını dene, büyük ödüller kazan!</div>
                         <div class="game-play-btn">Oyna</div>
                     </div>
                     
-                    <div class="game-card" id="chessCard" role="button" tabindex="0" aria-label="Satranç oyunu">
-                        <div class="game-icon" aria-hidden="true">♟️</div>
+                    <div class="game-card" id="chessCard">
+                        <div class="game-icon">♟️</div>
                         <div class="game-title">Satranç</div>
                         <div class="game-desc">Strateji oyunu oyna, kazanç kat!</div>
                         <div class="game-play-btn">Oyna</div>
                     </div>
                     
-                    <div class="game-card" id="coinFlipCard" role="button" tabindex="0" aria-label="Yazı Tura oyunu">
-                        <div class="game-icon" aria-hidden="true">🪙</div>
+                    <div class="game-card" id="coinFlipCard">
+                        <div class="game-icon">🪙</div>
                         <div class="game-title">Yazı Tura</div>
                         <div class="game-desc">Basit ama heyecanlı, hızlı kazan!</div>
                         <div class="game-play-btn">Oyna</div>
                     </div>
                     
-                    <div class="game-card" id="rpsCard" role="button" tabindex="0" aria-label="Taş-Kağıt-Makas oyunu">
-                        <div class="game-icon" aria-hidden="true">✊</div>
+                    <div class="game-card" id="rpsCard">
+                        <div class="game-icon">✊</div>
                         <div class="game-title">Taş-Kağıt-Makas</div>
                         <div class="game-desc">Klasik oyun, modern kazanç!</div>
                         <div class="game-play-btn">Oyna</div>
@@ -137,76 +124,374 @@
                 </div>
 
                 <!-- Ad Section -->
-                <section class="ad-section" id="adSection" aria-label="Reklam izleme">
+                <div class="ad-section" id="adSection">
                     <div class="ad-title">📺 Reklam İzle & Puan Kazan</div>
-                    <button class="ad-button" id="watchAdBtn" aria-label="Reklam izle">+50 Puan Kazan</button>
+                    <button class="ad-button" id="watchAdBtn">+50 Puan Kazan</button>
                     <div class="ad-cooldown" id="adCooldown" style="display: none;">
                         Sonraki reklam: <span id="adTimer">0</span>
                     </div>
-                </section>
-            </section>
+                </div>
+            </div>
 
             <!-- Chat Sidebar -->
-            <aside class="chat-sidebar" id="chatSidebar" aria-label="Chat bölümü">
+            <div class="chat-sidebar" id="chatSidebar">
                 <div class="chat-header">
                     <div class="chat-title">💬 <span id="chatHeaderTitle">Global Chat</span></div>
                     <div class="chat-header-buttons">
-                        <button class="chat-dm-btn" id="chatDmBtn" title="Özel Mesajlar" aria-label="Özel mesajlar">📩</button>
-                        <button class="chat-toggle-mobile" id="chatToggleMobile" aria-label="Chat'i aç/kapat">▼</button>
+                        <button class="chat-dm-btn" id="chatDmBtn" title="Özel Mesajlar">📩</button>
+                        <button class="chat-toggle-mobile" id="chatToggleMobile">▼</button>
                     </div>
                 </div>
                 <div class="chat-content">
                     <!-- Tab Buttons -->
-                    <div class="chat-tabs" role="tablist">
-                        <button class="chat-tab-btn active" data-tab="global" role="tab" aria-selected="true" aria-controls="globalChatTab">Global</button>
-                        <button class="chat-tab-btn" data-tab="dm" role="tab" aria-selected="false" aria-controls="dmChatTab">DM</button>
+                    <div class="chat-tabs">
+                        <button class="chat-tab-btn active" data-tab="global">Global</button>
+                        <button class="chat-tab-btn" data-tab="dm">DM</button>
                     </div>
 
                     <!-- Global Chat Tab -->
-                    <div class="chat-tab-content active" id="globalChatTab" role="tabpanel" aria-labelledby="globalTab">
-                        <div class="chat-messages" id="chatMessages" role="log" aria-live="polite">
+                    <div class="chat-tab-content active" id="globalChatTab">
+                        <div class="chat-messages" id="chatMessages">
                             <div class="chat-welcome">Global chat'e hoş geldin! 🎮</div>
                         </div>
                         <div class="chat-load-more" id="chatLoadMore" style="display: none;">
                             <button class="load-more-btn" id="loadMoreBtn">Daha Fazla Yükle</button>
                         </div>
                         <div class="chat-input-container">
-                            <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput" maxlength="200" aria-label="Chat mesajı">
-                            <button class="chat-send" id="chatSend" aria-label="Mesaj gönder">📤</button>
+                            <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput" maxlength="200">
+                            <button class="chat-send" id="chatSend">📤</button>
                         </div>
                     </div>
 
                     <!-- DM Chat Tab -->
-                    <div class="chat-tab-content" id="dmChatTab" role="tabpanel" aria-labelledby="dmTab" hidden>
+                    <div class="chat-tab-content" id="dmChatTab">
                         <div class="dm-user-list" id="dmUserList">
                             <div class="chat-welcome">Kullanıcıları yükleniyor...</div>
                         </div>
                         <div class="dm-conversation" id="dmConversation" style="display: none;">
                             <div class="dm-header">
-                                <button class="dm-back-btn" id="dmBackBtn" aria-label="Geri dön">← Geri</button>
+                                <button class="dm-back-btn" id="dmBackBtn">← Geri</button>
                                 <div class="dm-user-name" id="dmUserName">Kullanıcı</div>
                             </div>
-                            <div class="chat-messages" id="dmMessages" role="log" aria-live="polite"></div>
+                            <div class="chat-messages" id="dmMessages"></div>
                             <div class="chat-input-container">
-                                <input type="text" class="chat-input" placeholder="Özel mesajınızı yazın..." id="dmInput" maxlength="200" aria-label="Özel mesaj">
-                                <button class="chat-send" id="dmSend" aria-label="Mesaj gönder">📤</button>
+                                <input type="text" class="chat-input" placeholder="Özel mesajınızı yazın..." id="dmInput" maxlength="200">
+                                <button class="chat-send" id="dmSend">📤</button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </aside>
-        </main>
+            </div>
+        </div>
     </div>
 
-    <!-- All modals remain the same but with ARIA labels added -->
-    <!-- ... (modals same as before but with aria-label attributes) ... -->
+    <!-- Admin Panel Modal -->
+    <div class="game-modal" id="adminModal" style="display: none;">
+        <div class="modal-content admin-modal-content">
+            <div class="modal-header">
+                <h2>👨‍💼 Admin Paneli</h2>
+                <span class="modal-close" data-modal="adminModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Admin Tabs -->
+                <div class="admin-tabs">
+                    <button class="admin-tab-btn active" data-tab="users">👥 Kullanıcılar</button>
+                    <button class="admin-tab-btn" data-tab="presence">📊 Aktiflik</button>
+                </div>
+
+                <!-- Users Management Tab -->
+                <div class="admin-tab-content active" id="adminUsersTab">
+                    <div class="admin-search">
+                        <input type="text" id="adminUserSearch" class="search-input" placeholder="🔍 Kullanıcı ara...">
+                    </div>
+                    <div class="admin-user-list" id="adminUserList">
+                        <div class="loading">Kullanıcılar yükleniyor...</div>
+                    </div>
+                </div>
+
+                <!-- Presence Tab -->
+                <div class="admin-tab-content" id="adminPresenceTab">
+                    <div class="presence-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="onlineCount">0</div>
+                            <div class="stat-label">🟢 Online</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="offlineCount">0</div>
+                            <div class="stat-label">⚫ Offline</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalCount">0</div>
+                            <div class="stat-label">👥 Toplam</div>
+                        </div>
+                    </div>
+                    <div class="presence-list" id="presenceList">
+                        <div class="loading">Aktiflik verileri yükleniyor...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Action Modal -->
+    <div class="game-modal" id="adminActionModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="adminActionTitle">Kullanıcı İşlemi</h2>
+                <span class="modal-close" data-modal="adminActionModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="admin-action-user">
+                    <strong>Kullanıcı:</strong> <span id="actionUserName">-</span>
+                </div>
+                <div class="admin-actions">
+                    <button class="admin-action-btn ban-btn" id="banUserBtn">🚫 Ban</button>
+                    <button class="admin-action-btn unban-btn" id="unbanUserBtn" style="display: none;">✅ Ban Kaldır</button>
+                    <button class="admin-action-btn mute-btn" id="muteUserBtn">🔇 Sustur</button>
+                    <button class="admin-action-btn unmute-btn" id="unmuteUserBtn" style="display: none;">🔊 Susturmayı Kaldır</button>
+                    <button class="admin-action-btn reset-btn" id="resetPasswordBtn">🔑 Şifre Sıfırla</button>
+                </div>
+                <div id="muteOptions" style="display: none;">
+                    <label>Susturma Süresi:</label>
+                    <select id="muteDuration" class="profile-input">
+                        <option value="3600000">1 Saat</option>
+                        <option value="86400000">24 Saat</option>
+                        <option value="604800000">7 Gün</option>
+                        <option value="2592000000">30 Gün</option>
+                    </select>
+                    <button class="admin-action-btn confirm-btn" id="confirmMuteBtn">Onayla</button>
+                </div>
+                <div id="passwordResetOptions" style="display: none;">
+                    <label>Yeni Şifre:</label>
+                    <input type="password" id="newPasswordInput" class="profile-input" placeholder="Min 6 karakter">
+                    <button class="admin-action-btn confirm-btn" id="confirmResetBtn">Şifreyi Değiştir</button>
+                </div>
+                <div class="admin-message" id="adminActionMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="game-modal" id="leaderboardModal" style="display: none;">
+        <div class="modal-content leaderboard-modal-content">
+            <div class="modal-header">
+                <h2>🏆 Liderlik Tablosu</h2>
+                <span class="modal-close" data-modal="leaderboardModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Search Bar -->
+                <div class="leaderboard-search">
+                    <input type="text" id="userSearchInput" class="search-input" placeholder="🔍 Kullanıcı adı ara...">
+                </div>
+                
+                <!-- Tabs -->
+                <div class="leaderboard-tabs">
+                    <button class="tab-btn active" data-tab="top">En İyiler</button>
+                    <button class="tab-btn" data-tab="search">Arama Sonuçları</button>
+                </div>
+                
+                <!-- Top Users -->
+                <div class="leaderboard-content" id="topUsersTab">
+                    <div class="leaderboard-list" id="leaderboardList">
+                        <div class="loading">Yükleniyor...</div>
+                    </div>
+                </div>
+                
+                <!-- Search Results -->
+                <div class="leaderboard-content" id="searchResultsTab" style="display: none;">
+                    <div class="leaderboard-list" id="searchResultsList">
+                        <div class="search-placeholder">Kullanıcı adı girin...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Edit Modal -->
+    <div class="game-modal" id="profileModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Profili Düzenle</h2>
+                <span class="modal-close" data-modal="profileModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="profile-edit-section">
+                    <label>Profil Resmi URL</label>
+                    <input type="url" id="profileImageUrl" class="profile-input" placeholder="https://example.com/image.jpg">
+                    <div class="profile-preview">
+                        <img id="profilePreview" src="" alt="Önizleme" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="profile-edit-section">
+                    <label>Kullanıcı Adı</label>
+                    <input type="text" id="newUsername" class="profile-input" placeholder="Yeni kullanıcı adı">
+                </div>
+                
+                <div class="profile-edit-section">
+                    <label>Yeni Şifre</label>
+                    <input type="password" id="newPassword" class="profile-input" placeholder="Yeni şifre (min 6 karakter)">
+                </div>
+                
+                <button class="save-profile-btn" id="saveProfileBtn">Kaydet</button>
+                <div class="profile-message" id="profileMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Modal -->
+    <div class="game-modal" id="marketModal" style="display: none;">
+        <div class="modal-content market-modal-content">
+            <div class="modal-header">
+                <h2>🛒 Market - Şans Kutuları</h2>
+                <span class="modal-close" data-modal="marketModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="market-grid">
+                    <div class="market-item" data-box="bronze">
+                        <div class="box-icon">📦</div>
+                        <div class="box-name">Bronz Kutu</div>
+                        <div class="box-rewards">
+                            • 50-200 Puan<br>
+                            • %10 x2 Katlayıcı
+                        </div>
+                        <div class="box-price">💎 50</div>
+                        <button class="buy-box-btn" data-box="bronze">Satın Al</button>
+                    </div>
+                    
+                    <div class="market-item" data-box="silver">
+                        <div class="box-icon">🎁</div>
+                        <div class="box-name">Gümüş Kutu</div>
+                        <div class="box-rewards">
+                            • 200-500 Puan<br>
+                            • %20 x2 Katlayıcı<br>
+                            • %5 x5 Katlayıcı
+                        </div>
+                        <div class="box-price">💎 150</div>
+                        <button class="buy-box-btn" data-box="silver">Satın Al</button>
+                    </div>
+                    
+                    <div class="market-item gold-box" data-box="gold">
+                        <div class="box-icon">✨</div>
+                        <div class="box-name">Altın Kutu</div>
+                        <div class="box-rewards">
+                            • 500-1500 Puan<br>
+                            • %30 x2 Katlayıcı<br>
+                            • %15 x5 Katlayıcı<br>
+                            • %5 x10 Katlayıcı
+                        </div>
+                        <div class="box-price">💎 400</div>
+                        <button class="buy-box-btn" data-box="gold">Satın Al</button>
+                    </div>
+                </div>
+                
+                <div class="active-multiplier" id="activeMultiplier" style="display: none;">
+                    🎯 Aktif Katlayıcı: <span id="multiplierValue">x1</span>
+                </div>
+                
+                <div class="box-result" id="boxResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Modals -->
+    <!-- Coin Flip Modal -->
+    <div class="game-modal" id="coinFlipModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🪙 Yazı Tura</h2>
+                <span class="modal-close" data-modal="coinFlipModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="bet-input-container">
+                    <label>Bahis Miktarı (Min: 10)</label>
+                    <input type="number" id="coinBetAmount" min="10" value="10" class="bet-input">
+                </div>
+                <div class="coin-choices">
+                    <button class="choice-btn" data-choice="heads">Yazı 📄</button>
+                    <button class="choice-btn" data-choice="tails">Tura 🪙</button>
+                </div>
+                <div class="game-result" id="coinResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RPS Modal -->
+    <div class="game-modal" id="rpsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✊ Taş-Kağıt-Makas</h2>
+                <span class="modal-close" data-modal="rpsModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="bet-input-container">
+                    <label>Bahis Miktarı (Min: 10)</label>
+                    <input type="number" id="rpsBetAmount" min="10" value="10" class="bet-input">
+                </div>
+                <div class="rps-choices">
+                    <button class="choice-btn" data-choice="rock">🪨 Taş</button>
+                    <button class="choice-btn" data-choice="paper">📄 Kağıt</button>
+                    <button class="choice-btn" data-choice="scissors">✂️ Makas</button>
+                </div>
+                <div class="game-result" id="rpsResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spin Wheel Modal -->
+    <div class="game-modal" id="spinWheelModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎡 Çarkıfelek</h2>
+                <span class="modal-close" data-modal="spinWheelModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="bet-input-container">
+                    <label>Bahis Miktarı (Min: 10)</label>
+                    <input type="number" id="wheelBetAmount" min="10" value="10" class="bet-input">
+                </div>
+                <div class="wheel-container">
+                    <canvas id="wheelCanvas" width="300" height="300"></canvas>
+                    <div class="wheel-pointer">▼</div>
+                </div>
+                <button class="spin-btn" id="spinBtn">ÇEVİR!</button>
+                <div class="game-result" id="wheelResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chess Modal -->
+    <div class="game-modal" id="chessModal" style="display: none;">
+        <div class="modal-content chess-modal-content">
+            <div class="modal-header">
+                <h2>♟️ Satranç</h2>
+                <span class="modal-close" data-modal="chessModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="chess-info">
+                    <div class="chess-status" id="chessStatus">Oyunu Başlat</div>
+                    <div class="bet-info">Bahis: <span id="chessBetDisplay">100</span> 💎</div>
+                </div>
+                <div class="bet-input-container">
+                    <label>Bahis Miktarı (Min: 50)</label>
+                    <input type="number" id="chessBetAmount" min="50" value="100" class="bet-input">
+                    <div class="chess-difficulty">
+                        <label>Bot Zorluğu:</label>
+                        <select id="chessDifficulty" class="bet-input">
+                            <option value="easy">Kolay</option>
+                            <option value="medium" selected>Orta</option>
+                            <option value="hard">Zor</option>
+                        </select>
+                    </div>
+                    <button class="chess-start-btn" id="chessStartBtn">Oyunu Başlat</button>
+                </div>
+                <div id="chessBoard" class="chess-board"></div>
+                <div class="game-result" id="chessResult"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Firebase SDK -->
     <script type="module" src="app.js"></script>
-    <noscript>
-        <div class="noscript-warning">
-            Bu uygulama JavaScript gerektirir. Lütfen tarayıcınızda JavaScript'i etkinleştirin.
-        </div>
-    </noscript>
 </body>
 </html>
