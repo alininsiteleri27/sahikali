@@ -1614,25 +1614,7 @@ async function sendDm() {
     input.value = '';
 }
 
-async function loadDmMessages(targetUid) {
-    const chatId = [currentUser.uid, targetUid].sort().join('_');
-    const q = query(collection(db, 'dm', chatId, 'messages'), orderBy('timestamp', 'asc'));
 
-    onSnapshot(q, (snap) => {
-        const area = document.getElementById('dmMessagesArea');
-        area.innerHTML = '';
-        snap.forEach(d => {
-            const val = d.data();
-            const bubble = document.createElement('div');
-            bubble.className = 'msg-bubble';
-            bubble.style.alignSelf = val.senderId === currentUser.uid ? 'flex-end' : 'flex-start';
-            bubble.style.background = val.senderId === currentUser.uid ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)';
-            bubble.textContent = val.message;
-            area.appendChild(bubble);
-        });
-        area.scrollTop = area.scrollHeight;
-    });
-}
 
 
 // ========================================
