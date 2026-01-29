@@ -116,8 +116,8 @@ async function initializeUser(user) {
 
     // Check admin/founder status
     const userData = (await getDoc(userRef)).data();
-    isUserAdmin = userData.role === 'admin' || userData.role === 'founder';
-    const isFounder = userData.role === 'founder';
+    isUserAdmin = userData.role === 'admin' || userData.role === 'KURUCU';
+    const isFounder = userData.role === 'KURUCU';
 
     if (isUserAdmin) {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
@@ -152,7 +152,7 @@ async function loadAdminUsers() {
         const item = document.createElement('div');
         item.className = 'admin-user-item';
         // Add special styling if founder
-        if (role === 'founder') {
+        if (role === 'KURUCU') {
             item.style.borderLeft = '4px solid var(--founder-color)';
             item.style.background = 'linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%)';
         }
@@ -165,12 +165,12 @@ async function loadAdminUsers() {
                 <div class="admin-user-details">
                     <div class="admin-user-name">
                         ${data.username}
-                        ${role === 'founder' ? '<span style="font-size:12px; margin-left:5px">👑</span>' : ''}
+                        ${role === 'KURUCU' ? '<span style="font-size:12px; margin-left:5px">👑</span>' : ''}
                     </div>
                     <div class="admin-user-email">${data.email}</div>
                     <div class="admin-user-score">💎 ${data.score}</div>
                     <div class="admin-user-badges">
-                        ${role === 'founder' ? '<span class="admin-badge founder">KURUCU</span>' : ''}
+                        ${role === 'KURUCU' ? '<span class="admin-badge founder">KURUCU</span>' : ''}
                         ${role === 'admin' ? '<span class="admin-badge admin">Admin</span>' : ''}
                         ${data.banned ? '<span class="admin-badge banned">Banned</span>' : ''}
                         ${data.muted ? '<span class="admin-badge muted">Muted</span>' : ''}
@@ -208,7 +208,7 @@ document.getElementById('adminUserSearch').addEventListener('input', async (e) =
         if (data.username.toLowerCase().includes(searchTerm) || data.email.toLowerCase().includes(searchTerm)) {
             const item = document.createElement('div');
             item.className = 'admin-user-item';
-            if (role === 'founder') {
+            if (role === 'KURUCU') {
                 item.style.borderLeft = '4px solid var(--founder-color)';
                 item.style.background = 'linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%)';
             }
@@ -223,7 +223,7 @@ document.getElementById('adminUserSearch').addEventListener('input', async (e) =
                         <div class="admin-user-email">${data.email}</div>
                         <div class="admin-user-score">💎 ${data.score}</div>
                         <div class="admin-user-badges">
-                            ${role === 'founder' ? '<span class="admin-badge founder">KURUCU</span>' : ''}
+                            ${role === 'KURUCU' ? '<span class="admin-badge founder">KURUCU</span>' : ''}
                             ${role === 'admin' ? '<span class="admin-badge admin">Admin</span>' : ''}
                             ${data.banned ? '<span class="admin-badge banned">Banned</span>' : ''}
                             ${data.muted ? '<span class="admin-badge muted">Muted</span>' : ''}
@@ -246,7 +246,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
     // Get current user role
     const currentUserSnap = await getDoc(doc(db, 'users', currentUser.uid));
     const myRole = currentUserSnap.data().role;
-    const isMeFounder = myRole === 'founder';
+    const isMeFounder = myrole === 'KURUCU';
 
     // Hiyerarşi Kontrolü:
     // 1. Founder'a kimse işlem yapamaz (kendisi hariç, o da UI'da disabled olabilir ama burada logic önemli).
@@ -266,7 +266,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
         canAct = true;
     } else {
         // Admins
-        if (targetRole === 'admin' || targetRole === 'founder') {
+        if (targetRole === 'admin' || targetrole === 'KURUCU') {
             alert("Yetkiniz bu kullanıcıyı yönetmeye yetmiyor! (Admin/Founder koruması)");
             return;
         }
@@ -276,7 +276,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
     if (!canAct) return;
 
     document.getElementById('adminActionModal').style.display = 'flex';
-    document.getElementById('actionUserName').textContent = username + (targetRole === 'founder' ? ' (Kurucu)' : (targetRole === 'admin' ? ' (Admin)' : ''));
+    document.getElementById('actionUserName').textContent = username + (targetrole === 'KURUCU' ? ' (Kurucu)' : (targetRole === 'admin' ? ' (Admin)' : ''));
     document.getElementById('adminActionModal').dataset.uid = uid;
 
     // Show/hide permission based buttons
@@ -790,7 +790,7 @@ function appendChatMessage(msg) {
 
         // Admin/Founder highlight
         if (msg.role === 'admin') div.style.borderLeft = '3px solid var(--success-color)';
-        if (msg.role === 'founder') {
+        if (msg.role === 'KURUCU') {
             div.style.borderLeft = '3px solid var(--founder-color)';
             div.style.background = 'linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%)';
         }
@@ -799,11 +799,11 @@ function appendChatMessage(msg) {
 
         let badges = '';
         if (msg.role === 'admin') badges += '<span class="admin-badge admin" style="font-size:9px; padding:2px 4px;">ADMIN</span> ';
-        if (msg.role === 'founder') badges += '<span class="admin-badge founder" style="font-size:9px; padding:2px 4px;">KURUCU</span> ';
+        if (msg.role === 'KURUCU') badges += '<span class="admin-badge founder" style="font-size:9px; padding:2px 4px;">KURUCU</span> ';
 
         div.innerHTML = `
             <div class="message-header">
-                <span class="message-user" style="${msg.role === 'founder' ? 'color:var(--founder-color)' : ''}">${badges}${msg.username}</span>
+                <span class="message-user" style="${msg.role === 'KURUCU' ? 'color:var(--founder-color)' : ''}">${badges}${msg.username}</span>
                 <div style="display:flex; align-items:center;">
                     <span class="message-time">${time}</span>
                     ${isUserAdmin ? `<button class="chat-delete-btn" onclick="deleteMessage('${msg.id}')">🗑️</button>` : ''}
