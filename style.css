@@ -4659,6 +4659,36 @@ img {
     max-width: 100%;
     height: auto;
 }
+.user-info-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 15px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-username {
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.header-email {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 3px;
+}
+
+/* Dark mode için */
+.dark-mode .user-info-header {
+    background: rgba(255, 255, 255, 0.1);
+}
 
 /* ======================================== */
 /* END OF STYLES */
