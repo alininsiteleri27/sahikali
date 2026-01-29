@@ -246,7 +246,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
     // Get current user role
     const currentUserSnap = await getDoc(doc(db, 'users', currentUser.uid));
     const myRole = currentUserSnap.data().role;
-    const isMeFounder = myrole === 'KURUCU';
+    const isMeFounder = myRole === 'KURUCU';
 
     // Hiyerarşi Kontrolü:
     // 1. Founder'a kimse işlem yapamaz (kendisi hariç, o da UI'da disabled olabilir ama burada logic önemli).
@@ -266,7 +266,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
         canAct = true;
     } else {
         // Admins
-        if (targetRole === 'admin' || targetrole === 'KURUCU') {
+        if (targetRole === 'admin' || targetRole === 'KURUCU') {
             alert("Yetkiniz bu kullanıcıyı yönetmeye yetmiyor! (Admin/Founder koruması)");
             return;
         }
@@ -276,7 +276,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
     if (!canAct) return;
 
     document.getElementById('adminActionModal').style.display = 'flex';
-    document.getElementById('actionUserName').textContent = username + (targetrole === 'KURUCU' ? ' (Kurucu)' : (targetRole === 'admin' ? ' (Admin)' : ''));
+    document.getElementById('actionUserName').textContent = username + (targetRole === 'KURUCU' ? ' (Kurucu)' : (targetRole === 'admin' ? ' (Admin)' : ''));
     document.getElementById('adminActionModal').dataset.uid = uid;
 
     // Show/hide permission based buttons
@@ -809,7 +809,7 @@ function appendChatMessage(msg) {
                     ${isUserAdmin ? `<button class="chat-delete-btn" onclick="deleteMessage('${msg.id}')">🗑️</button>` : ''}
                 </div>
             </div>
-            <div class="message-text">${msg.text}</div>
+            <div class="message-text">${(msg.message || msg.text)}</div>
         `;
     }
 
