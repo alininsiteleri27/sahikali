@@ -3,883 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameZone Pro</title>
+    <title>ŞAHİKALİ - Oyun Platformu</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --success: #4cc9f0;
-            --danger: #f72585;
-            --warning: #f8961e;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --gray: #6c757d;
-            --dark-bg: #121826;
-            --dark-card: #1e293b;
-            --shadow: 0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);
-            --radius: 12px;
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: var(--dark);
-            transition: var(--transition);
-        }
-
-        body.dark-mode {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #e2e8f0;
-        }
-
-        /* Login Screen */
-        #loginScreen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
-        }
-
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            width: 100%;
-            max-width: 400px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        body.dark-mode .login-container {
-            background: var(--dark-card);
-            color: #e2e8f0;
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .login-header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .login-header p {
-            color: var(--gray);
-            font-size: 1rem;
-        }
-
-        .login-input-group {
-            margin-bottom: 20px;
-        }
-
-        .login-input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        body.dark-mode .login-input-group label {
-            color: #cbd5e1;
-        }
-
-        .login-input-group input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: var(--transition);
-            background: #f8fafc;
-        }
-
-        body.dark-mode .login-input-group input {
-            background: #334155;
-            border-color: #475569;
-            color: #e2e8f0;
-        }
-
-        .login-input-group input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 10px;
-        }
-
-        .login-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-
-        .login-toggle {
-            text-align: center;
-            margin-top: 20px;
-            color: var(--gray);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .login-toggle:hover {
-            color: var(--primary);
-        }
-
-        .login-error {
-            color: var(--danger);
-            margin-top: 10px;
-            font-size: 14px;
-            text-align: center;
-            min-height: 20px;
-        }
-
-        /* Main App */
-        #mainApp {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        #mainApp.show {
-            opacity: 1;
-        }
-
-        /* Header */
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 3px solid var(--primary);
-        }
-
-        body.dark-mode .header {
-            background: rgba(30, 41, 59, 0.95);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .logo-icon {
-            background: var(--primary);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .header-stats {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .stat-icon {
-            width: 36px;
-            height: 36px;
-            background: var(--primary);
-            color: white;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .stat-value {
-            font-size: 1.3rem;
-        }
-
-        .active-multiplier {
-            background: var(--warning);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: none;
-        }
-
-        /* Profile Section */
-        .profile-section {
-            position: relative;
-        }
-
-        .profile-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: var(--transition);
-            border: 3px solid transparent;
-        }
-
-        .profile-icon:hover {
-            border-color: var(--secondary);
-            transform: scale(1.05);
-        }
-
-        .profile-icon img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .dropdown {
-            position: absolute;
-            top: 65px;
-            right: 0;
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            width: 280px;
-            padding: 20px;
-            display: none;
-            z-index: 1000;
-            animation: slideDown 0.3s ease;
-        }
-
-        body.dark-mode .dropdown {
-            background: var(--dark-card);
-        }
-
-        .dropdown.active {
-            display: block;
-        }
-
-        .dropdown-user {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .dropdown-user-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .dropdown-user-email {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        .dropdown-menu {
-            list-style: none;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-bottom: 8px;
-        }
-
-        .dropdown-item:hover {
-            background: #f1f5f9;
-        }
-
-        body.dark-mode .dropdown-item:hover {
-            background: #334155;
-        }
-
-        .dropdown-item i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .theme-switch {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .theme-toggle {
-            width: 50px;
-            height: 26px;
-            background: #cbd5e1;
-            border-radius: 13px;
-            position: relative;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .theme-toggle.active {
-            background: var(--primary);
-        }
-
-        .theme-toggle::after {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: var(--transition);
-        }
-
-        .theme-toggle.active::after {
-            left: 26px;
-        }
-
-        /* Main Content */
-        .main-content {
-            display: flex;
-            min-height: calc(100vh - 80px);
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 25px 0;
-            border-right: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        body.dark-mode .sidebar {
-            background: rgba(30, 41, 59, 0.95);
-            border-right: 1px solid #475569;
-        }
-
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px 25px;
-            cursor: pointer;
-            transition: var(--transition);
-            color: var(--dark);
-            font-weight: 600;
-            font-size: 1rem;
-            border-left: 4px solid transparent;
-        }
-
-        body.dark-mode .sidebar-item {
-            color: #e2e8f0;
-        }
-
-        .sidebar-item:hover {
-            background: #f1f5f9;
-            border-left-color: var(--primary);
-        }
-
-        body.dark-mode .sidebar-item:hover {
-            background: #334155;
-        }
-
-        .sidebar-item.active {
-            background: #e0e7ff;
-            border-left-color: var(--primary);
-            color: var(--primary);
-        }
-
-        body.dark-mode .sidebar-item.active {
-            background: #1e40af;
-            color: white;
-        }
-
-        .sidebar-item i {
-            font-size: 1.2rem;
-            width: 24px;
-        }
-
-        .badge {
-            background: var(--danger);
-            color: white;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: auto;
-            display: none;
-        }
-
-        /* Content Area */
-        .content-area {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        .content-header {
-            margin-bottom: 30px;
-        }
-
-        .content-header h2 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        body.dark-mode .content-header h2 {
-            color: #60a5fa;
-        }
-
-        .content-header p {
-            color: var(--gray);
-            font-size: 1.1rem;
-        }
-
-        /* Games Grid */
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        }
-
-        .game-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 25px;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            cursor: pointer;
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
-        }
-
-        body.dark-mode .game-card {
-            background: var(--dark-card);
-        }
-
-        .game-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04);
-        }
-
-        .game-card-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .game-card-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-        }
-
-        .game-card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .game-card-desc {
-            color: var(--gray);
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .game-card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        body.dark-mode .game-card-footer {
-            border-top: 1px solid #475569;
-        }
-
-        .game-card-tag {
-            background: #e0e7ff;
-            color: var(--primary);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        body.dark-mode .game-card-tag {
-            background: #1e40af;
-        }
-
-        /* Chat Sidebar */
-        .chat-sidebar {
-            width: 350px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-left: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 80px);
-            position: sticky;
-            top: 80px;
-        }
-
-        body.dark-mode .chat-sidebar {
-            background: rgba(30, 41, 59, 0.95);
-            border-left: 1px solid #475569;
-        }
-
-        .chat-header {
-            padding: 20px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        body.dark-mode .chat-header {
-            border-bottom: 1px solid #475569;
-        }
-
-        .chat-header h3 {
-            font-size: 1.5rem;
-            color: var(--primary);
-        }
-
-        .chat-toggle-mobile {
-            display: none;
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--gray);
-        }
-
-        /* Modal Base */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1001;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: fadeIn 0.3s ease;
-        }
-
-        body.dark-mode .modal-content {
-            background: var(--dark-card);
-        }
-
-        .modal-header {
-            padding: 25px 30px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        body.dark-mode .modal-header {
-            border-bottom: 1px solid #475569;
-        }
-
-        .modal-header h3 {
-            font-size: 1.8rem;
-            color: var(--primary);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: var(--gray);
-            transition: var(--transition);
-        }
-
-        .modal-close:hover {
-            color: var(--danger);
-        }
-
-        .modal-body {
-            padding: 30px;
-        }
-
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .chat-sidebar {
-                position: fixed;
-                right: 0;
-                top: 80px;
-                height: calc(100vh - 80px);
-                transform: translateX(0);
-                transition: var(--transition);
-            }
-            
-            .chat-sidebar.minimized {
-                transform: translateX(100%);
-            }
-            
-            .chat-toggle-mobile {
-                display: block;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .main-content {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                flex-direction: row;
-                overflow-x: auto;
-                padding: 15px;
-            }
-            
-            .sidebar-item {
-                flex-shrink: 0;
-                white-space: nowrap;
-            }
-            
-            .chat-sidebar {
-                width: 100%;
-                position: fixed;
-                top: 80px;
-                right: 0;
-                z-index: 99;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 15px 20px;
-                flex-wrap: wrap;
-                gap: 15px;
-            }
-            
-            .header-stats {
-                order: 3;
-                width: 100%;
-                justify-content: center;
-                margin-top: 15px;
-            }
-            
-            .logo {
-                font-size: 1.5rem;
-            }
-            
-            .games-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .content-area {
-                padding: 20px;
-            }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
     <!-- Login Screen -->
     <div id="loginScreen">
         <div class="login-container">
             <div class="login-header">
-                <h1 id="loginTitle">🎮 Giriş Yap</h1>
-                <p>Oyun dünyasına hoş geldiniz!</p>
+                <div class="logo-sparkle">
+                    <i class="fas fa-crown crown-icon"></i>
+                </div>
+                <h1 id="loginTitle">
+                    <span class="gradient-text">🎮 Giriş Yap</span>
+                </h1>
+                <p class="login-subtitle">Şah gibi bir oyun deneyimi seni bekliyor!</p>
             </div>
             
-            <div class="login-input-group">
-                <label for="loginEmail">E-posta</label>
-                <input type="email" id="loginEmail" placeholder="ornek@email.com">
+            <div class="login-form">
+                <div class="input-group floating-label">
+                    <input type="email" id="loginEmail" required>
+                    <label for="loginEmail">E-posta</label>
+                    <i class="fas fa-envelope input-icon"></i>
+                </div>
+                
+                <div class="input-group floating-label">
+                    <input type="password" id="loginPassword" required>
+                    <label for="loginPassword">Şifre</label>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+                
+                <div class="input-group floating-label" id="loginUsername" style="display: none;">
+                    <input type="text" id="loginUsernameInput" required>
+                    <label for="loginUsernameInput">Kullanıcı Adı</label>
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+                
+                <button class="btn-glow" id="loginButton">
+                    <span class="btn-text">Giriş Yap</span>
+                    <div class="btn-shine"></div>
+                </button>
+                
+                <div id="loginError" class="error-message"></div>
+                
+                <div class="login-toggle" id="loginToggle">
+                    <span>Hesabın yok mu?</span>
+                    <span class="toggle-text">Kayıt Ol</span>
+                </div>
             </div>
             
-            <div class="login-input-group">
-                <label for="loginPassword">Şifre</label>
-                <input type="password" id="loginPassword" placeholder="••••••••">
-            </div>
-            
-            <div class="login-input-group" id="loginUsername" style="display: none;">
-                <label for="loginUsernameInput">Kullanıcı Adı</label>
-                <input type="text" id="loginUsernameInput" placeholder="Kullanıcı adınız">
-            </div>
-            
-            <button class="login-btn" id="loginButton">Giriş Yap</button>
-            
-            <div id="loginError" class="login-error"></div>
-            
-            <div class="login-toggle" id="loginToggle">
-                Hesabın yok mu? Kayıt ol
+            <div class="login-footer">
+                <div class="sparkle-effect">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-gem"></i>
+                    <i class="fas fa-crown"></i>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Main App -->
     <div id="mainApp">
+        <!-- Floating Notifications -->
+        <div id="notificationArea"></div>
+
         <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">🎮</div>
-                <span>GameZone Pro</span>
-            </div>
-            
-            <div class="header-stats">
-                <div class="stat-item">
-                    <div class="stat-icon">💎</div>
-                    <div>
-                        <div>Puan</div>
-                        <div class="stat-value" id="userScore">0</div>
+        <header class="main-header">
+            <div class="header-container">
+                <!-- Logo -->
+                <div class="brand-logo">
+                    <div class="logo-animation">
+                        <i class="fas fa-chess-king logo-icon"></i>
+                        <span class="logo-text">ŞAHİKALİ</span>
+                    </div>
+                    <div class="logo-glow"></div>
+                </div>
+                
+                <!-- Stats -->
+                <div class="stats-container">
+                    <div class="stat-card pulse">
+                        <i class="fas fa-gem stat-icon"></i>
+                        <div class="stat-content">
+                            <span class="stat-label">Puan</span>
+                            <span class="stat-value" id="userScore">0</span>
+                        </div>
+                        <div class="stat-glow"></div>
+                    </div>
+                    
+                    <div class="multiplier-badge" id="activeMultiplier" style="display: none;">
+                        <i class="fas fa-bolt"></i>
+                        <span class="multiplier-text">x<span id="multiplierValue">1</span></span>
+                    </div>
+                    
+                    <!-- Online Status -->
+                    <div class="online-status">
+                        <div class="status-dot online"></div>
+                        <span class="status-text">Çevrimiçi</span>
                     </div>
                 </div>
                 
-                <div id="activeMultiplier" class="active-multiplier" style="display: none;">
-                    Katlayıcı: <span id="multiplierValue">x1</span>
-                </div>
-            </div>
-            
-            <div class="profile-section">
-                <div class="profile-icon" id="profileIcon">
-                    <div id="profileEmoji">👤</div>
-                    <img id="profileImage" src="" alt="" style="display: none;">
-                </div>
-                
-                <div class="dropdown" id="dropdown">
-                    <div class="dropdown-user">
-                        <div class="dropdown-user-name" id="dropdownUsername">Kullanıcı</div>
-                        <div class="dropdown-user-email" id="dropdownEmail">email@example.com</div>
-                    </div>
-                    
-                    <ul class="dropdown-menu">
-                        <li class="dropdown-item" id="editProfileBtn">
-                            <i class="fas fa-user-edit"></i>
-                            Profili Düzenle
-                        </li>
-                        <li class="dropdown-item" id="adminPanelBtn" style="display: none;">
-                            <i class="fas fa-crown"></i>
-                            Admin Paneli
-                        </li>
-                        <li class="dropdown-item" id="leaderboardBtn">
-                            <i class="fas fa-trophy"></i>
-                            Lider Tablosu
-                        </li>
-                        <li class="dropdown-item" id="marketBtn">
-                            <i class="fas fa-shopping-cart"></i>
-                            Market
-                        </li>
-                        <li class="dropdown-item" id="enhancementsBtn">
-                            <i class="fas fa-rocket"></i>
-                            Geliştirmeler
-                        </li>
-                    </ul>
-                    
-                    <div class="theme-switch">
-                        <span id="themeLabel">Dark Mode</span>
-                        <div class="theme-toggle" id="themeToggle"></div>
-                    </div>
-                    
-                    <div class="dropdown-item" id="logoutBtn" style="color: var(--danger); margin-top: 15px;">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Çıkış Yap
+                <!-- Profile Section -->
+                <div class="profile-section">
+                    <div class="profile-wrapper">
+                        <div class="profile-avatar" id="profileIcon">
+                            <div class="avatar-emoji" id="profileEmoji">👤</div>
+                            <img id="profileImage" src="" alt="" style="display: none;">
+                            <div class="avatar-ring"></div>
+                            <div class="avatar-pulse"></div>
+                        </div>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="dropdown-menu" id="dropdown">
+                            <div class="dropdown-header">
+                                <div class="dropdown-user">
+                                    <div class="dropdown-avatar">
+                                        <div id="dropdownAvatarEmoji">👤</div>
+                                        <img id="dropdownAvatarImage" src="" alt="" style="display: none;">
+                                    </div>
+                                    <div class="dropdown-user-info">
+                                        <h4 id="dropdownUsername">Kullanıcı</h4>
+                                        <p id="dropdownEmail">email@example.com</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="dropdown-divider"></div>
+                            
+                            <ul class="dropdown-list">
+                                <li class="dropdown-item" id="editProfileBtn">
+                                    <i class="fas fa-user-edit"></i>
+                                    <span>Profili Düzenle</span>
+                                </li>
+                                <li class="dropdown-item admin-only" id="adminPanelBtn" style="display: none;">
+                                    <i class="fas fa-crown"></i>
+                                    <span>Admin Paneli</span>
+                                </li>
+                                <li class="dropdown-item" id="leaderboardBtn">
+                                    <i class="fas fa-trophy"></i>
+                                    <span>Lider Tablosu</span>
+                                </li>
+                                <li class="dropdown-item" id="marketBtn">
+                                    <i class="fas fa-store"></i>
+                                    <span>Market</span>
+                                </li>
+                                <li class="dropdown-item" id="enhancementsBtn">
+                                    <i class="fas fa-rocket"></i>
+                                    <span>Geliştirmeler</span>
+                                </li>
+                                <li class="dropdown-item founder-only" style="display: none;">
+                                    <i class="fas fa-gem"></i>
+                                    <span>Founder Zone</span>
+                                </li>
+                            </ul>
+                            
+                            <div class="dropdown-divider"></div>
+                            
+                            <div class="dropdown-footer">
+                                <div class="theme-toggle" id="themeToggle">
+                                    <i class="fas fa-sun"></i>
+                                    <div class="toggle-switch">
+                                        <div class="toggle-circle"></div>
+                                    </div>
+                                    <i class="fas fa-moon"></i>
+                                </div>
+                                <div class="dropdown-item logout-item" id="logoutBtn">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Çıkış Yap</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -887,146 +184,289 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Sidebar -->
-            <nav class="sidebar">
-                <div class="sidebar-item active" data-tab="games">
-                    <i class="fas fa-gamepad"></i>
-                    Oyunlar
-                </div>
-                
-                <div class="sidebar-item" data-tab="chat">
-                    <i class="fas fa-comments"></i>
-                    Chat
-                    <span class="badge" id="dmUnreadBadge" style="display: none;">0</span>
-                </div>
-                
-                <div class="sidebar-item" data-tab="friends">
-                    <i class="fas fa-user-friends"></i>
-                    Arkadaşlar
-                </div>
-                
-                <div class="sidebar-item" data-tab="achievements">
-                    <i class="fas fa-medal"></i>
-                    Başarılar
-                </div>
-                
-                <div class="sidebar-item" data-tab="help">
-                    <i class="fas fa-question-circle"></i>
-                    Yardım
-                </div>
-                
-                <div class="sidebar-item founder-only" data-tab="founder" style="display: none;">
-                    <i class="fas fa-gem"></i>
-                    Founder Zone
+            <!-- Sidebar Navigation -->
+            <nav class="sidebar-nav">
+                <div class="nav-container">
+                    <ul class="nav-list">
+                        <li class="nav-item active" data-tab="games">
+                            <div class="nav-icon-wrapper">
+                                <i class="fas fa-gamepad"></i>
+                                <div class="nav-glow"></div>
+                            </div>
+                            <span class="nav-label">Oyunlar</span>
+                            <div class="nav-indicator"></div>
+                        </li>
+                        
+                        <li class="nav-item" data-tab="chat">
+                            <div class="nav-icon-wrapper">
+                                <i class="fas fa-comments"></i>
+                                <div class="nav-glow"></div>
+                                <span class="nav-badge" id="dmUnreadBadge" style="display: none;">0</span>
+                            </div>
+                            <span class="nav-label">Chat</span>
+                            <div class="nav-indicator"></div>
+                        </li>
+                        
+                        <li class="nav-item" data-tab="friends">
+                            <div class="nav-icon-wrapper">
+                                <i class="fas fa-user-friends"></i>
+                                <div class="nav-glow"></div>
+                            </div>
+                            <span class="nav-label">Arkadaşlar</span>
+                            <div class="nav-indicator"></div>
+                        </li>
+                        
+                        <li class="nav-item" data-tab="achievements">
+                            <div class="nav-icon-wrapper">
+                                <i class="fas fa-medal"></i>
+                                <div class="nav-glow"></div>
+                            </div>
+                            <span class="nav-label">Başarılar</span>
+                            <div class="nav-indicator"></div>
+                        </li>
+                        
+                        <li class="nav-item founder-only" data-tab="founder" style="display: none;">
+                            <div class="nav-icon-wrapper">
+                                <i class="fas fa-gem"></i>
+                                <div class="nav-glow"></div>
+                            </div>
+                            <span class="nav-label">Founder</span>
+                            <div class="nav-indicator"></div>
+                        </li>
+                    </ul>
+                    
+                    <div class="nav-footer">
+                        <button class="ad-button pulse" id="watchAdBtn">
+                            <i class="fas fa-tv"></i>
+                            <span>+30 Puan Kazan</span>
+                        </button>
+                        <div class="ad-cooldown" id="adCooldown" style="display: none;">
+                            <div class="cooldown-timer">
+                                <i class="fas fa-clock"></i>
+                                <span id="adTimer">5:00</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </nav>
 
-            <!-- Content Area -->
+            <!-- Games Content Area -->
             <main class="content-area">
                 <div class="content-header">
-                    <h2>🎲 Oyunlar</h2>
-                    <p>Seçtiğin oyunu oyna ve puan kazan!</p>
+                    <div class="header-sparkle">
+                        <i class="fas fa-star"></i>
+                        <h2 class="gradient-text">🎲 Oyunlar</h2>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="content-subtitle">Seçtiğin oyunu oyna ve şah gibi puan kazan!</p>
                 </div>
                 
                 <!-- Games Grid -->
                 <div class="games-grid">
                     <!-- Coin Flip -->
-                    <div class="game-card" id="coinFlipCard">
-                        <div class="game-card-header">
-                            <div class="game-card-icon">🪙</div>
-                            <div class="game-card-title">Yazı Tura</div>
+                    <div class="game-card card-hover" id="coinFlipCard">
+                        <div class="card-shine"></div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-icon coin-icon">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div class="card-title">
+                                    <h3>Yazı Tura</h3>
+                                    <span class="card-tag">Risk: Orta</span>
+                                </div>
+                            </div>
+                            <p class="card-description">
+                                Bahis yap ve paranı tura mı yazı mı olacağını tahmin et.
+                                Kazanırsan x1.5 puan!
+                            </p>
+                            <div class="card-footer">
+                                <div class="card-stats">
+                                    <span><i class="fas fa-coins"></i> Min: 10</span>
+                                    <span><i class="fas fa-bolt"></i> x1.5</span>
+                                </div>
+                                <div class="card-badge hot">
+                                    <i class="fas fa-fire"></i>
+                                    <span>Popüler</span>
+                                </div>
+                            </div>
                         </div>
-                        <p class="game-card-desc">
-                            Bahis yap ve paranı tura mı yazı mı olacağını tahmin et.
-                            Kazanırsan x1.5 puan!
-                        </p>
-                        <div class="game-card-footer">
-                            <div class="game-card-tag">Risk: Orta</div>
-                            <div class="game-card-tag">Minimum: 10 Puan</div>
-                        </div>
+                        <div class="card-glow"></div>
                     </div>
                     
                     <!-- Rock Paper Scissors -->
-                    <div class="game-card" id="rpsCard">
-                        <div class="game-card-header">
-                            <div class="game-card-icon">✂️</div>
-                            <div class="game-card-title">Taş Kağıt Makas</div>
+                    <div class="game-card card-hover" id="rpsCard">
+                        <div class="card-shine"></div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-icon rps-icon">
+                                    <i class="fas fa-hand-rock"></i>
+                                </div>
+                                <div class="card-title">
+                                    <h3>Taş Kağıt Makas</h3>
+                                    <span class="card-tag">Strateji: Düşük</span>
+                                </div>
+                            </div>
+                            <p class="card-description">
+                                Bot'a karşı oyna. Taş makası, makas kağıdı, kağıt taşı yener.
+                                Kazanırsan x1.6 puan!
+                            </p>
+                            <div class="card-footer">
+                                <div class="card-stats">
+                                    <span><i class="fas fa-coins"></i> Min: 10</span>
+                                    <span><i class="fas fa-bolt"></i> x1.6</span>
+                                </div>
+                                <div class="card-badge new">
+                                    <i class="fas fa-star"></i>
+                                    <span>Yeni</span>
+                                </div>
+                            </div>
                         </div>
-                        <p class="game-card-desc">
-                            Bot'a karşı oyna. Taş makası, makas kağıdı, kağıt taşı yener.
-                            Kazanırsan x1.6 puan!
-                        </p>
-                        <div class="game-card-footer">
-                            <div class="game-card-tag">Strateji: Düşük</div>
-                            <div class="game-card-tag">Minimum: 10 Puan</div>
-                        </div>
+                        <div class="card-glow"></div>
                     </div>
                     
                     <!-- Wheel of Fortune -->
-                    <div class="game-card" id="spinWheelCard">
-                        <div class="game-card-header">
-                            <div class="game-card-icon">🎡</div>
-                            <div class="game-card-title">Çarkıfelek</div>
+                    <div class="game-card card-hover" id="spinWheelCard">
+                        <div class="card-shine"></div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-icon wheel-icon">
+                                    <i class="fas fa-dharmachakra"></i>
+                                </div>
+                                <div class="card-title">
+                                    <h3>Çarkıfelek</h3>
+                                    <span class="card-tag">Risk: Yüksek</span>
+                                </div>
+                            </div>
+                            <p class="card-description">
+                                Çarkı çevir ve nereye düşeceğini bekle. x0'dan x5'e kadar
+                                çarpma şansı!
+                            </p>
+                            <div class="card-footer">
+                                <div class="card-stats">
+                                    <span><i class="fas fa-coins"></i> Min: 10</span>
+                                    <span><i class="fas fa-bolt"></i> x5</span>
+                                </div>
+                                <div class="card-badge jackpot">
+                                    <i class="fas fa-gem"></i>
+                                    <span>Jackpot</span>
+                                </div>
+                            </div>
                         </div>
-                        <p class="game-card-desc">
-                            Çarkı çevir ve nereye düşeceğini bekle. x0'dan x5'e kadar
-                            çarpma şansı!
-                        </p>
-                        <div class="game-card-footer">
-                            <div class="game-card-tag">Risk: Yüksek</div>
-                            <div class="game-card-tag">Minimum: 10 Puan</div>
-                        </div>
+                        <div class="card-glow"></div>
                     </div>
                     
                     <!-- 2048 -->
-                    <div class="game-card" id="game2048Card">
-                        <div class="game-card-header">
-                            <div class="game-card-icon">🔢</div>
-                            <div class="game-card-title">2048</div>
+                    <div class="game-card card-hover" id="game2048Card">
+                        <div class="card-shine"></div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-icon game2048-icon">
+                                    <i class="fas fa-th"></i>
+                                </div>
+                                <div class="card-title">
+                                    <h3>2048</h3>
+                                    <span class="card-tag">Strateji: Yüksek</span>
+                                </div>
+                            </div>
+                            <p class="card-description">
+                                Karelere yön ver, aynı sayıları birleştir ve 2048'e ulaş!
+                                Skorun kadar puan kazan.
+                            </p>
+                            <div class="card-footer">
+                                <div class="card-stats">
+                                    <span><i class="fas fa-brain"></i> Zeka</span>
+                                    <span><i class="fas fa-infinity"></i> Sonsuz</span>
+                                </div>
+                                <div class="card-badge brain">
+                                    <i class="fas fa-brain"></i>
+                                    <span>Zeka</span>
+                                </div>
+                            </div>
                         </div>
-                        <p class="game-card-desc">
-                            Karelere yön ver, aynı sayıları birleştir ve 2048'e ulaş!
-                            Skorun kadar puan kazan.
-                        </p>
-                        <div class="game-card-footer">
-                            <div class="game-card-tag">Strateji: Yüksek</div>
-                            <div class="game-card-tag">Ödül: Skor x 0.1</div>
-                        </div>
+                        <div class="card-glow"></div>
                     </div>
                     
                     <!-- Chess -->
-                    <div class="game-card" id="chessCard">
-                        <div class="game-card-header">
-                            <div class="game-card-icon">♟️</div>
-                            <div class="game-card-title">Satranç</div>
+                    <div class="game-card card-hover" id="chessCard">
+                        <div class="card-shine"></div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-icon chess-icon">
+                                    <i class="fas fa-chess-knight"></i>
+                                </div>
+                                <div class="card-title">
+                                    <h3>Satranç</h3>
+                                    <span class="card-tag">Zorluk: Zor</span>
+                                </div>
+                            </div>
+                            <p class="card-description">
+                                Bot'a karşı satranç oyna. Zeka ve strateji gerektiren
+                                klasik oyun.
+                            </p>
+                            <div class="card-footer">
+                                <div class="card-stats">
+                                    <span><i class="fas fa-chess"></i> Strateji</span>
+                                    <span><i class="fas fa-crown"></i> 500 Puan</span>
+                                </div>
+                                <div class="card-badge premium">
+                                    <i class="fas fa-crown"></i>
+                                    <span>Premium</span>
+                                </div>
+                            </div>
                         </div>
-                        <p class="game-card-desc">
-                            Bot'a karşı satranç oyna. Zeka ve strateji gerektiren
-                            klasik oyun.
-                        </p>
-                        <div class="game-card-footer">
-                            <div class="game-card-tag">Zorluk: Zor</div>
-                            <div class="game-card-tag">Ödül: Zafer başına 500</div>
-                        </div>
+                        <div class="card-glow"></div>
                     </div>
                     
-                    <!-- Ad System -->
-                    <div class="game-card">
-                        <div class="game-card-header">
-                            <div class="game-card-icon">📺</div>
-                            <div class="game-card-title">Reklam İzle</div>
+                    <!-- Daily Bonus -->
+                    <div class="game-card special-card" id="dailyBonusCard">
+                        <div class="special-shine"></div>
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-icon daily-icon">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <div class="card-title">
+                                    <h3>Günlük Bonus</h3>
+                                    <span class="card-tag">Ücretsiz</span>
+                                </div>
+                            </div>
+                            <p class="card-description">
+                                Her gün ücretsiz bonus kazan! Günlük olarak gelir,
+                                kaçırma!
+                            </p>
+                            <div class="card-footer">
+                                <button class="btn-daily" id="claimDailyBtn">
+                                    <i class="fas fa-gift"></i>
+                                    <span>Bonusu Al</span>
+                                </button>
+                            </div>
                         </div>
-                        <p class="game-card-desc">
-                            30 saniyelik reklam izle ve 30 puan kazan.
-                            Her 5 dakikada bir kullanılabilir.
-                        </p>
-                        <div class="game-card-footer">
-                            <button class="login-btn" id="watchAdBtn" style="width: 100%;">
-                                +30 Puan Kazan
-                            </button>
+                        <div class="special-glow"></div>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="quick-stats">
+                    <div class="stat-box">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-info">
+                            <h4>Çevrimiçi</h4>
+                            <p id="onlineCount">0</p>
                         </div>
-                        <div id="adCooldown" style="display: none; text-align: center; margin-top: 10px;">
-                            <div>Bekleme süresi: <span id="adTimer">5:00</span></div>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-trophy"></i>
+                        <div class="stat-info">
+                            <h4>Toplam Oyun</h4>
+                            <p id="totalGames">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="stat-info">
+                            <h4>Günlük Kazanç</h4>
+                            <p id="dailyEarnings">0</p>
                         </div>
                     </div>
                 </div>
@@ -1035,119 +475,217 @@
             <!-- Chat Sidebar -->
             <aside class="chat-sidebar" id="chatSidebar">
                 <div class="chat-header">
-                    <h3>💬 Chat</h3>
-                    <button class="chat-toggle-mobile" id="chatToggleMobile">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                
-                <!-- Chat Tabs -->
-                <div class="chat-tabs">
-                    <div class="chat-tab-btn active" data-tab="global">Global</div>
-                    <div class="chat-tab-btn" data-tab="dm">DM</div>
-                    <div class="chat-tab-btn" data-tab="vs">VS</div>
-                </div>
-                
-                <!-- Global Chat -->
-                <div class="chat-tab-content active" id="globalChatTab">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-welcome">
-                            💬 Chat'e hoş geldin! Mesaj göndermeye başla.
-                        </div>
+                    <div class="chat-title">
+                        <i class="fas fa-comments"></i>
+                        <h3>💬 Chat</h3>
+                        <button class="chat-toggle" id="chatToggleMobile">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
                     
-                    <div class="chat-input-area">
-                        <input type="text" id="chatInput" placeholder="Mesajını yaz...">
-                        <button id="chatSend">Gönder</button>
-                    </div>
-                    
-                    <div id="chatLoadMore" style="display: none; text-align: center; padding: 10px;">
-                        <button id="loadMoreBtn">Daha fazla yükle</button>
+                    <!-- Chat Tabs -->
+                    <div class="chat-tabs">
+                        <button class="chat-tab active" data-tab="global">
+                            <i class="fas fa-globe"></i>
+                            <span>Global</span>
+                        </button>
+                        <button class="chat-tab" data-tab="dm">
+                            <i class="fas fa-user-friends"></i>
+                            <span>DM</span>
+                        </button>
+                        <button class="chat-tab" data-tab="vs">
+                            <i class="fas fa-crosshairs"></i>
+                            <span>VS</span>
+                        </button>
                     </div>
                 </div>
                 
-                <!-- DM Chat -->
-                <div class="chat-tab-content" id="dmChatTab">
-                    <div class="dm-users" id="dmUserList">
-                        <div class="chat-welcome">
-                            👤 Bir kullanıcı seçerek DM başlat
-                        </div>
-                    </div>
-                    
-                    <div class="dm-conversation" id="dmConversation" style="display: none;">
-                        <div class="dm-header">
-                            <button id="dmBackBtn">← Geri</button>
-                            <div class="dm-user-info">
-                                <div id="dmUserName">Kullanıcı</div>
-                                <div id="dmUserOnline">🟢 Çevrimiçi</div>
+                <!-- Chat Content -->
+                <div class="chat-content">
+                    <!-- Global Chat -->
+                    <div class="chat-tab-content active" id="globalChatTab">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="welcome-message">
+                                <i class="fas fa-comment-dots"></i>
+                                <p>Hoş geldin! İlk mesajını gönder ve topluluğa katıl.</p>
                             </div>
                         </div>
                         
-                        <div class="dm-messages" id="dmMessages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="chatInput" placeholder="Mesajını yaz...">
+                            <button class="send-btn" id="chatSend">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
                         
-                        <div class="dm-input-area">
-                            <input type="text" id="dmInput" placeholder="DM mesajını yaz...">
-                            <button id="dmSend">Gönder</button>
+                        <div class="chat-actions">
+                            <button class="action-btn" id="sendVsRequestBtn">
+                                <i class="fas fa-crosshairs"></i>
+                                <span>VS Daveti</span>
+                            </button>
+                            <button class="action-btn" id="loadMoreBtn" style="display: none;">
+                                <i class="fas fa-history"></i>
+                                <span>Daha Fazla</span>
+                            </button>
                         </div>
                     </div>
-                </div>
-                
-                <!-- VS Chat -->
-                <div class="chat-tab-content" id="vsChatTab">
-                    <div class="vs-content">
-                        <div class="vs-header">
-                            <h4>⚔️ VS Mücadele</h4>
-                            <p>Diğer oyunculara meydan oku!</p>
+                    
+                    <!-- DM Chat -->
+                    <div class="chat-tab-content" id="dmChatTab">
+                        <div class="dm-users" id="dmUserList">
+                            <div class="dm-welcome">
+                                <i class="fas fa-user-friends"></i>
+                                <p>Bir kullanıcı seçerek özel sohbet başlat</p>
+                            </div>
                         </div>
                         
-                        <button id="sendVsRequestBtn" class="login-btn">
-                            VS Daveti Gönder
-                        </button>
-                        
-                        <div class="vs-requests" id="vsRequests">
-                            <div class="chat-welcome">
-                                Aktif VS daveti yok
+                        <div class="dm-conversation" id="dmConversation" style="display: none;">
+                            <div class="dm-header">
+                                <button class="back-btn" id="dmBackBtn">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <div class="dm-user-info">
+                                    <div class="dm-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="dm-details">
+                                        <h4 id="dmUserName">Kullanıcı</h4>
+                                        <span id="dmUserOnline">🟢 Çevrimiçi</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="dm-messages" id="dmMessages"></div>
+                            
+                            <div class="dm-input">
+                                <input type="text" id="dmInput" placeholder="Özel mesajını yaz...">
+                                <button class="send-btn" id="dmSend">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- VS Chat -->
+                    <div class="chat-tab-content" id="vsChatTab">
+                        <div class="vs-content">
+                            <div class="vs-header">
+                                <i class="fas fa-crosshairs"></i>
+                                <h4>⚔️ VS Mücadele</h4>
+                                <p>Diğer oyunculara meydan oku!</p>
+                            </div>
+                            
+                            <div class="vs-actions">
+                                <button class="vs-btn primary" id="sendVsRequestBtn">
+                                    <i class="fas fa-bullhorn"></i>
+                                    <span>VS Daveti Gönder</span>
+                                </button>
+                                
+                                <div class="vs-stats">
+                                    <div class="vs-stat">
+                                        <i class="fas fa-fire"></i>
+                                        <span>Aktif VS: <strong>0</strong></span>
+                                    </div>
+                                    <div class="vs-stat">
+                                        <i class="fas fa-trophy"></i>
+                                        <span>Kazanma: <strong>0</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="vs-requests" id="vsRequests">
+                                <div class="no-requests">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>Aktif VS daveti yok</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </aside>
         </div>
+
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav">
+            <button class="mobile-nav-btn active" data-tab="games">
+                <i class="fas fa-gamepad"></i>
+                <span>Oyunlar</span>
+            </button>
+            <button class="mobile-nav-btn" data-tab="chat">
+                <i class="fas fa-comments"></i>
+                <span>Chat</span>
+                <span class="mobile-badge" id="mobileDmBadge" style="display: none;">0</span>
+            </button>
+            <button class="mobile-nav-btn" data-tab="profile">
+                <i class="fas fa-user"></i>
+                <span>Profil</span>
+            </button>
+            <button class="mobile-nav-btn" data-tab="market">
+                <i class="fas fa-store"></i>
+                <span>Market</span>
+            </button>
+        </nav>
     </div>
-        <!-- ======================================== -->
+
+    <!-- ======================================== -->
     <!-- MODAL WINDOWS -->
     <!-- ======================================== -->
 
     <!-- Profile Modal -->
     <div class="modal" id="profileModal">
-        <div class="modal-content">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
             <div class="modal-header">
-                <h3>👤 Profil Düzenle</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-user-edit"></i>
+                    <h3>Profil Düzenle</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="profile-edit-form">
-                    <div class="profile-image-section">
-                        <div class="profile-image-preview">
-                            <div id="profilePreview" style="display: none;"></div>
-                            <div id="profileEmojiPreview">👤</div>
+                <div class="profile-edit">
+                    <div class="avatar-upload">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <div class="preview-emoji" id="profileEmojiPreview">👤</div>
+                            <img id="profilePreview" src="" alt="" style="display: none;">
                         </div>
-                        <input type="text" id="profileImageUrl" placeholder="Profil resmi URL'si">
+                        <div class="upload-controls">
+                            <input type="text" id="profileImageUrl" placeholder="Profil resmi URL'si">
+                            <button class="upload-btn" onclick="document.getElementById('profileImageUrl').focus()">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>Kullanıcı Adı</label>
-                        <input type="text" id="newUsername" placeholder="Yeni kullanıcı adı">
+                        <label for="newUsername">
+                            <i class="fas fa-user-tag"></i>
+                            Kullanıcı Adı
+                        </label>
+                        <input type="text" id="newUsername" placeholder="Yeni kullanıcı adınız">
                     </div>
                     
                     <div class="form-group">
-                        <label>Yeni Şifre (Boş bırakabilirsin)</label>
+                        <label for="newPassword">
+                            <i class="fas fa-lock"></i>
+                            Yeni Şifre
+                        </label>
                         <input type="password" id="newPassword" placeholder="En az 6 karakter">
                     </div>
                     
-                    <div id="profileMessage" class="profile-message"></div>
+                    <div id="profileMessage" class="message"></div>
                     
-                    <button class="login-btn" id="saveProfileBtn">Kaydet</button>
+                    <div class="modal-actions">
+                        <button class="modal-btn secondary" id="cancelProfileBtn">
+                            <span>İptal</span>
+                        </button>
+                        <button class="modal-btn primary" id="saveProfileBtn">
+                            <i class="fas fa-save"></i>
+                            <span>Kaydet</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1155,50 +693,98 @@
 
     <!-- Admin Modal -->
     <div class="modal" id="adminModal">
-        <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container large">
             <div class="modal-header">
-                <h3>👑 Admin Paneli</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-crown"></i>
+                    <h3>Admin Paneli</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
+                <!-- Admin Tabs -->
                 <div class="admin-tabs">
-                    <div class="admin-tab-btn active" data-tab="users">Kullanıcılar</div>
-                    <div class="admin-tab-btn" data-tab="presence">Online Durum</div>
-                    <div class="admin-tab-btn" data-tab="dashboard">Dashboard</div>
-                    <div class="admin-tab-btn" data-tab="analytics">Analitik</div>
+                    <button class="admin-tab active" data-tab="users">
+                        <i class="fas fa-users"></i>
+                        <span>Kullanıcılar</span>
+                    </button>
+                    <button class="admin-tab" data-tab="presence">
+                        <i class="fas fa-wifi"></i>
+                        <span>Online Durum</span>
+                    </button>
+                    <button class="admin-tab" data-tab="dashboard">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button class="admin-tab" data-tab="analytics">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analitik</span>
+                    </button>
                 </div>
                 
+                <!-- Users Tab -->
                 <div class="admin-tab-content active" id="adminUsersTab">
                     <div class="admin-search">
+                        <i class="fas fa-search"></i>
                         <input type="text" id="adminUserSearch" placeholder="Kullanıcı ara...">
                     </div>
-                    <div class="admin-user-list" id="adminUserList"></div>
+                    <div class="admin-user-list" id="adminUserList">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                            <p>Kullanıcılar yükleniyor...</p>
+                        </div>
+                    </div>
                 </div>
                 
+                <!-- Presence Tab -->
                 <div class="admin-tab-content" id="adminPresenceTab">
                     <div class="presence-stats">
-                        <div class="presence-stat">
-                            <div class="presence-stat-value" id="onlineCount">0</div>
-                            <div class="presence-stat-label">Online</div>
+                        <div class="presence-stat online">
+                            <i class="fas fa-wifi"></i>
+                            <div class="stat-content">
+                                <h3 id="onlineCount">0</h3>
+                                <p>Online</p>
+                            </div>
                         </div>
-                        <div class="presence-stat">
-                            <div class="presence-stat-value" id="offlineCount">0</div>
-                            <div class="presence-stat-label">Offline</div>
+                        <div class="presence-stat offline">
+                            <i class="fas fa-wifi-slash"></i>
+                            <div class="stat-content">
+                                <h3 id="offlineCount">0</h3>
+                                <p>Offline</p>
+                            </div>
                         </div>
-                        <div class="presence-stat">
-                            <div class="presence-stat-value" id="totalCount">0</div>
-                            <div class="presence-stat-label">Toplam</div>
+                        <div class="presence-stat total">
+                            <i class="fas fa-users"></i>
+                            <div class="stat-content">
+                                <h3 id="totalCount">0</h3>
+                                <p>Toplam</p>
+                            </div>
                         </div>
                     </div>
                     <div class="presence-list" id="presenceList"></div>
                 </div>
                 
+                <!-- Dashboard Tab -->
                 <div class="admin-tab-content" id="adminDashboardTab">
-                    <div class="admin-stats" id="adminStats"></div>
+                    <div class="dashboard-stats" id="adminStats">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                            <p>İstatistikler yükleniyor...</p>
+                        </div>
+                    </div>
                 </div>
                 
+                <!-- Analytics Tab -->
                 <div class="admin-tab-content" id="adminAnalyticsTab">
-                    <div class="admin-analytics" id="adminAnalyticsChart"></div>
+                    <div class="analytics-chart" id="adminAnalyticsChart">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                            <p>Analizler yükleniyor...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1206,71 +792,150 @@
 
     <!-- Admin Action Modal -->
     <div class="modal" id="adminActionModal">
-        <div class="modal-content">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
             <div class="modal-header">
-                <h3>Kullanıcı İşlemleri</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-cog"></i>
+                    <h3>Kullanıcı İşlemleri</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="action-user-info">
-                    Kullanıcı: <span id="actionUserName">Kullanıcı</span>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="action-btn" id="banUserBtn">Yasakla</button>
-                    <button class="action-btn" id="unbanUserBtn">Yasak Kaldır</button>
-                    <button class="action-btn" id="muteUserBtn">Sustur</button>
-                    <button class="action-btn" id="unmuteUserBtn">Susturma Kaldır</button>
-                    <button class="action-btn" id="resetPasswordBtn">Şifre Sıfırla</button>
-                    
-                    <div id="founderGodActions" style="display: none; margin-top: 20px;">
-                        <h4>👑 Founder Actions</h4>
-                        <button class="action-btn founder-btn" id="setAdminBtn">Admin Yap</button>
-                        <button class="action-btn founder-btn" id="removeAdminBtn">Admin Kaldır</button>
-                        <button class="action-btn founder-btn" id="givePointsBtn">Puan Ver</button>
-                        <button class="action-btn founder-btn" id="takePointsBtn">Puan Al</button>
+                <div class="action-header">
+                    <div class="action-user">
+                        <i class="fas fa-user"></i>
+                        <div class="user-info">
+                            <h4 id="actionUserName">Kullanıcı</h4>
+                            <p>#<span id="actionUserId">0000</span></p>
+                        </div>
                     </div>
                 </div>
                 
-                <div id="muteOptions" style="display: none; margin-top: 20px;">
-                    <label>Süre (dakika)</label>
-                    <input type="number" id="muteDuration" value="30" min="1">
-                    <button class="action-btn" id="confirmMuteBtn">Onayla</button>
+                <div class="action-buttons">
+                    <button class="action-btn ban" id="banUserBtn">
+                        <i class="fas fa-ban"></i>
+                        <span>Yasakla</span>
+                    </button>
+                    <button class="action-btn unban" id="unbanUserBtn" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Yasak Kaldır</span>
+                    </button>
+                    <button class="action-btn mute" id="muteUserBtn">
+                        <i class="fas fa-volume-mute"></i>
+                        <span>Sustur</span>
+                    </button>
+                    <button class="action-btn unmute" id="unmuteUserBtn" style="display: none;">
+                        <i class="fas fa-volume-up"></i>
+                        <span>Susturma Kaldır</span>
+                    </button>
+                    <button class="action-btn reset" id="resetPasswordBtn">
+                        <i class="fas fa-key"></i>
+                        <span>Şifre Sıfırla</span>
+                    </button>
                 </div>
                 
-                <div id="passwordResetOptions" style="display: none; margin-top: 20px;">
-                    <input type="password" id="newPasswordInput" placeholder="Yeni şifre" disabled>
-                    <button class="action-btn" id="confirmResetBtn">Onayla</button>
+                <!-- Founder Actions -->
+                <div class="founder-actions" id="founderGodActions" style="display: none;">
+                    <h4><i class="fas fa-crown"></i> Founder Actions</h4>
+                    <div class="action-buttons">
+                        <button class="action-btn founder" id="setAdminBtn">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Admin Yap</span>
+                        </button>
+                        <button class="action-btn founder" id="removeAdminBtn">
+                            <i class="fas fa-user-times"></i>
+                            <span>Admin Kaldır</span>
+                        </button>
+                        <button class="action-btn founder" id="givePointsBtn">
+                            <i class="fas fa-coins"></i>
+                            <span>Puan Ver</span>
+                        </button>
+                        <button class="action-btn founder" id="takePointsBtn">
+                            <i class="fas fa-minus-circle"></i>
+                            <span>Puan Al</span>
+                        </button>
+                    </div>
                 </div>
                 
-                <div id="adminActionMessage" class="admin-message"></div>
+                <!-- Mute Options -->
+                <div class="mute-options" id="muteOptions" style="display: none;">
+                    <h5>Susturma Süresi</h5>
+                    <div class="duration-selector">
+                        <input type="number" id="muteDuration" value="30" min="1" max="1440">
+                        <span>dakika</span>
+                    </div>
+                    <button class="action-btn confirm" id="confirmMuteBtn">
+                        <i class="fas fa-check"></i>
+                        <span>Onayla</span>
+                    </button>
+                </div>
+                
+                <!-- Password Reset Options -->
+                <div class="password-options" id="passwordResetOptions" style="display: none;">
+                    <h5>Şifre Sıfırlama</h5>
+                    <p>Kullanıcının email adresine sıfırlama linki gönderilecek.</p>
+                    <button class="action-btn confirm" id="confirmResetBtn">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Gönder</span>
+                    </button>
+                </div>
+                
+                <div id="adminActionMessage" class="message"></div>
             </div>
         </div>
     </div>
 
     <!-- Leaderboard Modal -->
     <div class="modal" id="leaderboardModal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container large">
             <div class="modal-header">
-                <h3>🏆 Lider Tablosu</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-trophy"></i>
+                    <h3>🏆 Lider Tablosu</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="leaderboard-search">
+                    <i class="fas fa-search"></i>
                     <input type="text" id="userSearchInput" placeholder="Kullanıcı ara...">
                 </div>
                 
                 <div class="leaderboard-tabs">
-                    <div class="tab-btn active" data-tab="top">En İyi 50</div>
-                    <div class="tab-btn" data-tab="search">Arama Sonuçları</div>
+                    <button class="leaderboard-tab active" data-tab="top">
+                        <i class="fas fa-crown"></i>
+                        <span>En İyi 50</span>
+                    </button>
+                    <button class="leaderboard-tab" data-tab="search">
+                        <i class="fas fa-search"></i>
+                        <span>Arama Sonuçları</span>
+                    </button>
                 </div>
                 
-                <div id="topUsersTab">
-                    <div class="leaderboard-list" id="leaderboardList"></div>
-                </div>
-                
-                <div id="searchResultsTab" style="display: none;">
-                    <div class="leaderboard-list" id="searchResultsList"></div>
+                <div class="leaderboard-content">
+                    <div class="leaderboard-tab-content active" id="topUsersTab">
+                        <div class="leaderboard-list" id="leaderboardList">
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                                <p>Lider tablosu yükleniyor...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="leaderboard-tab-content" id="searchResultsTab" style="display: none;">
+                        <div class="leaderboard-list" id="searchResultsList">
+                            <div class="empty-state">
+                                <i class="fas fa-search"></i>
+                                <p>Bir kullanıcı adı yazarak arama yapın</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1278,67 +943,159 @@
 
     <!-- Market Modal -->
     <div class="modal" id="marketModal">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container xlarge">
             <div class="modal-header">
-                <h3>🛒 Market</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-store"></i>
+                    <h3>🛒 Market</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="market-grid">
-                    <div class="market-item">
-                        <div class="market-item-icon bronze">📦</div>
-                        <div class="market-item-name">Bronz Kutu</div>
-                        <div class="market-item-price">50 Puan</div>
-                        <div class="market-item-desc">20-100 Puan + Katlayıcı şansı</div>
-                        <button class="market-btn buy-box-btn" data-box="bronze">Satın Al</button>
+                    <!-- Bronze Box -->
+                    <div class="market-item bronze">
+                        <div class="item-shine"></div>
+                        <div class="item-content">
+                            <div class="item-icon">
+                                <i class="fas fa-box"></i>
+                                <div class="rarity bronze">Bronz</div>
+                            </div>
+                            <h4 class="item-name">Bronz Kutu</h4>
+                            <div class="item-price">
+                                <i class="fas fa-coins"></i>
+                                <span>50 Puan</span>
+                            </div>
+                            <p class="item-desc">20-100 Puan + Katlayıcı şansı</p>
+                            <button class="item-btn buy-box-btn" data-box="bronze">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Satın Al</span>
+                            </button>
+                        </div>
                     </div>
                     
-                    <div class="market-item">
-                        <div class="market-item-icon silver">📦</div>
-                        <div class="market-item-name">Gümüş Kutu</div>
-                        <div class="market-item-price">150 Puan</div>
-                        <div class="market-item-desc">100-250 Puan + Katlayıcı şansı</div>
-                        <button class="market-btn buy-box-btn" data-box="silver">Satın Al</button>
+                    <!-- Silver Box -->
+                    <div class="market-item silver">
+                        <div class="item-shine"></div>
+                        <div class="item-content">
+                            <div class="item-icon">
+                                <i class="fas fa-box-open"></i>
+                                <div class="rarity silver">Gümüş</div>
+                            </div>
+                            <h4 class="item-name">Gümüş Kutu</h4>
+                            <div class="item-price">
+                                <i class="fas fa-coins"></i>
+                                <span>150 Puan</span>
+                            </div>
+                            <p class="item-desc">100-250 Puan + Katlayıcı şansı</p>
+                            <button class="item-btn buy-box-btn" data-box="silver">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Satın Al</span>
+                            </button>
+                        </div>
                     </div>
                     
-                    <div class="market-item">
-                        <div class="market-item-icon gold">📦</div>
-                        <div class="market-item-name">Altın Kutu</div>
-                        <div class="market-item-price">400 Puan</div>
-                        <div class="market-item-desc">200-600 Puan + Katlayıcı şansı</div>
-                        <button class="market-btn buy-box-btn" data-box="gold">Satın Al</button>
+                    <!-- Gold Box -->
+                    <div class="market-item gold">
+                        <div class="item-shine"></div>
+                        <div class="item-content">
+                            <div class="item-icon">
+                                <i class="fas fa-gem"></i>
+                                <div class="rarity gold">Altın</div>
+                            </div>
+                            <h4 class="item-name">Altın Kutu</h4>
+                            <div class="item-price">
+                                <i class="fas fa-coins"></i>
+                                <span>400 Puan</span>
+                            </div>
+                            <p class="item-desc">200-600 Puan + Katlayıcı şansı</p>
+                            <button class="item-btn buy-box-btn" data-box="gold">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Satın Al</span>
+                            </button>
+                        </div>
                     </div>
                     
-                    <div class="market-item">
-                        <div class="market-item-icon epic">💜</div>
-                        <div class="market-item-name">Epik Kutu</div>
-                        <div class="market-item-price">250 Puan</div>
-                        <div class="market-item-desc">150-400 Puan + Katlayıcı şansı</div>
-                        <button class="market-btn buy-box-btn" data-box="epic">Satın Al</button>
+                    <!-- Epic Box -->
+                    <div class="market-item epic">
+                        <div class="item-shine"></div>
+                        <div class="item-content">
+                            <div class="item-icon">
+                                <i class="fas fa-star"></i>
+                                <div class="rarity epic">Epik</div>
+                            </div>
+                            <h4 class="item-name">Epik Kutu</h4>
+                            <div class="item-price">
+                                <i class="fas fa-coins"></i>
+                                <span>250 Puan</span>
+                            </div>
+                            <p class="item-desc">150-400 Puan + Katlayıcı şansı</p>
+                            <button class="item-btn buy-box-btn" data-box="epic">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Satın Al</span>
+                            </button>
+                        </div>
                     </div>
                     
-                    <div class="market-item">
-                        <div class="market-item-icon legendary">🌈</div>
-                        <div class="market-item-name">Efsanevi Kutu</div>
-                        <div class="market-item-price">600 Puan</div>
-                        <div class="market-item-desc">400-900 Puan + Katlayıcı şansı</div>
-                        <button class="market-btn buy-box-btn" data-box="legendary">Satın Al</button>
+                    <!-- Legendary Box -->
+                    <div class="market-item legendary">
+                        <div class="item-shine"></div>
+                        <div class="item-content">
+                            <div class="item-icon">
+                                <i class="fas fa-fire"></i>
+                                <div class="rarity legendary">Efsanevi</div>
+                            </div>
+                            <h4 class="item-name">Efsanevi Kutu</h4>
+                            <div class="item-price">
+                                <i class="fas fa-coins"></i>
+                                <span>600 Puan</span>
+                            </div>
+                            <p class="item-desc">400-900 Puan + Katlayıcı şansı</p>
+                            <button class="item-btn buy-box-btn" data-box="legendary">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Satın Al</span>
+                            </button>
+                        </div>
                     </div>
                     
-                    <div class="market-item">
-                        <div class="market-item-icon daily">📅</div>
-                        <div class="market-item-name">Günlük Kutu</div>
-                        <div class="market-item-price">ÜCRETSİZ</div>
-                        <div class="market-item-desc">Günde 1 kez 20-120 Puan</div>
-                        <button class="market-btn buy-box-btn" data-box="daily">Hemen Aç</button>
+                    <!-- Daily Box -->
+                    <div class="market-item daily">
+                        <div class="item-shine"></div>
+                        <div class="item-content">
+                            <div class="item-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                                <div class="rarity daily">Günlük</div>
+                            </div>
+                            <h4 class="item-name">Günlük Kutu</h4>
+                            <div class="item-price free">
+                                <i class="fas fa-gift"></i>
+                                <span>ÜCRETSİZ</span>
+                            </div>
+                            <p class="item-desc">Günde 1 kez 20-120 Puan</p>
+                            <button class="item-btn free-btn buy-box-btn" data-box="daily">
+                                <i class="fas fa-gift"></i>
+                                <span>Hemen Aç</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
-                <div id="boxResult" class="box-result"></div>
+                <div id="boxResult" class="result-message"></div>
                 
                 <div class="inventory-section">
-                    <h4>🎒 Envanterim</h4>
-                    <div class="inventory-grid" id="inventoryGrid"></div>
+                    <div class="section-header">
+                        <i class="fas fa-backpack"></i>
+                        <h4>🎒 Envanterim</h4>
+                    </div>
+                    <div class="inventory-grid" id="inventoryGrid">
+                        <div class="empty-inventory">
+                            <i class="fas fa-box-open"></i>
+                            <p>Envanterde öğe yok</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1346,43 +1103,84 @@
 
     <!-- Box Open Animation Modal -->
     <div class="modal" id="boxOpenModal">
-        <div class="modal-content" style="background: transparent; box-shadow: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container transparent">
             <div class="box-open-animation">
-                <div class="box-open-container">
-                    <div class="box-open-box" id="boxOpenBox">
-                        <div class="box-open-lid" id="boxOpenLid"></div>
-                        <div class="box-open-body"></div>
+                <div class="box-container">
+                    <div class="box" id="boxOpenBox">
+                        <div class="box-lid" id="boxOpenLid"></div>
+                        <div class="box-body"></div>
                     </div>
-                    <div class="box-open-glow" id="boxOpenGlow"></div>
+                    <div class="box-glow" id="boxOpenGlow"></div>
+                    <div class="box-sparkles">
+                        <div class="sparkle"></div>
+                        <div class="sparkle"></div>
+                        <div class="sparkle"></div>
+                        <div class="sparkle"></div>
+                    </div>
                 </div>
-                <div class="box-open-reward" id="boxOpenReward"></div>
+                <div class="box-reward" id="boxOpenReward">
+                    <h3 class="reward-title">Kazandın!</h3>
+                    <div class="reward-content">
+                        <i class="fas fa-gift"></i>
+                        <p class="reward-text">Ödül açılıyor...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Coin Flip Modal -->
     <div class="modal" id="coinFlipModal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
             <div class="modal-header">
-                <h3>🪙 Yazı Tura</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-coins"></i>
+                    <h3>🪙 Yazı Tura</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="game-bet-section">
-                    <label>Bahis Miktarı</label>
-                    <input type="number" id="coinBetAmount" value="50" min="10" step="10">
-                </div>
-                
-                <div class="coin-flip-container">
-                    <div class="coin-3d" id="coin3d" data-result="heads">
-                        <div class="coin-3d-front">YAZI</div>
-                        <div class="coin-3d-back">TURA</div>
+                <div class="game-bet">
+                    <div class="bet-controls">
+                        <label for="coinBetAmount">
+                            <i class="fas fa-coins"></i>
+                            Bahis Miktarı
+                        </label>
+                        <div class="bet-input">
+                            <button class="bet-btn minus">-10</button>
+                            <input type="number" id="coinBetAmount" value="50" min="10" step="10">
+                            <button class="bet-btn plus">+10</button>
+                        </div>
                     </div>
                 </div>
                 
+                <div class="coin-container">
+                    <div class="coin-3d" id="coin3d">
+                        <div class="coin-front">
+                            <i class="fas fa-head-side-virus"></i>
+                            <span>YAZI</span>
+                        </div>
+                        <div class="coin-back">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>TURA</span>
+                        </div>
+                    </div>
+                    <div class="coin-shadow"></div>
+                </div>
+                
                 <div class="game-choices">
-                    <button class="choice-btn" data-choice="heads">YAZI</button>
-                    <button class="choice-btn" data-choice="tails">TURA</button>
+                    <button class="choice-btn heads" data-choice="heads">
+                        <i class="fas fa-head-side-virus"></i>
+                        <span>YAZI</span>
+                    </button>
+                    <button class="choice-btn tails" data-choice="tails">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>TURA</span>
+                    </button>
                 </div>
                 
                 <div id="coinResult" class="game-result"></div>
@@ -1392,32 +1190,62 @@
 
     <!-- RPS Modal -->
     <div class="modal" id="rpsModal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
             <div class="modal-header">
-                <h3>✂️ Taş Kağıt Makas</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-hand-rock"></i>
+                    <h3>✂️ Taş Kağıt Makas</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="game-bet-section">
-                    <label>Bahis Miktarı</label>
-                    <input type="number" id="rpsBetAmount" value="50" min="10" step="10">
+                <div class="game-bet">
+                    <div class="bet-controls">
+                        <label for="rpsBetAmount">
+                            <i class="fas fa-coins"></i>
+                            Bahis Miktarı
+                        </label>
+                        <div class="bet-input">
+                            <button class="bet-btn minus">-10</button>
+                            <input type="number" id="rpsBetAmount" value="50" min="10" step="10">
+                            <button class="bet-btn plus">+10</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="rps-choices">
-                    <button class="choice-btn" data-choice="rock">🪨 Taş</button>
-                    <button class="choice-btn" data-choice="paper">📄 Kağıt</button>
-                    <button class="choice-btn" data-choice="scissors">✂️ Makas</button>
+                    <button class="rps-choice" data-choice="rock">
+                        <i class="fas fa-hand-rock"></i>
+                        <span>Taş</span>
+                    </button>
+                    <button class="rps-choice" data-choice="paper">
+                        <i class="fas fa-hand-paper"></i>
+                        <span>Kağıt</span>
+                    </button>
+                    <button class="rps-choice" data-choice="scissors">
+                        <i class="fas fa-hand-scissors"></i>
+                        <span>Makas</span>
+                    </button>
                 </div>
                 
-                <div class="rps-reveal-container" id="rpsRevealContainer">
-                    <div class="rps-reveal-player">
-                        <div>Sen</div>
-                        <div class="rps-reveal-choice" id="rpsPlayerChoice"></div>
+                <div class="rps-reveal" id="rpsRevealContainer">
+                    <div class="rps-player">
+                        <h5>Sen</h5>
+                        <div class="rps-icon" id="rpsPlayerChoice">
+                            <i class="fas fa-question"></i>
+                        </div>
                     </div>
-                    <div class="rps-reveal-vs">VS</div>
-                    <div class="rps-reveal-bot">
-                        <div>Bot</div>
-                        <div class="rps-reveal-choice" id="rpsBotChoice"></div>
+                    <div class="rps-vs">
+                        <span>VS</span>
+                    </div>
+                    <div class="rps-bot">
+                        <h5>Bot</h5>
+                        <div class="rps-icon" id="rpsBotChoice">
+                            <i class="fas fa-question"></i>
+                        </div>
                     </div>
                 </div>
                 
@@ -1428,27 +1256,59 @@
 
     <!-- Wheel Modal -->
     <div class="modal" id="spinWheelModal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container large">
             <div class="modal-header">
-                <h3>🎡 Çarkıfelek</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-dharmachakra"></i>
+                    <h3>🎡 Çarkıfelek</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="game-bet-section">
-                    <label>Bahis Miktarı</label>
-                    <input type="number" id="wheelBetAmount" value="100" min="10" step="10">
+                <div class="game-bet">
+                    <div class="bet-controls">
+                        <label for="wheelBetAmount">
+                            <i class="fas fa-coins"></i>
+                            Bahis Miktarı
+                        </label>
+                        <div class="bet-input">
+                            <button class="bet-btn minus">-10</button>
+                            <input type="number" id="wheelBetAmount" value="100" min="10" step="10">
+                            <button class="bet-btn plus">+10</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="wheel-container">
-                    <canvas id="wheelCanvas" width="400" height="400"></canvas>
-                    <div class="wheel-pointer"></div>
+                    <div class="wheel-wrapper">
+                        <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                        <div class="wheel-pointer">
+                            <i class="fas fa-caret-down"></i>
+                        </div>
+                        <div class="wheel-center">
+                            <i class="fas fa-gem"></i>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="wheel-prize-prediction">
-                    Tahmini Kazanç: <span id="wheelPrizeText">±0 puan</span>
+                <div class="wheel-prize">
+                    <div class="prize-info">
+                        <i class="fas fa-bullseye"></i>
+                        <div class="prize-text">
+                            <span>Tahmini Kazanç:</span>
+                            <strong id="wheelPrizeText">±0 puan</strong>
+                        </div>
+                    </div>
                 </div>
                 
-                <button class="spin-btn" id="spinBtn">ÇEVİR!</button>
+                <button class="spin-btn" id="spinBtn">
+                    <i class="fas fa-redo"></i>
+                    <span>ÇEVİR!</span>
+                    <div class="spin-shine"></div>
+                </button>
                 
                 <div id="wheelResult" class="game-result"></div>
             </div>
@@ -1457,36 +1317,58 @@
 
     <!-- 2048 Game Modal -->
     <div class="modal" id="game2048Modal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
             <div class="modal-header">
-                <h3>🔢 2048</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-th"></i>
+                    <h3>🔢 2048</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="game2048-stats">
-                    <div class="game2048-score-display">
-                        <div class="game2048-score-label">SKOR</div>
-                        <div class="game2048-score-value" id="game2048Score">0</div>
+                    <div class="score-display">
+                        <div class="score-label">SKOR</div>
+                        <div class="score-value" id="game2048Score">0</div>
                     </div>
-                    <div class="game2048-best-display">
-                        <div class="game2048-best-label">EN İYİ</div>
-                        <div class="game2048-best-value" id="game2048BestScore">0</div>
+                    <div class="best-display">
+                        <div class="best-label">EN İYİ</div>
+                        <div class="best-value" id="game2048BestScore">0</div>
                     </div>
-                    <button class="game2048-restart-btn" id="game2048Restart">Yeniden Başlat</button>
+                    <button class="restart-btn" id="game2048Restart">
+                        <i class="fas fa-redo"></i>
+                        <span>Yeniden Başlat</span>
+                    </button>
                 </div>
                 
                 <div class="game2048-grid" id="game2048Grid"></div>
                 
                 <div class="game2048-controls">
-                    <button class="game2048-control-btn" id="game2048Up">⬆️</button>
-                    <button class="game2048-control-btn" id="game2048Down">⬇️</button>
-                    <button class="game2048-control-btn" id="game2048Left">⬅️</button>
-                    <button class="game2048-control-btn" id="game2048Right">➡️</button>
+                    <button class="control-btn up" id="game2048Up">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <div class="middle-controls">
+                        <button class="control-btn left" id="game2048Left">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="control-center">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                        <button class="control-btn right" id="game2048Right">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <button class="control-btn down" id="game2048Down">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
                 </div>
                 
                 <div class="game2048-instructions">
-                    <p><strong>Kontroller:</strong> Yön tuşları veya üstteki butonlar</p>
-                    <p><strong>Oyun:</strong> Aynı sayıları birleştir, 2048'e ulaş!</p>
+                    <p><i class="fas fa-keyboard"></i> <strong>Kontroller:</strong> Yön tuşları veya butonlar</p>
+                    <p><i class="fas fa-lightbulb"></i> <strong>Oyun:</strong> Aynı sayıları birleştir, 2048'e ulaş!</p>
                 </div>
             </div>
         </div>
@@ -1494,107 +1376,238 @@
 
     <!-- Chess Modal -->
     <div class="modal" id="chessModal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container large">
             <div class="modal-header">
-                <h3>♟️ Satranç</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-chess-knight"></i>
+                    <h3>♟️ Satranç</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="chess-game-info">
-                    <div class="chess-player-turn">
-                        Sıra: <span id="chessCurrentPlayer">Beyaz</span>
+                    <div class="player-turn">
+                        <i class="fas fa-chess-board"></i>
+                        <div class="turn-info">
+                            <span>Sıra:</span>
+                            <strong id="chessCurrentPlayer">Beyaz</strong>
+                        </div>
                     </div>
-                    <button class="chess-restart-btn" id="chessRestart">Yeniden Başlat</button>
+                    <button class="chess-restart" id="chessRestart">
+                        <i class="fas fa-redo"></i>
+                        <span>Yeniden Başlat</span>
+                    </button>
                 </div>
                 
                 <div class="chess-board" id="chessBoard"></div>
                 
                 <div class="chess-instructions">
-                    <p><strong>Oyun:</strong> Beyaz başlar. Taş seç ve hedef kareye tıkla.</p>
-                    <p><strong>Ödül:</strong> Bot'u yenerek 500 puan kazan!</p>
+                    <div class="instruction">
+                        <i class="fas fa-chess-pawn"></i>
+                        <p><strong>Oyun:</strong> Beyaz başlar. Taş seç ve hedef kareye tıkla.</p>
+                    </div>
+                    <div class="instruction">
+                        <i class="fas fa-trophy"></i>
+                        <p><strong>Ödül:</strong> Bot'u yenerek 500 puan kazan!</p>
+                    </div>
                 </div>
                 
-                <audio id="chessMoveSound" src="https://assets.mixkit.co/sfx/preview/mixkit-chess-tile-move-1125.mp3" preload="auto"></audio>
+                <audio id="chessMoveSound" preload="auto">
+                    <source src="https://assets.mixkit.co/sfx/preview/mixkit-chess-tile-move-1125.mp3" type="audio/mpeg">
+                </audio>
             </div>
         </div>
     </div>
 
     <!-- Enhancements Modal -->
     <div class="modal" id="enhancementsModal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container large">
             <div class="modal-header">
-                <h3>🚀 Geliştirmeler</h3>
-                <button class="modal-close">&times;</button>
+                <div class="modal-title">
+                    <i class="fas fa-rocket"></i>
+                    <h3>🚀 Geliştirmeler</h3>
+                </div>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="enhancements-grid">
+                    <!-- Click Power -->
                     <div class="enhancement-item">
-                        <div class="enhancement-icon">⚡</div>
+                        <div class="enhancement-icon power">
+                            <i class="fas fa-bolt"></i>
+                        </div>
                         <div class="enhancement-info">
-                            <div class="enhancement-name">Tıklama Gücü</div>
-                            <div class="enhancement-desc">Tüm kazançları %50 artırır</div>
-                            <div class="enhancement-level">Seviye 0/3</div>
+                            <h4>Tıklama Gücü</h4>
+                            <p>Tüm kazançları %50 artırır</p>
+                            <div class="enhancement-level">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Seviye <span class="level">0</span>/3</span>
+                            </div>
                         </div>
                         <button class="enhancement-btn" data-enhancement-id="click-power" data-max-level="3">
-                            <span class="enhancement-cost">100 Puan</span>
-                            <span class="enhancement-action">Yükselt</span>
+                            <span class="cost">100 Puan</span>
+                            <span class="action">Yükselt</span>
                         </button>
+                        <div class="enhancement-glow"></div>
                     </div>
                     
+                    <!-- Ad Boost -->
                     <div class="enhancement-item">
-                        <div class="enhancement-icon">📺</div>
+                        <div class="enhancement-icon ad">
+                            <i class="fas fa-tv"></i>
+                        </div>
                         <div class="enhancement-info">
-                            <div class="enhancement-name">Reklam Güçlendirici</div>
-                            <div class="enhancement-desc">Reklam ödülünü +10 artırır</div>
-                            <div class="enhancement-level">Seviye 0/5</div>
+                            <h4>Reklam Güçlendirici</h4>
+                            <p>Reklam ödülünü +10 artırır</p>
+                            <div class="enhancement-level">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Seviye <span class="level">0</span>/5</span>
+                            </div>
                         </div>
                         <button class="enhancement-btn" data-enhancement-id="ad-boost" data-max-level="5">
-                            <span class="enhancement-cost">250 Puan</span>
-                            <span class="enhancement-action">Yükselt</span>
+                            <span class="cost">250 Puan</span>
+                            <span class="action">Yükselt</span>
                         </button>
+                        <div class="enhancement-glow"></div>
                     </div>
                     
+                    <!-- Wheel Luck -->
                     <div class="enhancement-item">
-                        <div class="enhancement-icon">🎡</div>
+                        <div class="enhancement-icon luck">
+                            <i class="fas fa-clover"></i>
+                        </div>
                         <div class="enhancement-info">
-                            <div class="enhancement-name">Çark Şansı</div>
-                            <div class="enhancement-desc">Çark kazanma şansını artırır</div>
-                            <div class="enhancement-level">Seviye 0/3</div>
+                            <h4>Çark Şansı</h4>
+                            <p>Çark kazanma şansını artırır</p>
+                            <div class="enhancement-level">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Seviye <span class="level">0</span>/3</span>
+                            </div>
                         </div>
                         <button class="enhancement-btn" data-enhancement-id="wheel-luck" data-max-level="3">
-                            <span class="enhancement-cost">500 Puan</span>
-                            <span class="enhancement-action">Yükselt</span>
+                            <span class="cost">500 Puan</span>
+                            <span class="action">Yükselt</span>
                         </button>
+                        <div class="enhancement-glow"></div>
                     </div>
                     
+                    <!-- Chat Speed -->
                     <div class="enhancement-item">
-                        <div class="enhancement-icon">💬</div>
+                        <div class="enhancement-icon speed">
+                            <i class="fas fa-comment-alt"></i>
+                        </div>
                         <div class="enhancement-info">
-                            <div class="enhancement-name">Chat Hızı</div>
-                            <div class="enhancement-desc">Chat bekleme süresini azaltır</div>
-                            <div class="enhancement-level">Seviye 0/3</div>
+                            <h4>Chat Hızı</h4>
+                            <p>Chat bekleme süresini azaltır</p>
+                            <div class="enhancement-level">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Seviye <span class="level">0</span>/3</span>
+                            </div>
                         </div>
                         <button class="enhancement-btn" data-enhancement-id="chat-speed" data-max-level="3">
-                            <span class="enhancement-cost">150 Puan</span>
-                            <span class="enhancement-action">Yükselt</span>
+                            <span class="cost">150 Puan</span>
+                            <span class="action">Yükselt</span>
                         </button>
+                        <div class="enhancement-glow"></div>
                     </div>
                 </div>
                 
-                <div id="enhancementResult" class="enhancement-result"></div>
+                <div id="enhancementResult" class="result-message"></div>
             </div>
         </div>
     </div>
 
     <!-- Game Loading Overlay -->
-    <div id="gameLoadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1002; justify-content: center; align-items: center; color: white; font-size: 2rem;">
-        <div class="loading-spinner">⌛</div>
+    <div id="gameLoadingOverlay">
+        <div class="loading-content">
+            <div class="spinner-ring"></div>
+            <div class="loading-text">
+                <span class="loading-dots">Yükleniyor</span>
+            </div>
+        </div>
     </div>
 
-    <!-- JavaScript -->
-    <script type="module">
-        // Buraya daha önce hazırladığınız app.js kodunu ekleyin
-        // Kodun tamamını buraya kopyalayın
+    <!-- Audio Elements -->
+    <audio id="clickSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="successSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="failSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- External Scripts -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <!-- Main App Script -->
+    <script type="module" src="app.js"></script>
+    
+    <!-- Initialization Script -->
+    <script>
+        // Initialize particles.js
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof particlesJS !== 'undefined') {
+                particlesJS('particles-js', {
+                    particles: {
+                        number: { value: 80, density: { enable: true, value_area: 800 } },
+                        color: { value: "#4cc9f0" },
+                        shape: { type: "circle" },
+                        opacity: { value: 0.5, random: true },
+                        size: { value: 3, random: true },
+                        line_linked: {
+                            enable: true,
+                            distance: 150,
+                            color: "#4cc9f0",
+                            opacity: 0.2,
+                            width: 1
+                        },
+                        move: {
+                            enable: true,
+                            speed: 2,
+                            direction: "none",
+                            random: true,
+                            straight: false,
+                            out_mode: "out",
+                            bounce: false
+                        }
+                    },
+                    interactivity: {
+                        detect_on: "canvas",
+                        events: {
+                            onhover: { enable: true, mode: "repulse" },
+                            onclick: { enable: true, mode: "push" }
+                        }
+                    },
+                    retina_detect: true
+                });
+            }
+        });
+        
+        // Play sound function
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio play failed:", e));
+            }
+        }
+        
+        // Add click sound to all buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                playSound('clickSound');
+            }
+        });
     </script>
 </body>
 </html>
