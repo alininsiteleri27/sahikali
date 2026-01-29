@@ -1573,54 +1573,15 @@ async function sendMessage() {
 
 
 
-function appendChatMessage(data) {
-    const chatEl = document.getElementById('globalMessages');
-    const msgDiv = document.createElement('div');
-    const role = data.role || 'user';
-    const isSpecial = role === 'admin' || role === 'founder' || role === 'KURUCU';
 
-    msgDiv.className = `msg-bubble ${isSpecial ? 'admin' : ''}`;
-    if (role === 'KURUCU' || role === 'founder') msgDiv.classList.add('founder');
 
-    // Fix undefined bug: Check both keys
-    const textContent = data.message || data.text || '...';
 
-    msgDiv.innerHTML = `
-        <div class="msg-header">
-            <span class="msg-user ${isSpecial ? 'founder' : ''}">${data.username}</span>
-            <span class="msg-time">${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString() : ''}</span>
-        </div>
-        <div>${textContent}</div>
-    `;
-    chatEl.appendChild(msgDiv);
-}
 
 // ========================================
 // DM SYSTEM
 // ========================================
-async function loadDmUsers() {
-    const listEl = document.getElementById('dmUserList');
-    listEl.innerHTML = '<div class="loading-spinner"></div>';
 
-    // In a real app we'd query distinct conversations. 
-    // For simplicity, listing all users (except self)
-    const usersSnap = await getDocs(query(collection(db, 'users'), limit(20)));
 
-    listEl.innerHTML = '';
-    usersSnap.forEach(docSnap => {
-        if (docSnap.id === currentUser.uid) return;
-        const u = docSnap.data();
-
-        const div = document.createElement('div');
-        div.className = 'dm-user-row';
-        div.innerHTML = `
-            <img src="${u.profileImage || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Crect width="40" height="40" fill="%23444"/%3E%3C/svg%3E'}" class="mini-avatar">
-            <span>${u.username}</span>
-        `;
-        div.onclick = () => openDm(docSnap.id, u.username);
-        listEl.appendChild(div);
-    });
-}
 
 async function openDm(targetUid, username) {
     currentDmRecipient = targetUid;
