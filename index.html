@@ -3,639 +3,290 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Satranç Oyun Platformu - Pro Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Gaming Network</title>
+    <!-- Premium Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@500;700;900&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome Pro (Simulated) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-        <div class="login-box">
-            <div class="login-title" id="loginTitle">🎮 Giriş Yap</div>
-            <input type="email" class="login-input" placeholder="Email" id="loginEmail" autocomplete="email">
-            <input type="password" class="login-input" placeholder="Şifre (min 6 karakter)" id="loginPassword"
-                autocomplete="current-password">
-            <input type="text" class="login-input" placeholder="Kullanıcı Adı" id="loginUsername"
-                style="display: none;">
-            <button class="login-button" id="loginButton">Giriş Yap</button>
-            <div class="login-error" id="loginError"></div>
-            <div class="login-toggle" id="loginToggle">Hesabın yok mu? Kayıt ol</div>
-        </div>
-        <div class="signature-container">
-            <span class="glitch-text" data-text="KCGLN ALİ">KCGLN ALİ</span>
+
+    <!-- LOADING SCREEN (Surprise Effect) -->
+    <div id="boot-screen" class="boot-overlay">
+        <div class="boot-logo">
+            <i class="fa-brands fa-discord fa-beat-fade"></i>
+            <div class="loader-bar"></div>
+            <div class="boot-text">NEXUS SYSTEM INITIALIZING...</div>
         </div>
     </div>
 
-    <!-- Main App -->
-    <div class="container" id="mainApp">
-        <!-- Header -->
-        <div class="header">
-            <div class="profile-section">
-                <div class="profile-icon" id="profileIcon">
-                    <img id="profileImage" src="" alt="👤"
-                        style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                    <span id="profileEmoji">👤</span>
-                </div>
-                <div>
-                    <div class="username" id="headerUsername">Yükleniyor...</div>
-                    <div class="user-email" id="headerEmail">loading...</div>
-                </div>
-
-                <!-- Dropdown Menu -->
-                <div class="dropdown" id="dropdown">
-                    <div class="dropdown-item" id="profileInfo">
-                        <span>👤</span>
-                        <div>
-                            <div style="font-weight: bold;" id="dropdownUsername">Kullanıcı</div>
-                            <div style="font-size: 12px; opacity: 0.7;" id="dropdownEmail">email</div>
-                        </div>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <div class="dropdown-item" id="editProfileBtn">
-                        <span>✏️</span> Profili Düzenle
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <!-- Admin Panel Button - Only visible for admins -->
-                    <div class="dropdown-item admin-only" id="adminPanelBtn" style="display: none;">
-                        <span>👨‍💼</span> Admin Paneli
-                    </div>
-                    <div class="dropdown-divider admin-only" style="display: none;"></div>
-                    <div class="dropdown-item" id="themeToggleItem">
-                        <span>🌓</span>
-                        <div class="theme-toggle">
-                            <span id="themeLabel">Dark Mode</span>
-                            <div class="toggle-switch" id="themeToggle">
-                                <div class="toggle-slider"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <div class="dropdown-item logout-item" id="logoutBtn">
-                        <span>🚪</span> Çıkış Yap
-                    </div>
-                </div>
+    <!-- AUTH SCREEN -->
+    <div id="auth-overlay" class="auth-wrapper">
+        <div class="auth-card glass-morphism-3">
+            <div class="auth-header">
+                <h2>Hoş Geldin!</h2>
+                <p>Seni tekrar aramızda görmek harika.</p>
             </div>
-
-            <div class="header-right">
-                <button class="leaderboard-btn" id="leaderboardBtn">
-                    🏆 Liderlik
-                </button>
-                <button class="market-btn" id="marketBtn">
-                    🛒 Market
-                </button>
-                <div class="score-section">
-                    <span>💎</span>
-                    <div>
-                        <div class="score-label">Puanın</div>
-                        <div class="score-value" id="userScore">0</div>
+            <div id="auth-forms">
+                <!-- Login -->
+                <div id="login-form" class="auth-step active">
+                    <div class="input-grp">
+                        <label>E-POSTA</label>
+                        <input type="email" id="loginEmail" autocomplete="off">
+                    </div>
+                    <div class="input-grp">
+                        <label>ŞİFRE</label>
+                        <input type="password" id="loginPassword">
+                    </div>
+                    <button id="loginButton" class="btn-discord">Giriş Yap</button>
+                    <div class="auth-footer">
+                        Hesabın yok mu? <span id="toRegister">Kaydol</span>
+                    </div>
+                </div>
+                <!-- Register -->
+                <div id="register-form" class="auth-step">
+                    <div class="input-grp">
+                        <label>KULLANICI ADI</label>
+                        <input type="text" id="regUsername">
+                    </div>
+                    <div class="input-grp">
+                        <label>E-POSTA</label>
+                        <input type="email" id="regEmail">
+                    </div>
+                    <div class="input-grp">
+                        <label>ŞİFRE</label>
+                        <input type="password" id="regPassword">
+                    </div>
+                    <button id="registerButton" class="btn-discord">Kaydol</button>
+                    <div class="auth-footer">
+                        Zaten üyen var mı? <span id="toLogin">Giriş Yap</span>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Animated Background Particles -->
+        <div id="particles"></div>
+    </div>
 
-        <!-- Main Content with Chat Sidebar -->
-        <div class="main-layout">
-            <!-- Main Content -->
-            <div class="main-content">
-                <div class="section-title">🎮 Oyunlar</div>
+    <!-- MAIN APP STRUCTURE -->
+    <div id="app-dashboard" class="app-layout hidden">
 
-                <!-- Games Grid -->
-                <div class="games-grid">
-                    <div class="game-card" id="spinWheelCard">
-                        <div class="game-icon">🎡</div>
-                        <div class="game-title">Çarkıfelek</div>
-                        <div class="game-desc">Şansını dene, büyük ödüller kazan!</div>
-                        <div class="game-play-btn">Oyna</div>
+        <!-- 1. SERVER RAIL (Extreme Left) -->
+        <nav class="server-rail">
+            <div class="server-icon home active" title="Ana Sayfa">
+                <i class="fa-brands fa-discord"></i>
+            </div>
+            <div class="separator"></div>
+            <div class="server-icon" title="Oyun Sunucusu 1">
+                <img src="https://via.placeholder.com/50/7289da/ffffff?text=G1" alt="S1">
+                <div class="pill"></div>
+            </div>
+            <div class="server-icon" title="VIP Lounge">
+                <img src="https://via.placeholder.com/50/d946ef/ffffff?text=VIP" alt="VIP">
+                <div class="pill"></div>
+            </div>
+            <div class="separator"></div>
+            <div class="server-icon add-server">
+                <i class="fa-solid fa-plus"></i>
+            </div>
+            <div class="server-icon explore">
+                <i class="fa-solid fa-compass"></i>
+            </div>
+        </nav>
+
+        <!-- 2. CHANNEL SIDEBAR (Middle Left) -->
+        <aside class="channel-sidebar">
+            <header class="server-header">
+                <h3>Nexus Network <i class="fa-solid fa-chevron-down"></i></h3>
+            </header>
+
+            <div class="channel-scroller">
+                <!-- Category: Information -->
+                <div class="channel-category">
+                    <span class="cat-name"><i class="fa-solid fa-angle-down"></i> BİLGİ</span>
+                    <div class="channel-item active" data-page="home">
+                        <i class="fa-solid fa-hashtag"></i>
+                        <span>kurallar</span>
                     </div>
-
-                    <div class="game-card" id="chessCard">
-                        <div class="game-icon">♟️</div>
-                        <div class="game-title">Satranç</div>
-                        <div class="game-desc">Strateji oyunu oyna, kazanç kat!</div>
-                        <div class="game-play-btn">Oyna</div>
-                    </div>
-
-                    <div class="game-card" id="coinFlipCard">
-                        <div class="game-icon">🪙</div>
-                        <div class="game-title">Yazı Tura</div>
-                        <div class="game-desc">Basit ama heyecanlı, hızlı kazan!</div>
-                        <div class="game-play-btn">Oyna</div>
-                    </div>
-
-                    <div class="game-card" id="rpsCard">
-                        <div class="game-icon">✊</div>
-                        <div class="game-title">Taş-Kağıt-Makas</div>
-                        <div class="game-desc">Klasik oyun, modern kazanç!</div>
-                        <div class="game-play-btn">Oyna</div>
+                    <div class="channel-item">
+                        <i class="fa-solid fa-hashtag"></i>
+                        <span>duyurular</span>
                     </div>
                 </div>
 
-                <!-- Ad Section -->
-                <div class="ad-section" id="adSection">
-                    <div class="ad-title">📺 Reklam İzle & Puan Kazan</div>
-                    <button class="ad-button" id="watchAdBtn">+50 Puan Kazan</button>
-                    <div class="ad-cooldown" id="adCooldown" style="display: none;">
-                        Sonraki reklam: <span id="adTimer">0</span>
+                <!-- Category: Actions -->
+                <div class="channel-category">
+                    <span class="cat-name"><i class="fa-solid fa-angle-down"></i> İŞLEMLER</span>
+                    <div class="channel-item" id="navMarket">
+                        <i class="fa-solid fa-shop"></i>
+                        <span>market</span>
+                        <span class="new-badge">YENİ</span>
+                    </div>
+                    <div class="channel-item" id="navLeaderboard">
+                        <i class="fa-solid fa-trophy"></i>
+                        <span>liderlik-tablosu</span>
+                    </div>
+                </div>
+
+                <!-- Category: Games -->
+                <div class="channel-category">
+                    <span class="cat-name"><i class="fa-solid fa-angle-down"></i> OYUNLAR</span>
+                    <div class="channel-item game-trigger" data-game="wheel">
+                        <i class="fa-solid fa-gamepad"></i>
+                        <span>çarkıfelek</span>
+                    </div>
+                    <div class="channel-item game-trigger" data-game="chess">
+                        <i class="fa-solid fa-chess"></i>
+                        <span>satranç-pro</span>
+                    </div>
+                    <div class="channel-item game-trigger" data-game="rps">
+                        <i class="fa-solid fa-hand-scissors"></i>
+                        <span>taş-kağıt</span>
+                    </div>
+                </div>
+
+                <!-- Admin Area -->
+                <div class="channel-category admin-only hidden" id="adminCategory">
+                    <span class="cat-name"><i class="fa-solid fa-angle-down"></i> YÖNETİM</span>
+                    <div class="channel-item" id="navAdmin">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>admin-paneli</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Chat Sidebar -->
-            <div class="chat-sidebar" id="chatSidebar">
-                <div class="chat-header">
-                    <div class="chat-title">💬 <span id="chatHeaderTitle">Global Chat</span></div>
-                    <div class="chat-header-buttons">
-                        <button class="chat-dm-btn" id="openChallengeBtn" title="Düello Yap"
-                            style="background: linear-gradient(45deg, #ff4757, #ff6b81); margin-right: 5px;">⚔️</button>
-                        <button class="chat-dm-btn" id="chatDmBtn" title="Özel Mesajlar">📩</button>
-                        <button class="chat-toggle-mobile" id="chatToggleMobile">▼</button>
-                    </div>
+            <!-- User Area (Bottom Fixed) -->
+            <div class="user-area">
+                <div class="user-avatar-wrapper">
+                    <img id="sidebarAvatar" src="https://via.placeholder.com/40" alt="Me">
+                    <div class="status-indicator online"></div>
                 </div>
-                <div class="chat-content">
-                    <!-- Tab Buttons -->
-                    <div class="chat-tabs">
-                        <button class="chat-tab-btn active" data-tab="global">Global</button>
-                        <button class="chat-tab-btn" data-tab="dm">DM</button>
-                    </div>
-
-                    <!-- Global Chat Tab -->
-                    <div class="chat-tab-content active" id="globalChatTab">
-                        <div class="chat-messages" id="chatMessages">
-                            <div class="chat-welcome">Global chat'e hoş geldin! 🎮</div>
-                        </div>
-                        <div class="chat-load-more" id="chatLoadMore" style="display: none;">
-                            <button class="load-more-btn" id="loadMoreBtn">Daha Fazla Yükle</button>
-                        </div>
-                        <div class="chat-input-container">
-                            <input type="text" class="chat-input" placeholder="Mesajınızı yazın..." id="chatInput"
-                                maxlength="200">
-                            <button class="chat-send" id="chatSend">📤</button>
-                        </div>
-                    </div>
-
-                    <!-- DM Chat Tab -->
-                    <div class="chat-tab-content" id="dmChatTab">
-                        <div class="dm-user-list" id="dmUserList">
-                            <div class="chat-welcome">Kullanıcıları yükleniyor...</div>
-                        </div>
-                        <div class="dm-conversation" id="dmConversation" style="display: none;">
-                            <div class="dm-header">
-                                <button class="dm-back-btn" id="dmBackBtn">← Geri</button>
-                                <div class="dm-user-name" id="dmUserName">Kullanıcı</div>
-                            </div>
-                            <div class="chat-messages" id="dmMessages"></div>
-                            <div class="chat-input-container">
-                                <input type="text" class="chat-input" placeholder="Özel mesajınızı yazın..."
-                                    id="dmInput" maxlength="200">
-                                <button class="chat-send" id="dmSend">📤</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="user-details">
+                    <div id="sidebarUsername" class="username">Yükleniyor...</div>
+                    <div id="sidebarRole" class="discriminator">#0000</div>
+                </div>
+                <div class="user-controls">
+                    <button><i class="fa-solid fa-microphone"></i></button>
+                    <button><i class="fa-solid fa-headphones"></i></button>
+                    <button id="settingsBtn"><i class="fa-solid fa-gear"></i></button>
+                    <button id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i></button>
                 </div>
             </div>
+        </aside>
+
+        <!-- 3. MAIN CONTENT (Center) -->
+        <main class="chat-area">
+            <header class="chat-header-bar">
+                <div class="header-left">
+                    <i class="fa-solid fa-hashtag text-gray"></i>
+                    <h3>genel-sohbet</h3>
+                    <div class="divider-vertical"></div>
+                    <span class="topic">Nexus ana sohbet kanalı</span>
+                </div>
+                <div class="header-right">
+                    <div class="icon-btn search-bar">
+                        <input type="text" placeholder="Ara" disabled>
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <i class="fa-solid fa-bell icon-btn-simple"></i>
+                    <i class="fa-solid fa-thumbtack icon-btn-simple"></i>
+                    <i class="fa-solid fa-user-group icon-btn-simple active" id="toggleMembers"></i>
+                </div>
+            </header>
+
+            <div class="messages-wrapper" id="globalMessages">
+                <!-- Welcome Message -->
+                <div class="welcome-banner">
+                    <div class="welcome-icon"><i class="fa-solid fa-hashtag"></i></div>
+                    <h1>#genel-sohbet Kanalına Hoş Geldin!</h1>
+                    <p>Burası Nexus'un başlangıcı. Sohbet et, oyun oyna ve keyfine bak.</p>
+                </div>
+                <!-- Messages injected via JS -->
+            </div>
+
+            <div class="input-area-wrapper">
+                <div class="chat-input-box">
+                    <button class="attach-btn"><i class="fa-solid fa-circle-plus"></i></button>
+                    <input type="text" id="globalChatInput" placeholder="#genel-sohbet kanalına mesaj gönder">
+                    <div class="input-icons">
+                        <i class="fa-solid fa-gift"></i>
+                        <i class="fa-solid fa-note-sticky"></i>
+                        <i class="fa-regular fa-face-smile"></i>
+                    </div>
+                </div>
+                <div class="typing-indicator hidden">Biri yazıyor...</div>
+            </div>
+        </main>
+
+        <!-- 4. MEMBER LIST (Right) -->
+        <aside class="member-sidebar" id="memberSidebar">
+            <div class="member-category">
+                <span>KURUCU — 1</span>
+            </div>
+            <div class="member-item founder-glow">
+                <div class="avatar-wrapper">
+                    <img src="https://via.placeholder.com/32" alt="F">
+                    <div class="status-indicator dnd"></div>
+                </div>
+                <div class="member-info">
+                    <span class="name founder-color">KCGLN ALİ</span>
+                    <span class="activity">Kod yazıyor...</span>
+                </div>
+            </div>
+
+            <div class="member-category">
+                <span>ÇEVRİMİÇİ — <span id="onlineCountRaw">0</span></span>
+            </div>
+            <div id="memberListContainer">
+                <!-- Dynamic Members -->
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- MODALS (Re-styled) -->
+    <div id="modal-container" class="modal-layer hidden">
+        <!-- Dynamic Modal Content Injection -->
+        <div class="modal-box-discord">
+            <!-- Content -->
         </div>
     </div>
 
-    <!-- Admin Panel Modal -->
-    <div class="game-modal" id="adminModal" style="display: none;">
-        <div class="modal-content admin-modal-content">
-            <div class="modal-header">
-                <h2>👨‍💼 Admin Paneli</h2>
-                <span class="modal-close" data-modal="adminModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <!-- Admin Tabs -->
-                <div class="admin-tabs">
-                    <button class="admin-tab-btn active" data-tab="users">👥 Kullanıcılar</button>
-                    <button class="admin-tab-btn" data-tab="presence">📊 Aktiflik</button>
-                </div>
-
-                <!-- Users Management Tab -->
-                <div class="admin-tab-content active" id="adminUsersTab">
-                    <div class="admin-search">
-                        <input type="text" id="adminUserSearch" class="search-input" placeholder="🔍 Kullanıcı ara...">
-                    </div>
-                    <div class="admin-user-list" id="adminUserList">
-                        <div class="loading">Kullanıcılar yükleniyor...</div>
-                    </div>
-                </div>
-
-                <!-- Presence Tab -->
-                <div class="admin-tab-content" id="adminPresenceTab">
-                    <div class="presence-stats">
-                        <div class="stat-card">
-                            <div class="stat-value" id="onlineCount">0</div>
-                            <div class="stat-label">🟢 Online</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="offlineCount">0</div>
-                            <div class="stat-label">⚫ Offline</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="totalCount">0</div>
-                            <div class="stat-label">👥 Toplam</div>
-                        </div>
-                    </div>
-                    <div class="presence-list" id="presenceList">
-                        <div class="loading">Aktiflik verileri yükleniyor...</div>
-                    </div>
-                </div>
-            </div>
+    <!-- GAME OVERLAYS (Full Screen Games) -->
+    <div id="game-overlay" class="game-layer hidden">
+        <button class="close-game-btn"><i class="fa-solid fa-xmark"></i> ÇIKIŞ</button>
+        <div id="game-stage" class="game-stage">
+            <!-- Game Canvas/Content -->
+        </div>
+        <div class="game-controls-bottom">
+            <!-- Betting Controls -->
         </div>
     </div>
 
-    <!-- Admin Action Modal -->
-    <div class="game-modal" id="adminActionModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="adminActionTitle">Kullanıcı İşlemi</h2>
-                <span class="modal-close" data-modal="adminActionModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="admin-action-user">
-                    <strong>Kullanıcı:</strong> <span id="actionUserName">-</span>
-                </div>
-                <div class="admin-actions">
-                    <button class="admin-action-btn ban-btn" id="banUserBtn">🚫 Ban</button>
-                    <button class="admin-action-btn unban-btn" id="unbanUserBtn" style="display: none;">✅ Ban
-                        Kaldır</button>
-                    <button class="admin-action-btn mute-btn" id="muteUserBtn">🔇 Sustur</button>
-                    <button class="admin-action-btn unmute-btn" id="unmuteUserBtn" style="display: none;">🔊 Susturmayı
-                        Kaldır</button>
-                    <button class="admin-action-btn reset-btn" id="resetPasswordBtn">🔑 Şifre Sıfırla</button>
-                </div>
-                <div id="muteOptions" style="display: none;">
-                    <label>Susturma Süresi:</label>
-                    <select id="muteDuration" class="profile-input">
-                        <option value="3600000">1 Saat</option>
-                        <option value="86400000">24 Saat</option>
-                        <option value="604800000">7 Gün</option>
-                        <option value="2592000000">30 Gün</option>
-                    </select>
-                    <button class="admin-action-btn confirm-btn" id="confirmMuteBtn">Onayla</button>
-                </div>
-                <input type="password" id="newPasswordInput" class="profile-input" placeholder="Min 6 karakter">
-                <button class="admin-action-btn confirm-btn" id="confirmResetBtn">Şifreyi Değiştir</button>
-            </div>
+    <!-- Old Modal Structure Support (Hidden/Refactored) -->
+    <!-- We will map old JS calls to new overlay logic in CSS/JS -->
+    <div id="modalWheel" class="hidden"></div>
+    <div id="modalMarket" class="hidden"></div>
+    <div id="modalAdmin" class="hidden"></div>
 
-            <!-- Founder Actions (Hidden by default) -->
-            <div id="founderOptions"
-                style="display: none; border-top: 1px solid #334155; margin-top: 16px; padding-top: 16px;">
-                <h3 style="margin-bottom: 12px; font-size: 16px; color: var(--founder-color);">👑 Kurucu İşlemleri</h3>
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-rack"></div>
 
-                <!-- Role Management -->
-                <div style="margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Kullanıcı Rolü:</label>
-                    <select id="userRoleSelect" class="profile-input">
-                        <option value="user">Kullanıcı</option>
-                        <option value="admin">Admin</option>
-                        <option value="founder">Kurucu (Founder)</option>
-                    </select>
-                    <button class="admin-action-btn confirm-btn" id="updateRoleBtn"
-                        style="margin-top: 8px; background: var(--founder-color);">Rolü Güncelle</button>
-                </div>
-
-                <!-- Score Management -->
-                <div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Puan Ekle/Çıkar:</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="number" id="scoreAmount" class="profile-input"
-                            placeholder="Miktar (Örn: 500 veya -500)">
-                        <button class="admin-action-btn confirm-btn" id="updateScoreBtn"
-                            style="width: auto; background: var(--success-color);">Uygula</button>
-                    </div>
-                </div>
-            </div>
-            <div class="admin-message" id="adminActionMessage"></div>
-        </div>
-    </div>
-    </div>
-
-    <!-- Leaderboard Modal -->
-    <div class="game-modal" id="leaderboardModal" style="display: none;">
-        <div class="modal-content leaderboard-modal-content">
-            <div class="modal-header">
-                <h2>🏆 Liderlik Tablosu</h2>
-                <span class="modal-close" data-modal="leaderboardModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <!-- Search Bar -->
-                <div class="leaderboard-search">
-                    <input type="text" id="userSearchInput" class="search-input" placeholder="🔍 Kullanıcı adı ara...">
-                </div>
-
-                <!-- Tabs -->
-                <div class="leaderboard-tabs">
-                    <button class="tab-btn active" data-tab="top">En İyiler</button>
-                    <button class="tab-btn" data-tab="search">Arama Sonuçları</button>
-                </div>
-
-                <!-- Top Users -->
-                <div class="leaderboard-content" id="topUsersTab">
-                    <div class="leaderboard-list" id="leaderboardList">
-                        <div class="loading">Yükleniyor...</div>
-                    </div>
-                </div>
-
-                <!-- Search Results -->
-                <div class="leaderboard-content" id="searchResultsTab" style="display: none;">
-                    <div class="leaderboard-list" id="searchResultsList">
-                        <div class="search-placeholder">Kullanıcı adı girin...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Profile Edit Modal -->
-    <div class="game-modal" id="profileModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>✏️ Profili Düzenle</h2>
-                <span class="modal-close" data-modal="profileModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="profile-edit-section">
-                    <label>Profil Resmi URL</label>
-                    <input type="url" id="profileImageUrl" class="profile-input"
-                        placeholder="https://example.com/image.jpg">
-                    <div class="profile-preview">
-                        <img id="profilePreview" src="" alt="Önizleme" style="display: none;">
-                    </div>
-                </div>
-
-                <div class="profile-edit-section">
-                    <label>Kullanıcı Adı</label>
-                    <input type="text" id="newUsername" class="profile-input" placeholder="Yeni kullanıcı adı">
-                </div>
-
-                <div class="profile-edit-section">
-                    <label>Yeni Şifre</label>
-                    <input type="password" id="newPassword" class="profile-input"
-                        placeholder="Yeni şifre (min 6 karakter)">
-                </div>
-
-                <button class="save-profile-btn" id="saveProfileBtn">Kaydet</button>
-                <div class="profile-message" id="profileMessage"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Market Modal -->
-    <div class="game-modal" id="marketModal" style="display: none;">
-        <div class="modal-content market-modal-content">
-            <div class="modal-header">
-                <h2>🛒 Market - Şans Kutuları</h2>
-                <span class="modal-close" data-modal="marketModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="market-grid">
-                    <div class="market-item" data-box="bronze">
-                        <div class="box-icon">📦</div>
-                        <div class="box-name">Bronz Kutu</div>
-                        <div class="box-rewards">
-                            • 50-200 Puan<br>
-                            • %10 x2 Katlayıcı
-                        </div>
-                        <div class="box-price">💎 50</div>
-                        <button class="buy-box-btn" data-box="bronze">Satın Al</button>
-                    </div>
-
-                    <div class="market-item" data-box="silver">
-                        <div class="box-icon">🎁</div>
-                        <div class="box-name">Gümüş Kutu</div>
-                        <div class="box-rewards">
-                            • 200-500 Puan<br>
-                            • %20 x2 Katlayıcı<br>
-                            • %5 x5 Katlayıcı
-                        </div>
-                        <div class="box-price">💎 150</div>
-                        <button class="buy-box-btn" data-box="silver">Satın Al</button>
-                    </div>
-
-                    <div class="market-item gold-box" data-box="gold">
-                        <div class="box-icon">✨</div>
-                        <div class="box-name">Altın Kutu</div>
-                        <div class="box-rewards">
-                            • 500-1500 Puan<br>
-                            • %30 x2 Katlayıcı<br>
-                            • %15 x5 Katlayıcı<br>
-                            • %5 x10 Katlayıcı
-                        </div>
-                        <div class="box-price">💎 400</div>
-                        <button class="buy-box-btn" data-box="gold">Satın Al</button>
-                    </div>
-                </div>
-
-                <div class="active-multiplier" id="activeMultiplier" style="display: none;">
-                    🎯 Aktif Katlayıcı: <span id="multiplierValue">x1</span>
-                </div>
-
-                <div class="box-result" id="boxResult"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Game Modals -->
-    <!-- Coin Flip Modal -->
-    <div class="game-modal" id="coinFlipModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🪙 Yazı Tura</h2>
-                <span class="modal-close" data-modal="coinFlipModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="bet-input-container">
-                    <label>Bahis Miktarı (Min: 10)</label>
-                    <input type="number" id="coinBetAmount" min="10" value="10" class="bet-input">
-                </div>
-                <div class="coin-choices">
-                    <button class="choice-btn" data-choice="heads">Yazı 📄</button>
-                    <button class="choice-btn" data-choice="tails">Tura 🪙</button>
-                </div>
-                <div class="game-result" id="coinResult"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- RPS Modal -->
-    <div class="game-modal" id="rpsModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>✊ Taş-Kağıt-Makas</h2>
-                <span class="modal-close" data-modal="rpsModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="bet-input-container">
-                    <label>Bahis Miktarı (Min: 10)</label>
-                    <input type="number" id="rpsBetAmount" min="10" value="10" class="bet-input">
-                </div>
-                <div class="rps-choices">
-                    <button class="choice-btn" data-choice="rock">🪨 Taş</button>
-                    <button class="choice-btn" data-choice="paper">📄 Kağıt</button>
-                    <button class="choice-btn" data-choice="scissors">✂️ Makas</button>
-                </div>
-                <div class="game-result" id="rpsResult"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Create Challenge Modal -->
-    <div class="game-modal" id="createChallengeModal" style="display: none;">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h2>⚔️ Düello Oluştur</h2>
-                <span class="modal-close" data-modal="createChallengeModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="bet-input-container">
-                    <label>Oyun Seçin</label>
-                    <select id="challengeGameType" class="profile-input">
-                        <option value="rps">✊ Taş-Kağıt-Makas</option>
-                        <option value="coin">🪙 Yazı-Tura</option>
-                    </select>
-                </div>
-
-                <div class="bet-input-container">
-                    <label>Bahis Miktarı</label>
-                    <input type="number" id="challengeBetAmount" class="bet-input" value="100" min="50">
-                </div>
-
-                <!-- Coin Side Selection (Only for Coin Flip) -->
-                <div id="coinSideSelector" style="display: none; margin-bottom: 20px;">
-                    <label>Tarafını Seç:</label>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="choice-btn" id="btnSideHeads" onclick="selectCoinSide('heads')"
-                            style="flex:1;">Yazı</button>
-                        <button class="choice-btn" id="btnSideTails" onclick="selectCoinSide('tails')"
-                            style="flex:1;">Tura</button>
-                    </div>
-                </div>
-
-                <button class="spin-btn" id="sendChallengeBtn" style="width: 100%;">Global Chat'e Gönder</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Multiplayer Game Arena Modal -->
-    <div class="game-modal" id="mpGameModal" style="display: none;">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h2 id="mpGameTitle">🔥 VS Arena</h2>
-                <!-- No close button here to prevent rage quit glitching -->
-                <span class="modal-close" onclick="closeMpGame()">&times;</span>
-            </div>
-            <div class="modal-body">
-
-                <div class="vs-layout">
-                    <!-- Host -->
-                    <div class="vs-player">
-                        <div class="vs-avatar">
-                            <img id="mpHostAvatar" src="" alt="P1">
-                        </div>
-                        <div id="mpHostName" style="font-weight: bold;">Player 1</div>
-                        <div id="mpHostStatus" style="font-size: 12px; color: #aaa;">Bekliyor...</div>
-                    </div>
-
-                    <div class="vs-divider">VS</div>
-
-                    <!-- Guest -->
-                    <div class="vs-player">
-                        <div class="vs-avatar">
-                            <img id="mpGuestAvatar" src="" alt="P2">
-                        </div>
-                        <div id="mpGuestName" style="font-weight: bold;">Player 2</div>
-                        <div id="mpGuestStatus" style="font-size: 12px; color: #aaa;">Bekliyor...</div>
-                    </div>
-                </div>
-
-                <div class="game-status-text" id="mpStatusText">Oyuncu bekleniyor...</div>
-
-                <!-- Game Areas -->
-
-                <!-- MP Coin Flip Area -->
-                <div id="mpCoinArea" style="display: none;">
-                    <div class="coin-container">
-                        <div class="coin" id="mpCoin">
-                            <div class="coin-face coin-front">Y</div>
-                            <div class="coin-face coin-back">T</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MP RPS Area -->
-                <div id="mpRpsArea" style="display: none;">
-                    <div class="choice-grid" id="mpRpsControls">
-                        <button class="rps-choice" onclick="makeMpMove('rock')">✊</button>
-                        <button class="rps-choice" onclick="makeMpMove('paper')">📄</button>
-                        <button class="rps-choice" onclick="makeMpMove('scissors')">✂️</button>
-                    </div>
-                </div>
-
-                <div id="mpResultDisplay"
-                    style="text-align: center; font-size: 20px; font-weight: 800; margin-top: 20px; min-height: 30px;">
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Spin Wheel Modal -->
-    <div class="game-modal" id="spinWheelModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🎡 Çarkıfelek</h2>
-                <span class="modal-close" data-modal="spinWheelModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="bet-input-container">
-                    <label>Bahis Miktarı (Min: 10)</label>
-                    <input type="number" id="wheelBetAmount" min="10" value="10" class="bet-input">
-                </div>
-                <div class="wheel-container">
-                    <canvas id="wheelCanvas" width="300" height="300"></canvas>
-                    <div class="wheel-pointer">▼</div>
-                </div>
-                <button class="spin-btn" id="spinBtn">ÇEVİR!</button>
-                <div class="game-result" id="wheelResult"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Chess Modal -->
-    <div class="game-modal" id="chessModal" style="display: none;">
-        <div class="modal-content chess-modal-content">
-            <div class="modal-header">
-                <h2>♟️ Satranç</h2>
-                <span class="modal-close" data-modal="chessModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="chess-info">
-                    <div class="chess-status" id="chessStatus">Oyunu Başlat</div>
-                    <div class="bet-info">Bahis: <span id="chessBetDisplay">100</span> 💎</div>
-                </div>
-                <div class="bet-input-container">
-                    <label>Bahis Miktarı (Min: 50)</label>
-                    <input type="number" id="chessBetAmount" min="50" value="100" class="bet-input">
-                    <div class="chess-difficulty">
-                        <label>Bot Zorluğu:</label>
-                        <select id="chessDifficulty" class="bet-input">
-                            <option value="easy">Kolay</option>
-                            <option value="medium" selected>Orta</option>
-                            <option value="hard">Zor</option>
-                        </select>
-                    </div>
-                    <button class="chess-start-btn" id="chessStartBtn">Oyunu Başlat</button>
-                </div>
-                <div id="chessBoard" class="chess-board"></div>
-                <div class="game-result" id="chessResult"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Firebase SDK -->
     <script type="module" src="app.js"></script>
+    <script>
+        // Simple loading simulation
+        setTimeout(() => {
+            document.getElementById('boot-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('boot-screen').style.display = 'none';
+            }, 500);
+        }, 1500);
+    </script>
 </body>
 
 </html>
