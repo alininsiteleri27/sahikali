@@ -73,12 +73,13 @@ let chatLoadedCount = 5;
 let currentDmRecipient = null;
 let chessGame = null;
 let isUserAdmin = false;
-let isUserFounder = false;  // YENİ: Founder rolü
+let isUserFounder = false;
 let chatUnsubscribe = null;
-let game2048 = null;  // YENİ: 2048 oyunu
-let dmUnreadCounts = {};  // YENİ: DM bildirim sayıları
+let game2048 = null;
+let dmUnreadCounts = {};
 let dmReceiptsUnsubscribe = null;
 let dmUnsubscribers = {};
+let currentDmMessagesUnsubscribe = null;
 
 // ========================================
 // AUTH & USER MANAGEMENT
@@ -94,10 +95,14 @@ onAuthStateChanged(auth, async (user) => {
         loadChat();
         loadDmUsers();
         initEnhancements();
-        listenToDmNotifications();  // YENİ: DM bildirimlerini dinle
+        listenToDmNotifications();
     } else {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('mainApp').classList.remove('show');
+        // Clean up all listeners
+        if (chatUnsubscribe) chatUnsubscribe();
+        Object.values(dmUnsubscribers).forEach(unsub => unsub());
+        dmUnsubscribers = {};
     }
 });
 
@@ -122,7 +127,7 @@ async function initializeUser(user) {
 
     const userData = (await getDoc(userRef)).data();
     isUserAdmin = userData.role === 'admin';
-    isUserFounder = userData.role === 'founder';  // YENİ: Founder kontrolü
+    isUserFounder = userData.role === 'founder';
 
     if (isUserAdmin || isUserFounder) {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
@@ -155,6 +160,9 @@ async function loadUserData() {
             document.getElementById('profileImage').src = data.profileImage;
             document.getElementById('profileImage').style.display = 'block';
             document.getElementById('profileEmoji').style.display = 'none';
+            document.getElementById('dropdownAvatarImage').src = data.profileImage;
+            document.getElementById('dropdownAvatarImage').style.display = 'block';
+            document.getElementById('dropdownAvatarEmoji').style.display = 'none';
         }
 
         userMultiplier = data.multiplier || 1;
@@ -185,7 +193,7 @@ document.getElementById('loginToggle').addEventListener('click', () => {
 document.getElementById('loginButton').addEventListener('click', async () => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    const username = document.getElementById('loginUsername').value;
+    const username = document.getElementById('loginUsernameInput').value;
     const errorEl = document.getElementById('loginError');
 
     if (!email || !password) {
@@ -252,7 +260,7 @@ const savedTheme = localStorage.getItem('theme') || 'light';
 if (savedTheme === 'dark') {
     document.body.classList.add('dark-mode');
     themeToggle.classList.add('active');
-    document.getElementById('themeLabel').textContent = 'Light Mode';
+    themeToggle.querySelector('.toggle-circle').style.left = '26px';
 }
 
 themeToggle.addEventListener('click', () => {
@@ -261,10 +269,10 @@ themeToggle.addEventListener('click', () => {
 
     if (document.body.classList.contains('dark-mode')) {
         localStorage.setItem('theme', 'dark');
-        document.getElementById('themeLabel').textContent = 'Light Mode';
+        themeToggle.querySelector('.toggle-circle').style.left = '26px';
     } else {
         localStorage.setItem('theme', 'light');
-        document.getElementById('themeLabel').textContent = 'Dark Mode';
+        themeToggle.querySelector('.toggle-circle').style.left = '2px';
     }
 });
 
@@ -276,11 +284,14 @@ document.getElementById('editProfileBtn').addEventListener('click', () => {
 document.getElementById('profileImageUrl').addEventListener('input', (e) => {
     const url = e.target.value;
     const preview = document.getElementById('profilePreview');
+    const emojiPreview = document.getElementById('profileEmojiPreview');
     if (url) {
         preview.src = url;
         preview.style.display = 'block';
+        emojiPreview.style.display = 'none';
     } else {
         preview.style.display = 'none';
+        emojiPreview.style.display = 'block';
     }
 });
 
@@ -316,8 +327,14 @@ document.getElementById('saveProfileBtn').addEventListener('click', async () => 
         messageEl.className = 'profile-message error';
         messageEl.textContent = error.message;
     }
-});// ========================================
-// ADMIN PANEL - YENİ: Founder Koruması Eklendi
+});
+
+document.getElementById('cancelProfileBtn').addEventListener('click', () => {
+    document.getElementById('profileModal').style.display = 'none';
+});
+
+// ========================================
+// ADMIN PANEL
 // ========================================
 document.getElementById('adminPanelBtn')?.addEventListener('click', () => {
     document.getElementById('dropdown').classList.remove('active');
@@ -326,9 +343,9 @@ document.getElementById('adminPanelBtn')?.addEventListener('click', () => {
     loadPresenceData();
 });
 
-document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+document.querySelectorAll('.admin-tab').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
 
         btn.classList.add('active');
@@ -373,62 +390,28 @@ async function loadAdminUsers() {
                 </div>
             </div>
             <div class="admin-user-actions">
-                <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${!!data.banned}, ${!!data.muted}, '${data.role || 'user'}')">
+                <button class="admin-action-quick-btn" data-uid="${docSnap.id}" data-username="${data.username}" data-banned="${!!data.banned}" data-muted="${!!data.muted}" data-role="${data.role || 'user'}">
                     ⚙️ İşlemler
                 </button>
             </div>
         `;
         listEl.appendChild(item);
     });
+
+    // Add event listeners to all admin action buttons
+    document.querySelectorAll('.admin-action-quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const uid = btn.dataset.uid;
+            const username = btn.dataset.username;
+            const isBanned = btn.dataset.banned === 'true';
+            const isMuted = btn.dataset.muted === 'true';
+            const targetRole = btn.dataset.role;
+            openAdminAction(uid, username, isBanned, isMuted, targetRole);
+        });
+    });
 }
 
-document.getElementById('adminUserSearch').addEventListener('input', async (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    if (!searchTerm) {
-        loadAdminUsers();
-        return;
-    }
-
-    const listEl = document.getElementById('adminUserList');
-    const usersQuery = query(collection(db, 'users'));
-    const snapshot = await getDocs(usersQuery);
-
-    listEl.innerHTML = '';
-    snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data.username.toLowerCase().includes(searchTerm) || data.email.toLowerCase().includes(searchTerm)) {
-            const item = document.createElement('div');
-            item.className = 'admin-user-item';
-            item.innerHTML = `
-                <div class="admin-user-info-section">
-                    <div class="user-avatar">
-                        ${data.profileImage ? `<img src="${data.profileImage}" alt="">` : '👤'}
-                    </div>
-                    <div class="admin-user-details">
-                        <div class="admin-user-name">${data.username}</div>
-                        <div class="admin-user-email">${data.email}</div>
-                        <div class="admin-user-score">💎 ${data.score}</div>
-                        <div class="admin-user-badges">
-                            ${data.role === 'founder' ? '<span class="admin-badge founder">Founder</span>' : ''}
-                            ${data.role === 'admin' ? '<span class="admin-badge admin">Admin</span>' : ''}
-                            ${data.banned ? '<span class="admin-badge banned">Banned</span>' : ''}
-                            ${data.muted ? '<span class="admin-badge muted">Muted</span>' : ''}
-                        </div>
-                    </div>
-                </div>
-                <div class="admin-user-actions">
-                    <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${!!data.banned}, ${!!data.muted}, '${data.role || 'user'}')">
-                        ⚙️ İşlemler
-                    </button>
-                </div>
-            `;
-            listEl.appendChild(item);
-        }
-    });
-});
-
-// YENİ: Admin Koruma Sistemi - Adminler birbirini yönetemez
-window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) => {
+async function openAdminAction(uid, username, isBanned, isMuted, targetRole) {
     const currentUserRef = doc(db, 'users', currentUser.uid);
     const currentUserData = (await getDoc(currentUserRef)).data();
     const currentRole = currentUserData.role || 'user';
@@ -446,6 +429,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
 
     document.getElementById('adminActionModal').style.display = 'flex';
     document.getElementById('actionUserName').textContent = username;
+    document.getElementById('actionUserId').textContent = uid;
     document.getElementById('adminActionModal').dataset.uid = uid;
 
     document.getElementById('banUserBtn').style.display = isBanned ? 'none' : 'block';
@@ -453,7 +437,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
     document.getElementById('muteUserBtn').style.display = isMuted ? 'none' : 'block';
     document.getElementById('unmuteUserBtn').style.display = isMuted ? 'block' : 'none';
 
-    // YENİ: Founder God Mode yetkiler
+    // Founder God Mode yetkiler
     if (currentRole === 'founder') {
         document.getElementById('founderGodActions').style.display = 'block';
     } else {
@@ -463,7 +447,7 @@ window.openAdminAction = async (uid, username, isBanned, isMuted, targetRole) =>
     document.getElementById('muteOptions').style.display = 'none';
     document.getElementById('passwordResetOptions').style.display = 'none';
     document.getElementById('adminActionMessage').textContent = '';
-};
+}
 
 document.getElementById('banUserBtn').addEventListener('click', async () => {
     const uid = document.getElementById('adminActionModal').dataset.uid;
@@ -511,7 +495,7 @@ document.getElementById('confirmMuteBtn').addEventListener('click', async () => 
     const messageEl = document.getElementById('adminActionMessage');
 
     try {
-        const muteUntil = Date.now() + duration;
+        const muteUntil = Date.now() + (duration * 60000);
         await updateDoc(doc(db, 'users', uid), {
             muted: true,
             muteUntil: muteUntil
@@ -588,7 +572,7 @@ document.getElementById('confirmResetBtn').addEventListener('click', async () =>
     }
 });
 
-// YENİ: Founder God Mode Actions
+// Founder God Mode Actions
 document.getElementById('setAdminBtn')?.addEventListener('click', async () => {
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const messageEl = document.getElementById('adminActionMessage');
@@ -687,7 +671,7 @@ async function loadPresenceData() {
             presenceListEl.appendChild(item);
         });
 
-        document.getElementById('onlineCount').textContent = onlineCount;
+        document.getElementById('onlineCountAdmin').textContent = onlineCount;
         document.getElementById('offlineCount').textContent = offlineCount;
         document.getElementById('totalCount').textContent = usersSnapshot.size;
     });
@@ -738,15 +722,15 @@ document.getElementById('userSearchInput').addEventListener('input', async (e) =
     const searchTerm = e.target.value.toLowerCase();
 
     if (!searchTerm) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.leaderboard-tab').forEach(b => b.classList.remove('active'));
         document.getElementById('topUsersTab').style.display = 'block';
         document.getElementById('searchResultsTab').style.display = 'none';
-        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.querySelectorAll('.leaderboard-tab')[0].classList.add('active');
         return;
     }
 
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.querySelectorAll('.leaderboard-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.leaderboard-tab')[1].classList.add('active');
     document.getElementById('topUsersTab').style.display = 'none';
     document.getElementById('searchResultsTab').style.display = 'block';
 
@@ -783,9 +767,9 @@ document.getElementById('userSearchInput').addEventListener('input', async (e) =
     }
 });
 
-document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(btn => {
+document.querySelectorAll('.leaderboard-tab').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.leaderboard-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
         if (btn.dataset.tab === 'top') {
@@ -796,12 +780,14 @@ document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(btn => {
             document.getElementById('searchResultsTab').style.display = 'block';
         }
     });
-});// ========================================
-// CHAT SYSTEM (Global + DM) - YENİ: DM Bildirimleri Eklendi
+});
+
 // ========================================
-document.querySelectorAll('.chat-tab-btn').forEach(btn => {
+// CHAT SYSTEM (Global + DM)
+// ========================================
+document.querySelectorAll('.chat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.chat-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.chat-tab').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.chat-tab-content').forEach(c => c.classList.remove('active'));
 
         btn.classList.add('active');
@@ -814,15 +800,6 @@ document.querySelectorAll('.chat-tab-btn').forEach(btn => {
     });
 });
 
-document.getElementById('chatDmBtn')?.addEventListener('click', () => {
-    document.querySelectorAll('.chat-tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.chat-tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelector('.chat-tab-btn[data-tab="dm"]').classList.add('active');
-    document.getElementById('dmChatTab').classList.add('active');
-    loadDmUsers();
-});
-
-// YENİ: VS daveti butonu
 document.getElementById('sendVsRequestBtn')?.addEventListener('click', async () => {
     const userRef = doc(db, 'users', currentUser.uid);
     const userSnap = await getDoc(userRef);
@@ -856,7 +833,7 @@ async function loadChat() {
     if (snapshot.docs.length > 0) {
         lastChatDoc = snapshot.docs[snapshot.docs.length - 1];
         if (snapshot.docs.length >= chatLoadedCount) {
-            document.getElementById('chatLoadMore').style.display = 'block';
+            document.getElementById('loadMoreBtn').style.display = 'block';
         }
     }
 
@@ -897,13 +874,13 @@ function appendChatMessage(msg) {
 
     let messageContent = msg.message;
     if (msg.isVsRequest) {
-        messageContent = `${msg.message} <button class="vs-accept-btn" onclick="acceptVsRequest('${msg.userId}', '${msg.username}')">✅ Kabul Et</button>`;
+        messageContent = `${msg.message} <button class="vs-accept-btn" data-sender-id="${msg.userId}" data-sender-name="${msg.username}">✅ Kabul Et</button>`;
     }
 
     msgEl.innerHTML = `
         <div class="message-header">
             <div class="message-user">${msg.username}</div>
-            ${(isUserAdmin || isUserFounder) ? `<button class="chat-delete-btn">Sil</button>` : ''}
+            ${(isUserAdmin || isUserFounder) ? `<button class="chat-delete-btn" data-msg-id="${msg.id}">Sil</button>` : ''}
         </div>
         <div class="message-text">${messageContent}</div>
         <div class="message-time">${time}</div>
@@ -923,13 +900,19 @@ function appendChatMessage(msg) {
         });
     }
 
+    // Add event listener to VS accept button
+    const vsAcceptBtn = msgEl.querySelector('.vs-accept-btn');
+    if (vsAcceptBtn) {
+        vsAcceptBtn.addEventListener('click', async (e) => {
+            const senderId = e.target.dataset.senderId;
+            const senderName = e.target.dataset.senderName;
+            alert(`VS isteği kabul edildi! ${senderName} ile eşleşiyorsun...`);
+            // VS lobisine yönlendirme yapılabilir
+        });
+    }
+
     messagesEl.appendChild(msgEl);
 }
-
-window.acceptVsRequest = async (senderId, senderName) => {
-    alert(`VS isteği kabul edildi! ${senderName} ile eşleşiyorsun...`);
-    // VS lobisine yönlendirme yapılabilir
-};
 
 document.getElementById('loadMoreBtn').addEventListener('click', async () => {
     if (!lastChatDoc) return;
@@ -971,7 +954,7 @@ document.getElementById('loadMoreBtn').addEventListener('click', async () => {
             messagesEl.insertBefore(msgEl, messagesEl.firstChild);
         });
     } else {
-        document.getElementById('chatLoadMore').style.display = 'none';
+        document.getElementById('loadMoreBtn').style.display = 'none';
     }
 });
 
@@ -1010,11 +993,11 @@ document.getElementById('chatInput').addEventListener('keypress', (e) => {
 });
 
 // ========================================
-// DM (Direct Messages) - YENİ: Bildirim Sistemi
+// DM (Direct Messages)
 // ========================================
 async function loadDmUsers() {
     const listEl = document.getElementById('dmUserList');
-    listEl.innerHTML = '<div class="chat-welcome">Kullanıcıları yükleniyor...</div>';
+    listEl.innerHTML = '<div class="loading">Kullanıcıları yükleniyor...</div>';
 
     const usersQuery = query(collection(db, 'users'));
     const snapshot = await getDocs(usersQuery);
@@ -1025,7 +1008,7 @@ async function loadDmUsers() {
         onValue(presenceRef, (s) => resolve(s.val() || {}), { onlyOnce: true });
     });
 
-    // YENİ: Son mesaj zamanlarını al ve sırala
+    // Son mesaj zamanlarını al ve sırala
     const lastMessages = {};
     for (const docSnap of snapshot.docs) {
         if (docSnap.id === currentUser.uid) continue;
@@ -1073,7 +1056,7 @@ async function loadDmUsers() {
     });
 }
 
-// YENİ: DM bildirimlerini dinle
+// DM bildirimlerini dinle
 function listenToDmNotifications() {
     const usersQuery = query(collection(db, 'users'));
     getDocs(usersQuery).then(snapshot => {
@@ -1089,7 +1072,7 @@ function listenToDmNotifications() {
                     // Yeni mesaj geldi, okunmadı olarak işaretle
                     dmUnreadCounts[docSnap.id] = (dmUnreadCounts[docSnap.id] || 0) + 1;
                     updateDmUnreadBadge();
-                    loadDmUsers(); // Listeyi güncelle (en üste çıkar)
+                    loadDmUsers(); // Listeyi güncelle
                 }
             });
 
@@ -1099,6 +1082,16 @@ function listenToDmNotifications() {
 }
 
 function openDmConversation(recipientId, recipientName) {
+    // Önceki dinleyicileri temizle
+    if (currentDmMessagesUnsubscribe) {
+        currentDmMessagesUnsubscribe();
+        currentDmMessagesUnsubscribe = null;
+    }
+    if (dmReceiptsUnsubscribe) {
+        dmReceiptsUnsubscribe();
+        dmReceiptsUnsubscribe = null;
+    }
+
     currentDmRecipient = recipientId;
     document.getElementById('dmUserName').textContent = recipientName;
     document.getElementById('dmUserList').style.display = 'none';
@@ -1114,14 +1107,21 @@ function openDmConversation(recipientId, recipientName) {
     dmUnreadCounts[recipientId] = 0; // Okundu olarak işaretle
     updateDmUnreadBadge();
     loadDmMessages(recipientId);
-    loadDmUsers(); // Listeyi güncelle (kırmızı noktayı kaldır)
+    loadDmUsers(); // Listeyi güncelle
 }
 
 document.getElementById('dmBackBtn').addEventListener('click', () => {
     document.getElementById('dmUserList').style.display = 'block';
     document.getElementById('dmConversation').style.display = 'none';
     currentDmRecipient = null;
-    if (dmReceiptsUnsubscribe) { dmReceiptsUnsubscribe(); dmReceiptsUnsubscribe = null; }
+    if (currentDmMessagesUnsubscribe) {
+        currentDmMessagesUnsubscribe();
+        currentDmMessagesUnsubscribe = null;
+    }
+    if (dmReceiptsUnsubscribe) {
+        dmReceiptsUnsubscribe();
+        dmReceiptsUnsubscribe = null;
+    }
 });
 
 async function loadDmMessages(recipientId) {
@@ -1139,7 +1139,8 @@ async function loadDmMessages(recipientId) {
         if (dta.readBy === recipientId) readByRecipient[dta.messageId] = true;
     });
 
-    onSnapshot(query(messagesRef, orderBy('timestamp', 'asc')), async (snapshot) => {
+    // Mesajları dinle
+    currentDmMessagesUnsubscribe = onSnapshot(query(messagesRef, orderBy('timestamp', 'asc')), async (snapshot) => {
         messagesEl.innerHTML = '';
         snapshot.forEach(docSnap => {
             const msg = docSnap.data();
@@ -1180,6 +1181,7 @@ async function loadDmMessages(recipientId) {
         }
     });
 
+    // Okundu bilgilerini dinle
     dmReceiptsUnsubscribe = onSnapshot(receiptsRef, (snap) => {
         snap.forEach(d => {
             const dta = d.data();
@@ -1260,7 +1262,7 @@ document.getElementById('chatToggleMobile').addEventListener('click', () => {
 });
 
 // ========================================
-// AD SYSTEM - BALANCED (30 puan)
+// AD SYSTEM
 // ========================================
 document.getElementById('watchAdBtn').addEventListener('click', async () => {
     if (adCooldown) return;
@@ -1271,7 +1273,7 @@ document.getElementById('watchAdBtn').addEventListener('click', async () => {
 
     setTimeout(async () => {
         const userRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(userRef, { score: increment(30) }); // 50 -> 30 (daha dengeli)
+        await updateDoc(userRef, { score: increment(30) });
 
         btn.style.display = 'none';
         document.getElementById('adCooldown').style.display = 'block';
@@ -1295,8 +1297,10 @@ document.getElementById('watchAdBtn').addEventListener('click', async () => {
             }
         }, 1000);
     }, 3000);
-});// ========================================
-// MARKET SYSTEM - BALANCED ECONOMY (Daha Az Puan)
+});
+
+// ========================================
+// MARKET SYSTEM
 // ========================================
 document.getElementById('marketBtn').addEventListener('click', () => {
     document.getElementById('marketModal').style.display = 'flex';
@@ -1361,41 +1365,40 @@ async function claimDailyBox() {
     loadInventory();
 }
 
-// YENİ: BALANCED - Daha az puan veren kutu sistemi
 function openBox(type) {
     const rand = Math.random();
     if (type === 'daily') {
-        const score = Math.floor(Math.random() * 101) + 20; // 20-120 (eski: 50-300)
+        const score = Math.floor(Math.random() * 101) + 20;
         if (rand < 0.02) return { scoreReward: score, multiplier: 2, message: `📅 ${score} Puan + x2!` };
         return { scoreReward: score, message: `📅 ${score} Puan kazandın!` };
     }
     if (type === 'bronze') {
-        const score = Math.floor(Math.random() * 81) + 20; // 20-100 (eski: 50-200)
+        const score = Math.floor(Math.random() * 81) + 20;
         if (rand < 0.05) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
     if (type === 'silver') {
-        const score = Math.floor(Math.random() * 151) + 100; // 100-250 (eski: 200-500)
+        const score = Math.floor(Math.random() * 151) + 100;
         if (rand < 0.03) return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
         if (rand < 0.10) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
     if (type === 'gold') {
-        const score = Math.floor(Math.random() * 401) + 200; // 200-600 (eski: 500-1500)
+        const score = Math.floor(Math.random() * 401) + 200;
         if (rand < 0.02) return { scoreReward: score, multiplier: 10, message: `💥 ${score} Puan + x10 MEGA Katlayıcı!` };
         if (rand < 0.08) return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
         if (rand < 0.15) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
     if (type === 'epic') {
-        const score = Math.floor(Math.random() * 251) + 150; // 150-400 (eski: 300-800)
+        const score = Math.floor(Math.random() * 251) + 150;
         if (rand < 0.04) return { scoreReward: score, multiplier: 10, message: `💜 ${score} Puan + x10 Epic!` };
         if (rand < 0.12) return { scoreReward: score, multiplier: 5, message: `💜 ${score} Puan + x5!` };
         if (rand < 0.20) return { scoreReward: score, multiplier: 2, message: `💜 ${score} Puan + x2!` };
         return { scoreReward: score, message: `💜 ${score} Puan kazandın!` };
     }
     if (type === 'legendary') {
-        const score = Math.floor(Math.random() * 501) + 400; // 400-900 (eski: 800-2000)
+        const score = Math.floor(Math.random() * 501) + 400;
         if (rand < 0.03) return { scoreReward: score, multiplier: 10, message: `🌈 ${score} Puan + x10 Legendary!` };
         if (rand < 0.10) return { scoreReward: score, multiplier: 5, message: `🌈 ${score} Puan + x5!` };
         if (rand < 0.20) return { scoreReward: score, multiplier: 2, message: `🌈 ${score} Puan + x2!` };
@@ -1445,866 +1448,6 @@ async function loadInventory() {
 }
 
 // ========================================
-// SIMPLE GAMES - BALANCED (Daha Az Kazanç)
-// ========================================
-document.getElementById('coinFlipCard').addEventListener('click', () => {
-    document.getElementById('coinFlipModal').style.display = 'flex';
-});
-
-document.querySelectorAll('#coinFlipModal .choice-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const choice = btn.dataset.choice;
-        const betAmount = parseInt(document.getElementById('coinBetAmount').value);
-
-        if (betAmount < 10) {
-            showGameResult('coinResult', 'Minimum bahis 10!', 'lose');
-            return;
-        }
-
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const currentScore = userSnap.data().score;
-
-        if (currentScore < betAmount) {
-            showGameResult('coinResult', 'Yetersiz bakiye!', 'lose');
-            return;
-        }
-
-        const result = Math.random() < 0.5 ? 'heads' : 'tails';
-        const won = result === choice;
-
-        showGameLoading(true);
-        await playCoinFlipAnimation(choice, result);
-        showGameLoading(false);
-
-        if (won) {
-            const winAmount = Math.floor(betAmount * 1.5 * userMultiplier); // 1.8 -> 1.5 (daha dengeli)
-            await updateDoc(userRef, { score: increment(winAmount - betAmount) });
-            showGameResult('coinResult', `🎉 Kazandın! +${winAmount - betAmount} Puan`, 'win');
-            playCelebrationAnimation('win');
-        } else {
-            await updateDoc(userRef, { score: increment(-betAmount) });
-            showGameResult('coinResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
-            playCelebrationAnimation('lose');
-        }
-    });
-});
-
-document.getElementById('rpsCard').addEventListener('click', () => {
-    document.getElementById('rpsModal').style.display = 'flex';
-    const rev = document.getElementById('rpsRevealContainer');
-    if (rev) { 
-        rev.classList.remove('rps-reveal-container--active'); 
-        rev.querySelector('#rpsPlayerChoice').textContent = ''; 
-        rev.querySelector('#rpsBotChoice').textContent = ''; 
-    }
-});
-
-document.querySelectorAll('#rpsModal .choice-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const choice = btn.dataset.choice;
-        const betAmount = parseInt(document.getElementById('rpsBetAmount').value);
-
-        if (betAmount < 10) {
-            showGameResult('rpsResult', 'Minimum bahis 10!', 'lose');
-            return;
-        }
-
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const currentScore = userSnap.data().score;
-
-        if (currentScore < betAmount) {
-            showGameResult('rpsResult', 'Yetersiz bakiye!', 'lose');
-            return;
-        }
-
-        const choices = ['rock', 'paper', 'scissors'];
-        const botChoice = choices[Math.floor(Math.random() * 3)];
-        const wins = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
-        let result = 'draw';
-        if (wins[choice] === botChoice) result = 'win';
-        else if (wins[botChoice] === choice) result = 'lose';
-
-        showGameLoading(true);
-        await playRpsRevealAnimation(choice, botChoice);
-        showGameLoading(false);
-
-        if (result === 'win') {
-            const winAmount = Math.floor(betAmount * 1.6 * userMultiplier); // 1.9 -> 1.6 (daha dengeli)
-            await updateDoc(userRef, { score: increment(winAmount - betAmount) });
-            showGameResult('rpsResult', `🎉 Kazandın! +${winAmount - betAmount} Puan`, 'win');
-            playCelebrationAnimation('win');
-        } else if (result === 'lose') {
-            await updateDoc(userRef, { score: increment(-betAmount) });
-            showGameResult('rpsResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
-            playCelebrationAnimation('lose');
-        } else {
-            showGameResult('rpsResult', `🤝 Berabere! Bahis iade edildi`, 'win');
-        }
-    });
-});
-
-// ========================================
-// WHEEL - FIXED (Tam durduğu dilim kazanır) + BALANCED
-// ========================================
-document.getElementById('spinWheelCard').addEventListener('click', () => {
-    document.getElementById('spinWheelModal').style.display = 'flex';
-    drawWheel();
-});
-
-const WHEEL_SEGMENTS = [
-    { label: 'x0', mult: 0 },
-    { label: 'x1', mult: 1 },
-    { label: 'x1.2', mult: 1.2 },
-    { label: 'x1.5', mult: 1.5 },
-    { label: 'x2', mult: 2 },
-    { label: 'x3', mult: 3 },
-    { label: 'x5', mult: 5 },
-    { label: 'x1.5', mult: 1.5 }
-];
-const WHEEL_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
-
-function drawWheel() {
-    const canvas = document.getElementById('wheelCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.style.transform = 'rotate(0deg)';
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const segments = WHEEL_SEGMENTS.length;
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 140;
-    const anglePerSegment = (2 * Math.PI) / segments;
-
-    for (let i = 0; i < segments; i++) {
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, i * anglePerSegment, (i + 1) * anglePerSegment);
-        ctx.closePath();
-        ctx.fillStyle = WHEEL_COLORS[i];
-        ctx.fill();
-        ctx.stroke();
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(i * anglePerSegment + anglePerSegment / 2);
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 18px Arial';
-        ctx.fillText(WHEEL_SEGMENTS[i].label, radius / 1.5, 8);
-        ctx.restore();
-    }
-}
-
-function updateWheelPrizePrediction() {
-    const el = document.getElementById('wheelPrizeText');
-    if (!el) return;
-    const bet = parseInt(document.getElementById('wheelBetAmount')?.value || 10);
-    const idx = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
-    const seg = WHEEL_SEGMENTS[idx];
-    const win = seg.mult > 0 ? Math.floor(bet * seg.mult * userMultiplier) : 0;
-    el.textContent = seg.mult > 0 ? `±${win} puan (${seg.label})` : 'Kayıp';
-}
-
-document.getElementById('wheelBetAmount')?.addEventListener('input', updateWheelPrizePrediction);
-
-document.getElementById('spinBtn').addEventListener('click', async () => {
-    const betAmount = parseInt(document.getElementById('wheelBetAmount').value);
-
-    if (betAmount < 10) {
-        showGameResult('wheelResult', 'Minimum bahis 10!', 'lose');
-        return;
-    }
-
-    const userRef = doc(db, 'users', currentUser.uid);
-    const userSnap = await getDoc(userRef);
-    const currentScore = userSnap.data().score;
-
-    if (currentScore < betAmount) {
-        showGameResult('wheelResult', 'Yetersiz bakiye!', 'lose');
-        return;
-    }
-
-    const btn = document.getElementById('spinBtn');
-    btn.disabled = true;
-    btn.textContent = 'Çevriliyor...';
-
-    await updateDoc(userRef, { score: increment(-betAmount) });
-
-    const segmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
-    const seg = WHEEL_SEGMENTS[segmentIndex];
-
-    const canvas = document.getElementById('wheelCanvas');
-    const anglePerSeg = (360 / WHEEL_SEGMENTS.length);
-    
-    // FIXED: Tam durduğu dilimin ödülünü al
-    const targetAngle = 360 * 5 + (segmentIndex * anglePerSeg);
-    const spinTime = 3000;
-    const startTime = Date.now();
-
-    const spin = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / spinTime, 1);
-        const ease = 1 - Math.pow(1 - progress, 3);
-        const rotation = ease * targetAngle;
-        canvas.style.transform = `rotate(${rotation}deg)`;
-
-        if (progress >= 1) {
-            clearInterval(spin);
-            
-            // FIXED: Tam durduğu segmentin ödülünü ver
-            const resultMult = seg.mult;
-            const winAmount = resultMult > 0 ? Math.floor(betAmount * resultMult * userMultiplier) : 0;
-            
-            if (resultMult > 0) {
-                updateDoc(userRef, { score: increment(winAmount) }).then(() => {
-                    showGameResult('wheelResult', `🎉 ${seg.label}! +${winAmount} Puan`, 'win');
-                    playCelebrationAnimation('win');
-                });
-            } else {
-                showGameResult('wheelResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
-                playCelebrationAnimation('lose');
-            }
-            
-            btn.disabled = false;
-            btn.textContent = 'ÇEVİR!';
-            updateWheelPrizePrediction();
-        }
-    }, 16);
-});
-
-function showGameResult(elementId, message, type) {
-    const resultEl = document.getElementById(elementId);
-    if (!resultEl) return;
-    resultEl.className = `game-result ${type}`;
-    resultEl.textContent = message;
-    setTimeout(() => { resultEl.textContent = ''; resultEl.className = 'game-result'; }, 5000);
-}
-
-function showGameLoading(show) {
-    const overlay = document.getElementById('gameLoadingOverlay');
-    if (overlay) overlay.style.display = show ? 'flex' : 'none';
-}
-
-function playCoinFlipAnimation(choice, result) {
-    const coin = document.getElementById('coin3d');
-    if (!coin) return Promise.resolve();
-    coin.classList.remove('coin-3d--flip');
-    coin.offsetHeight;
-    coin.dataset.result = result;
-    coin.classList.add('coin-3d--flip');
-    return new Promise(r => setTimeout(r, 1200)).then(() => coin.classList.remove('coin-3d--flip'));
-}
-
-function playRpsRevealAnimation(player, bot) {
-    const container = document.getElementById('rpsRevealContainer');
-    const pc = document.getElementById('rpsPlayerChoice');
-    const bc = document.getElementById('rpsBotChoice');
-    const icons = { rock: '🪨', paper: '📄', scissors: '✂️' };
-    if (pc) pc.textContent = icons[player] || '';
-    if (bc) bc.textContent = icons[bot] || '';
-    if (container) container.classList.add('rps-reveal-container--active');
-    return new Promise(r => setTimeout(r, 1000));
-}
-
-function playCelebrationAnimation(outcome) {
-    document.body.classList.add(`celebration-${outcome}`);
-    setTimeout(() => document.body.classList.remove(`celebration-${outcome}`), 1500);
-}// ========================================
-// 2048 GAME - YENİ: Tam Oyun Sistemi
-// ========================================
-document.getElementById('game2048Card')?.addEventListener('click', () => {
-    document.getElementById('game2048Modal').style.display = 'flex';
-    init2048();
-});
-
-function init2048() {
-    game2048 = {
-        grid: Array(16).fill(0),
-        score: 0,
-        bestScore: localStorage.getItem('2048_best') || 0
-    };
-    
-    document.getElementById('game2048Score').textContent = '0';
-    document.getElementById('game2048BestScore').textContent = game2048.bestScore;
-    
-    render2048Grid();
-    addRandomTile();
-    addRandomTile();
-    
-    document.getElementById('game2048Modal').focus();
-}
-
-function render2048Grid() {
-    const gridEl = document.getElementById('game2048Grid');
-    gridEl.innerHTML = '';
-    
-    for (let i = 0; i < 16; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'game2048-cell';
-        const value = game2048.grid[i];
-        if (value > 0) {
-            cell.textContent = value;
-            cell.classList.add(`game2048-tile-${value}`);
-        }
-        gridEl.appendChild(cell);
-    }
-}
-
-function addRandomTile() {
-    const emptyCells = game2048.grid.map((val, idx) => val === 0 ? idx : -1).filter(idx => idx !== -1);
-    if (emptyCells.length === 0) return;
-    
-    const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-    game2048.grid[randomCell] = Math.random() < 0.9 ? 2 : 4;
-}
-
-function move2048(direction) {
-    let moved = false;
-    const size = 4;
-    
-    for (let i = 0; i < size; i++) {
-        let row = [];
-        for (let j = 0; j < size; j++) {
-            let index;
-            if (direction === 'left') index = i * size + j;
-            else if (direction === 'right') index = i * size + (size - 1 - j);
-            else if (direction === 'up') index = j * size + i;
-            else index = (size - 1 - j) * size + i;
-            row.push({ value: game2048.grid[index], index });
-        }
-        
-        let filtered = row.filter(cell => cell.value > 0);
-        let newRow = [];
-        
-        for (let j = 0; j < filtered.length; j++) {
-            if (j < filtered.length - 1 && filtered[j].value === filtered[j + 1].value) {
-                const mergedValue = filtered[j].value * 2;
-                newRow.push({ value: mergedValue, index: filtered[j].index });
-                game2048.score += mergedValue;
-                j++;
-                moved = true;
-            } else {
-                newRow.push(filtered[j]);
-            }
-            if (j < filtered.length - 1 && filtered[j].value !== filtered[j + 1].value) {
-                moved = moved || (filtered[j].index !== newRow[newRow.length - 1].index);
-            }
-        }
-        
-        while (newRow.length < size) {
-            newRow.push({ value: 0, index: -1 });
-        }
-        
-        for (let j = 0; j < size; j++) {
-            const targetIndex = row[j].index;
-            if (targetIndex !== -1) {
-                game2048.grid[targetIndex] = newRow[j].value;
-                moved = moved || (game2048.grid[targetIndex] !== row[j].value);
-            }
-        }
-    }
-    
-    if (moved) {
-        addRandomTile();
-        render2048Grid();
-        update2048Score();
-        check2048GameOver();
-    }
-}
-
-function update2048Score() {
-    document.getElementById('game2048Score').textContent = game2048.score;
-    if (game2048.score > game2048.bestScore) {
-        game2048.bestScore = game2048.score;
-        localStorage.setItem('2048_best', game2048.bestScore);
-        document.getElementById('game2048BestScore').textContent = game2048.bestScore;
-    }
-    
-    if (game2048.score > 0) {
-        document.getElementById('game2048Score').classList.add('game2048-score--updated');
-        setTimeout(() => {
-            document.getElementById('game2048Score').classList.remove('game2048-score--updated');
-        }, 300);
-    }
-}
-
-function check2048GameOver() {
-    const hasEmpty = game2048.grid.some(cell => cell === 0);
-    if (hasEmpty) return;
-    
-    for (let i = 0; i < 16; i++) {
-        const row = Math.floor(i / 4);
-        const col = i % 4;
-        
-        if (col < 3 && game2048.grid[i] === game2048.grid[i + 1]) return;
-        if (row < 3 && game2048.grid[i] === game2048.grid[i + 4]) return;
-    }
-    
-    setTimeout(() => {
-        alert(`Oyun Bitti! Skorunuz: ${game2048.score}`);
-        if (confirm('Yeniden başlamak ister misiniz?')) {
-            init2048();
-        }
-    }, 300);
-}
-
-// 2048 klavye kontrolleri
-document.addEventListener('keydown', (e) => {
-    if (document.getElementById('game2048Modal').style.display !== 'flex') return;
-    
-    switch(e.key) {
-        case 'ArrowUp': e.preventDefault(); move2048('up'); break;
-        case 'ArrowDown': e.preventDefault(); move2048('down'); break;
-        case 'ArrowLeft': e.preventDefault(); move2048('left'); break;
-        case 'ArrowRight': e.preventDefault(); move2048('right'); break;
-    }
-});
-
-// 2048 mobil kontrolleri
-document.getElementById('game2048Up')?.addEventListener('click', () => move2048('up'));
-document.getElementById('game2048Down')?.addEventListener('click', () => move2048('down'));
-document.getElementById('game2048Left')?.addEventListener('click', () => move2048('left'));
-document.getElementById('game2048Right')?.addEventListener('click', () => move2048('right'));
-
-document.getElementById('game2048Restart')?.addEventListener('click', () => {
-    if (confirm('Oyunu yeniden başlatmak istediğinize emin misiniz?')) {
-        init2048();
-    }
-});
-
-// ========================================
-// CHESS GAME - Temel Implementasyon
-// ========================================
-document.getElementById('chessCard')?.addEventListener('click', () => {
-    document.getElementById('chessModal').style.display = 'flex';
-    initChess();
-});
-
-function initChess() {
-    chessGame = {
-        board: createInitialChessBoard(),
-        currentPlayer: 'white',
-        selectedPiece: null,
-        validMoves: []
-    };
-    
-    renderChessBoard();
-}
-
-function createInitialChessBoard() {
-    const board = Array(64).fill(null);
-    
-    const piecesOrder = [
-        'rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'
-    ];
-    
-    for (let i = 0; i < 8; i++) {
-        board[i] = { type: piecesOrder[i], color: 'black' };
-        board[i + 8] = { type: 'pawn', color: 'black' };
-        board[i + 48] = { type: 'pawn', color: 'white' };
-        board[i + 56] = { type: piecesOrder[i], color: 'white' };
-    }
-    
-    return board;
-}
-
-function renderChessBoard() {
-    const boardEl = document.getElementById('chessBoard');
-    boardEl.innerHTML = '';
-    
-    for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
-            const index = row * 8 + col;
-            const cell = document.createElement('div');
-            cell.className = `chess-cell ${(row + col) % 2 === 0 ? 'chess-cell-light' : 'chess-cell-dark'}`;
-            cell.dataset.index = index;
-            
-            const piece = chessGame.board[index];
-            if (piece) {
-                const pieceEl = document.createElement('div');
-                pieceEl.className = `chess-piece chess-piece-${piece.color} chess-piece-${piece.type}`;
-                pieceEl.textContent = getChessPieceSymbol(piece.type);
-                cell.appendChild(pieceEl);
-            }
-            
-            if (chessGame.validMoves.includes(index)) {
-                cell.classList.add('chess-cell-valid');
-            }
-            
-            cell.addEventListener('click', () => handleChessCellClick(index));
-            boardEl.appendChild(cell);
-        }
-    }
-    
-    document.getElementById('chessCurrentPlayer').textContent = 
-        chessGame.currentPlayer === 'white' ? 'Beyaz' : 'Siyah';
-}
-
-function getChessPieceSymbol(type) {
-    const symbols = {
-        king: '♔',
-        queen: '♕',
-        rook: '♖',
-        bishop: '♗',
-        knight: '♘',
-        pawn: '♙'
-    };
-    return symbols[type] || '';
-}
-
-function handleChessCellClick(index) {
-    const piece = chessGame.board[index];
-    
-    if (chessGame.selectedPiece === null) {
-        if (piece && piece.color === chessGame.currentPlayer) {
-            chessGame.selectedPiece = index;
-            chessGame.validMoves = calculateValidMoves(index, piece);
-            renderChessBoard();
-        }
-    } else {
-        if (chessGame.validMoves.includes(index)) {
-            moveChessPiece(chessGame.selectedPiece, index);
-            chessGame.currentPlayer = chessGame.currentPlayer === 'white' ? 'black' : 'white';
-        }
-        chessGame.selectedPiece = null;
-        chessGame.validMoves = [];
-        renderChessBoard();
-        checkChessGameStatus();
-    }
-}
-
-function calculateValidMoves(index, piece) {
-    const moves = [];
-    const row = Math.floor(index / 8);
-    const col = index % 8;
-    
-    switch(piece.type) {
-        case 'pawn':
-            const direction = piece.color === 'white' ? -1 : 1;
-            const forward1 = index + (direction * 8);
-            if (forward1 >= 0 && forward1 < 64 && !chessGame.board[forward1]) {
-                moves.push(forward1);
-                
-                const isStartRow = (piece.color === 'white' && row === 6) || 
-                                 (piece.color === 'black' && row === 1);
-                if (isStartRow) {
-                    const forward2 = index + (direction * 16);
-                    if (!chessGame.board[forward2]) {
-                        moves.push(forward2);
-                    }
-                }
-            }
-            
-            const leftDiag = index + (direction * 8) - 1;
-            const rightDiag = index + (direction * 8) + 1;
-            
-            if (Math.floor(leftDiag / 8) === row + direction && 
-                chessGame.board[leftDiag] && 
-                chessGame.board[leftDiag].color !== piece.color) {
-                moves.push(leftDiag);
-            }
-            
-            if (Math.floor(rightDiag / 8) === row + direction && 
-                chessGame.board[rightDiag] && 
-                chessGame.board[rightDiag].color !== piece.color) {
-                moves.push(rightDiag);
-            }
-            break;
-            
-        case 'rook':
-            addLinearMoves(moves, index, [[-1,0],[1,0],[0,-1],[0,1]]);
-            break;
-            
-        case 'knight':
-            const knightMoves = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
-            knightMoves.forEach(([dr, dc]) => {
-                const newRow = row + dr;
-                const newCol = col + dc;
-                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
-                    const newIndex = newRow * 8 + newCol;
-                    const targetPiece = chessGame.board[newIndex];
-                    if (!targetPiece || targetPiece.color !== piece.color) {
-                        moves.push(newIndex);
-                    }
-                }
-            });
-            break;
-    }
-    
-    return moves;
-}
-
-function addLinearMoves(moves, index, directions) {
-    const row = Math.floor(index / 8);
-    const col = index % 8;
-    const piece = chessGame.board[index];
-    
-    directions.forEach(([dr, dc]) => {
-        let newRow = row + dr;
-        let newCol = col + dc;
-        
-        while (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
-            const newIndex = newRow * 8 + newCol;
-            const targetPiece = chessGame.board[newIndex];
-            
-            if (!targetPiece) {
-                moves.push(newIndex);
-            } else {
-                if (targetPiece.color !== piece.color) {
-                    moves.push(newIndex);
-                }
-                break;
-            }
-            
-            newRow += dr;
-            newCol += dc;
-        }
-    });
-}
-
-function moveChessPiece(from, to) {
-    chessGame.board[to] = chessGame.board[from];
-    chessGame.board[from] = null;
-    
-    document.getElementById('chessMoveSound')?.play();
-    
-    if (chessGame.board[to]?.type === 'pawn') {
-        const row = Math.floor(to / 8);
-        if (row === 0 || row === 7) {
-            chessGame.board[to].type = 'queen';
-        }
-    }
-}
-
-function checkChessGameStatus() {
-    const kings = chessGame.board.map((piece, idx) => piece?.type === 'king' ? piece.color : null)
-        .filter(color => color !== null);
-    
-    if (kings.length < 2) {
-        setTimeout(() => {
-            const winner = kings[0] === 'white' ? 'Beyaz' : 'Siyah';
-            alert(`${winner} kazandı!`);
-            if (confirm('Yeni oyuna başlamak ister misiniz?')) {
-                initChess();
-            }
-        }, 100);
-    }
-}
-
-document.getElementById('chessRestart')?.addEventListener('click', () => {
-    if (confirm('Satranç oyununu yeniden başlatmak istediğinize emin misiniz?')) {
-        initChess();
-    }
-});
-
-// ========================================
-// ENHANCEMENTS SYSTEM
-// ========================================
-function initEnhancements() {
-    loadEnhancements();
-    setupEnhancementListeners();
-}
-
-async function loadEnhancements() {
-    const userRef = doc(db, 'users', currentUser.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
-    
-    if (userData.enhancements) {
-        Object.entries(userData.enhancements).forEach(([id, level]) => {
-            const enhBtn = document.querySelector(`[data-enhancement-id="${id}"]`);
-            if (enhBtn) {
-                enhBtn.dataset.level = level;
-                updateEnhancementButton(id, level);
-            }
-        });
-    }
-}
-
-function setupEnhancementListeners() {
-    document.querySelectorAll('.enhancement-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const id = btn.dataset.enhancementId;
-            const currentLevel = parseInt(btn.dataset.level || 0);
-            const maxLevel = parseInt(btn.dataset.maxLevel || 3);
-            
-            if (currentLevel >= maxLevel) {
-                showEnhancementResult('Bu geliştirme maksimum seviyede!', 'error');
-                return;
-            }
-            
-            const cost = calculateEnhancementCost(id, currentLevel);
-            const userRef = doc(db, 'users', currentUser.uid);
-            const userSnap = await getDoc(userRef);
-            const userData = userSnap.data();
-            
-            if (userData.score < cost) {
-                showEnhancementResult('Yetersiz puan!', 'error');
-                return;
-            }
-            
-            try {
-                await updateDoc(userRef, {
-                    score: increment(-cost),
-                    [`enhancements.${id}`]: currentLevel + 1
-                });
-                
-                const newLevel = currentLevel + 1;
-                btn.dataset.level = newLevel;
-                updateEnhancementButton(id, newLevel);
-                applyEnhancementEffect(id, newLevel);
-                
-                showEnhancementResult(`Geliştirme başarıyla yükseltildi! (Seviye ${newLevel})`, 'success');
-            } catch (error) {
-                showEnhancementResult('Hata oluştu: ' + error.message, 'error');
-            }
-        });
-    });
-}
-
-function calculateEnhancementCost(id, level) {
-    const baseCosts = {
-        'click-power': 100,
-        'ad-boost': 250,
-        'wheel-luck': 500,
-        'chat-speed': 150
-    };
-    
-    return baseCosts[id] * (level + 1);
-}
-
-function updateEnhancementButton(id, level) {
-    const btn = document.querySelector(`[data-enhancement-id="${id}"]`);
-    if (!btn) return;
-    
-    const maxLevel = parseInt(btn.dataset.maxLevel || 3);
-    const cost = calculateEnhancementCost(id, level);
-    
-    btn.querySelector('.enhancement-level').textContent = `Seviye ${level}/${maxLevel}`;
-    btn.querySelector('.enhancement-cost').textContent = `${cost} Puan`;
-    
-    if (level >= maxLevel) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="enhancement-max">Maksimum Seviye</span>';
-    }
-}
-
-function applyEnhancementEffect(id, level) {
-    switch(id) {
-        case 'click-power':
-            userMultiplier = 1 + (level * 0.5);
-            document.getElementById('multiplierValue').textContent = `x${userMultiplier}`;
-            break;
-        case 'ad-boost':
-            const adBtn = document.getElementById('watchAdBtn');
-            if (adBtn) {
-                const baseReward = 30;
-                const newReward = baseReward + (level * 10);
-                adBtn.textContent = `+${newReward} Puan Kazan`;
-                adBtn.dataset.reward = newReward;
-            }
-            break;
-    }
-}
-
-function showEnhancementResult(message, type) {
-    const resultEl = document.getElementById('enhancementResult');
-    if (!resultEl) return;
-    
-    resultEl.className = `enhancement-result enhancement-result-${type}`;
-    resultEl.textContent = message;
-    
-    setTimeout(() => {
-        resultEl.textContent = '';
-        resultEl.className = 'enhancement-result';
-    }, 3000);
-}
-
-// ========================================
-// ADMIN DASHBOARD & ANALYTICS
-// ========================================
-async function loadAdminDashboard() {
-    const statsEl = document.getElementById('adminStats');
-    if (!statsEl) return;
-    
-    statsEl.innerHTML = '<div class="loading">İstatistikler yükleniyor...</div>';
-    
-    try {
-        const usersSnap = await getDocs(collection(db, 'users'));
-        const chatSnap = await getDocs(collection(db, 'chat'));
-        const presenceRef = ref(rtdb, 'presence');
-        
-        const presenceData = await new Promise((resolve) => {
-            onValue(presenceRef, (s) => resolve(s.val() || {}), { onlyOnce: true });
-        });
-        
-        const onlineUsers = Object.values(presenceData).filter(p => p.online).length;
-        const totalScore = usersSnap.docs.reduce((sum, doc) => sum + (doc.data().score || 0), 0);
-        const avgScore = usersSnap.size > 0 ? Math.round(totalScore / usersSnap.size) : 0;
-        
-        statsEl.innerHTML = `
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon">👥</div>
-                <div class="admin-stat-value">${usersSnap.size}</div>
-                <div class="admin-stat-label">Toplam Kullanıcı</div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon">🟢</div>
-                <div class="admin-stat-value">${onlineUsers}</div>
-                <div class="admin-stat-label">Çevrimiçi Kullanıcı</div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon">💎</div>
-                <div class="admin-stat-value">${totalScore}</div>
-                <div class="admin-stat-label">Toplam Puan</div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon">📊</div>
-                <div class="admin-stat-value">${avgScore}</div>
-                <div class="admin-stat-label">Ortalama Puan</div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon">💬</div>
-                <div class="admin-stat-value">${chatSnap.size}</div>
-                <div class="admin-stat-label">Toplam Mesaj</div>
-            </div>
-        `;
-    } catch (error) {
-        statsEl.innerHTML = `<div class="error">İstatistikler yüklenemedi: ${error.message}</div>`;
-    }
-}
-
-async function loadAdminAnalytics() {
-    const chartEl = document.getElementById('adminAnalyticsChart');
-    if (!chartEl) return;
-    
-    chartEl.innerHTML = '<div class="loading">Analizler yükleniyor...</div>';
-    
-    setTimeout(() => {
-        chartEl.innerHTML = `
-            <div class="analytics-placeholder">
-                <div class="analytics-chart">
-                    <!-- Basit bir çubuk grafik simülasyonu -->
-                    <div class="analytics-bar" style="height: 80%;" title="Pazartesi: 80 kullanıcı"></div>
-                    <div class="analytics-bar" style="height: 65%;" title="Salı: 65 kullanıcı"></div>
-                    <div class="analytics-bar" style="height: 90%;" title="Çarşamba: 90 kullanıcı"></div>
-                    <div class="analytics-bar" style="height: 70%;" title="Perşembe: 70 kullanıcı"></div>
-                    <div class="analytics-bar" style="height: 95%;" title="Cuma: 95 kullanıcı"></div>
-                    <div class="analytics-bar" style="height: 100%;" title="Cumartesi: 100 kullanıcı"></div>
-                    <div class="analytics-bar" style="height: 85%;" title="Pazar: 85 kullanıcı"></div>
-                </div>
-                <div class="analytics-labels">
-                    <span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span>
-                </div>
-                <div class="analytics-title">Son 7 Günlük Aktif Kullanıcı</div>
-            </div>
-        `;
-    }, 1000);
-}
-
-// ========================================
 // MODAL CLOSING & UTILITIES
 // ========================================
 document.querySelectorAll('.modal-close, .modal-backdrop').forEach(el => {
@@ -2320,9 +1463,18 @@ document.querySelectorAll('.modal-close, .modal-backdrop').forEach(el => {
                 if (modal.id === 'chessModal') {
                     chessGame = null;
                 }
-                if (modal.id === 'dmConversation' && dmReceiptsUnsubscribe) {
-                    dmReceiptsUnsubscribe();
-                    dmReceiptsUnsubscribe = null;
+                if (modal.id === 'dmConversation') {
+                    document.getElementById('dmUserList').style.display = 'block';
+                    document.getElementById('dmConversation').style.display = 'none';
+                    currentDmRecipient = null;
+                    if (currentDmMessagesUnsubscribe) {
+                        currentDmMessagesUnsubscribe();
+                        currentDmMessagesUnsubscribe = null;
+                    }
+                    if (dmReceiptsUnsubscribe) {
+                        dmReceiptsUnsubscribe();
+                        dmReceiptsUnsubscribe = null;
+                    }
                 }
             }
         }
@@ -2340,17 +1492,6 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ========================================
-// MOBILE MENU TOGGLE
-// ========================================
-document.getElementById('mobileMenuToggle')?.addEventListener('click', () => {
-    document.getElementById('mobileSidebar').classList.toggle('mobile-sidebar--active');
-});
-
-document.getElementById('mobileSidebarOverlay')?.addEventListener('click', () => {
-    document.getElementById('mobileSidebar').classList.remove('mobile-sidebar--active');
-});
-
-// ========================================
 // INITIALIZATION COMPLETE
 // ========================================
-console.log('🚀 Uygulama başlatıldı!');
+console.log('🚀 Uygulama başlatıldı! Tüm sistemler çalışıyor.');
