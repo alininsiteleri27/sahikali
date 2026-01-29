@@ -2,23 +2,23 @@
 // FIREBASE CONFIGURATION
 // ========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    onAuthStateChanged, 
     signOut,
     updatePassword,
     setPersistence,
     inMemoryPersistence,
     sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import {
-    getFirestore,
-    doc,
-    setDoc,
-    getDoc,
-    updateDoc,
+   import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    getDoc, 
+    updateDoc, 
     increment,
     collection,
     query,
@@ -31,8 +31,7 @@ import {
     addDoc,
     startAfter,
     Timestamp,
-    deleteDoc,
-    runTransaction
+    deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
     getDatabase,
@@ -43,6 +42,7 @@ import {
     serverTimestamp as rtdbServerTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+// Firebase Config (ASLA BOZMA!)
 const firebaseConfig = {
     apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
     authDomain: "ali23-cfd02.firebaseapp.com",
@@ -58,6 +58,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
+// Oturum sadece sayfa açıkken geçerli olsun (yenileyince logout)
 setPersistence(auth, inMemoryPersistence).catch((err) => {
     console.error('Auth persistence hatası:', err);
 });
@@ -73,13 +74,7 @@ let chatLoadedCount = 5;
 let currentDmRecipient = null;
 let chessGame = null;
 let isUserAdmin = false;
-let isUserFounder = false;
 let chatUnsubscribe = null;
-let game2048 = null;
-let dmUnreadCounts = {};
-let dmReceiptsUnsubscribe = null;
-let dmUnsubscribers = {};
-let currentDmMessagesUnsubscribe = null;
 
 // ========================================
 // AUTH & USER MANAGEMENT
@@ -94,22 +89,16 @@ onAuthStateChanged(auth, async (user) => {
         setupPresence(user.uid);
         loadChat();
         loadDmUsers();
-        initEnhancements();
-        listenToDmNotifications();
     } else {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('mainApp').classList.remove('show');
-        // Clean up all listeners
-        if (chatUnsubscribe) chatUnsubscribe();
-        Object.values(dmUnsubscribers).forEach(unsub => unsub());
-        dmUnsubscribers = {};
     }
 });
 
 async function initializeUser(user) {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
-
+    
     if (!userSnap.exists()) {
         await setDoc(userRef, {
             email: user.email,
@@ -124,47 +113,42 @@ async function initializeUser(user) {
             muteUntil: null
         });
     }
-
+    
+    // Check admin status
     const userData = (await getDoc(userRef)).data();
     isUserAdmin = userData.role === 'admin';
-    isUserFounder = userData.role === 'founder';
-
-    if (isUserAdmin || isUserFounder) {
+    
+    if (isUserAdmin) {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
-    }
-    if (isUserFounder) {
-        document.querySelectorAll('.founder-only').forEach(el => el.style.display = 'flex');
     }
 }
 
 async function loadUserData() {
     const userRef = doc(db, 'users', currentUser.uid);
-
+    
     onSnapshot(userRef, (docSnap) => {
         const data = docSnap.data();
         if (!data) return;
-
+        
+        // Check if banned
         if (data.banned) {
             alert('Hesabınız yasaklanmış. Lütfen yönetici ile iletişime geçin.');
             signOut(auth);
             return;
         }
-
+        
         document.getElementById('headerUsername').textContent = data.username;
         document.getElementById('headerEmail').textContent = data.email;
         document.getElementById('userScore').textContent = data.score;
         document.getElementById('dropdownUsername').textContent = data.username;
         document.getElementById('dropdownEmail').textContent = data.email;
-
+        
         if (data.profileImage) {
             document.getElementById('profileImage').src = data.profileImage;
             document.getElementById('profileImage').style.display = 'block';
             document.getElementById('profileEmoji').style.display = 'none';
-            document.getElementById('dropdownAvatarImage').src = data.profileImage;
-            document.getElementById('dropdownAvatarImage').style.display = 'block';
-            document.getElementById('dropdownAvatarEmoji').style.display = 'none';
         }
-
+        
         userMultiplier = data.multiplier || 1;
         if (userMultiplier > 1) {
             document.getElementById('activeMultiplier').style.display = 'block';
@@ -173,6 +157,7 @@ async function loadUserData() {
     });
 }
 
+// Login/Register
 let isRegisterMode = false;
 
 document.getElementById('loginToggle').addEventListener('click', () => {
@@ -193,19 +178,19 @@ document.getElementById('loginToggle').addEventListener('click', () => {
 document.getElementById('loginButton').addEventListener('click', async () => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    const username = document.getElementById('loginUsernameInput').value;
+    const username = document.getElementById('loginUsername').value;
     const errorEl = document.getElementById('loginError');
-
+    
     if (!email || !password) {
         errorEl.textContent = 'Lütfen tüm alanları doldurun';
         return;
     }
-
+    
     if (password.length < 6) {
         errorEl.textContent = 'Şifre en az 6 karakter olmalı';
         return;
     }
-
+    
     try {
         if (isRegisterMode) {
             if (!username) {
@@ -227,10 +212,13 @@ document.getElementById('loginButton').addEventListener('click', async () => {
 // ========================================
 function setupPresence(uid) {
     const presenceRef = ref(rtdb, `presence/${uid}`);
+    const userStatusRef = ref(rtdb, `status/${uid}`);
+    
     set(presenceRef, {
         online: true,
         lastSeen: rtdbServerTimestamp()
     });
+    
     onDisconnect(presenceRef).set({
         online: false,
         lastSeen: rtdbServerTimestamp()
@@ -254,28 +242,30 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     signOut(auth);
 });
 
+// Theme Toggle
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('theme') || 'light';
 
 if (savedTheme === 'dark') {
     document.body.classList.add('dark-mode');
     themeToggle.classList.add('active');
-    themeToggle.querySelector('.toggle-circle').style.left = '26px';
+    document.getElementById('themeLabel').textContent = 'Light Mode';
 }
 
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     themeToggle.classList.toggle('active');
-
+    
     if (document.body.classList.contains('dark-mode')) {
         localStorage.setItem('theme', 'dark');
-        themeToggle.querySelector('.toggle-circle').style.left = '26px';
+        document.getElementById('themeLabel').textContent = 'Light Mode';
     } else {
         localStorage.setItem('theme', 'light');
-        themeToggle.querySelector('.toggle-circle').style.left = '2px';
+        document.getElementById('themeLabel').textContent = 'Dark Mode';
     }
 });
 
+// Edit Profile
 document.getElementById('editProfileBtn').addEventListener('click', () => {
     document.getElementById('dropdown').classList.remove('active');
     document.getElementById('profileModal').style.display = 'flex';
@@ -284,14 +274,11 @@ document.getElementById('editProfileBtn').addEventListener('click', () => {
 document.getElementById('profileImageUrl').addEventListener('input', (e) => {
     const url = e.target.value;
     const preview = document.getElementById('profilePreview');
-    const emojiPreview = document.getElementById('profileEmojiPreview');
     if (url) {
         preview.src = url;
         preview.style.display = 'block';
-        emojiPreview.style.display = 'none';
     } else {
         preview.style.display = 'none';
-        emojiPreview.style.display = 'block';
     }
 });
 
@@ -300,25 +287,25 @@ document.getElementById('saveProfileBtn').addEventListener('click', async () => 
     const newUsername = document.getElementById('newUsername').value;
     const newPass = document.getElementById('newPassword').value;
     const messageEl = document.getElementById('profileMessage');
-
+    
     try {
         const userRef = doc(db, 'users', currentUser.uid);
         const updates = {};
-
+        
         if (imageUrl) updates.profileImage = imageUrl;
         if (newUsername) updates.username = newUsername;
-
+        
         if (Object.keys(updates).length > 0) {
             await updateDoc(userRef, updates);
         }
-
+        
         if (newPass && newPass.length >= 6) {
             await updatePassword(currentUser, newPass);
         }
-
+        
         messageEl.className = 'profile-message success';
         messageEl.textContent = '✅ Profil güncellendi!';
-
+        
         setTimeout(() => {
             document.getElementById('profileModal').style.display = 'none';
             messageEl.textContent = '';
@@ -327,10 +314,6 @@ document.getElementById('saveProfileBtn').addEventListener('click', async () => 
         messageEl.className = 'profile-message error';
         messageEl.textContent = error.message;
     }
-});
-
-document.getElementById('cancelProfileBtn').addEventListener('click', () => {
-    document.getElementById('profileModal').style.display = 'none';
 });
 
 // ========================================
@@ -343,30 +326,30 @@ document.getElementById('adminPanelBtn')?.addEventListener('click', () => {
     loadPresenceData();
 });
 
-document.querySelectorAll('.admin-tab').forEach(btn => {
+// Admin Tabs
+document.querySelectorAll('.admin-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-
+        
         btn.classList.add('active');
         const tabName = btn.dataset.tab;
-        const tabId = `admin${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`;
-        const tabEl = document.getElementById(tabId);
-        if (tabEl) tabEl.classList.add('active');
-
-        if (tabName === 'presence') loadPresenceData();
-        else if (tabName === 'dashboard') loadAdminDashboard();
-        else if (tabName === 'analytics') loadAdminAnalytics();
+        document.getElementById(`admin${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`).classList.add('active');
+        
+        if (tabName === 'presence') {
+            loadPresenceData();
+        }
     });
 });
 
+// Load Users for Admin
 async function loadAdminUsers() {
     const listEl = document.getElementById('adminUserList');
     listEl.innerHTML = '<div class="loading">Yükleniyor...</div>';
-
+    
     const usersQuery = query(collection(db, 'users'), orderBy('score', 'desc'));
     const snapshot = await getDocs(usersQuery);
-
+    
     listEl.innerHTML = '';
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
@@ -382,7 +365,6 @@ async function loadAdminUsers() {
                     <div class="admin-user-email">${data.email}</div>
                     <div class="admin-user-score">💎 ${data.score}</div>
                     <div class="admin-user-badges">
-                        ${data.role === 'founder' ? '<span class="admin-badge founder">Founder</span>' : ''}
                         ${data.role === 'admin' ? '<span class="admin-badge admin">Admin</span>' : ''}
                         ${data.banned ? '<span class="admin-badge banned">Banned</span>' : ''}
                         ${data.muted ? '<span class="admin-badge muted">Muted</span>' : ''}
@@ -390,69 +372,83 @@ async function loadAdminUsers() {
                 </div>
             </div>
             <div class="admin-user-actions">
-                <button class="admin-action-quick-btn" data-uid="${docSnap.id}" data-username="${data.username}" data-banned="${!!data.banned}" data-muted="${!!data.muted}" data-role="${data.role || 'user'}">
+                <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${data.banned}, ${data.muted})">
                     ⚙️ İşlemler
                 </button>
             </div>
         `;
         listEl.appendChild(item);
     });
-
-    // Add event listeners to all admin action buttons
-    document.querySelectorAll('.admin-action-quick-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const uid = btn.dataset.uid;
-            const username = btn.dataset.username;
-            const isBanned = btn.dataset.banned === 'true';
-            const isMuted = btn.dataset.muted === 'true';
-            const targetRole = btn.dataset.role;
-            openAdminAction(uid, username, isBanned, isMuted, targetRole);
-        });
-    });
 }
 
-async function openAdminAction(uid, username, isBanned, isMuted, targetRole) {
-    const currentUserRef = doc(db, 'users', currentUser.uid);
-    const currentUserData = (await getDoc(currentUserRef)).data();
-    const currentRole = currentUserData.role || 'user';
-
-    // Admin koruma sistemi
-    if (currentRole === 'admin' && (targetRole === 'admin' || targetRole === 'founder')) {
-        alert('Adminler diğer adminleri veya kurucuları yönetemez!');
+// Admin Search
+document.getElementById('adminUserSearch').addEventListener('input', async (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    if (!searchTerm) {
+        loadAdminUsers();
         return;
     }
+    
+    const listEl = document.getElementById('adminUserList');
+    const usersQuery = query(collection(db, 'users'));
+    const snapshot = await getDocs(usersQuery);
+    
+    listEl.innerHTML = '';
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.username.toLowerCase().includes(searchTerm) || data.email.toLowerCase().includes(searchTerm)) {
+            const item = document.createElement('div');
+            item.className = 'admin-user-item';
+            item.innerHTML = `
+                <div class="admin-user-info-section">
+                    <div class="user-avatar">
+                        ${data.profileImage ? `<img src="${data.profileImage}" alt="">` : '👤'}
+                    </div>
+                    <div class="admin-user-details">
+                        <div class="admin-user-name">${data.username}</div>
+                        <div class="admin-user-email">${data.email}</div>
+                        <div class="admin-user-score">💎 ${data.score}</div>
+                        <div class="admin-user-badges">
+                            ${data.role === 'admin' ? '<span class="admin-badge admin">Admin</span>' : ''}
+                            ${data.banned ? '<span class="admin-badge banned">Banned</span>' : ''}
+                            ${data.muted ? '<span class="admin-badge muted">Muted</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-user-actions">
+                    <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${data.banned}, ${data.muted})">
+                        ⚙️ İşlemler
+                    </button>
+                </div>
+            `;
+            listEl.appendChild(item);
+        }
+    });
+});
 
-    if (currentRole !== 'founder' && targetRole === 'founder') {
-        alert('Sadece kurucu, kurucu rolündeki kullanıcıları yönetebilir!');
-        return;
-    }
-
+// Admin Actions
+window.openAdminAction = (uid, username, isBanned, isMuted) => {
     document.getElementById('adminActionModal').style.display = 'flex';
     document.getElementById('actionUserName').textContent = username;
-    document.getElementById('actionUserId').textContent = uid;
     document.getElementById('adminActionModal').dataset.uid = uid;
-
+    
+    // Show/hide buttons
     document.getElementById('banUserBtn').style.display = isBanned ? 'none' : 'block';
     document.getElementById('unbanUserBtn').style.display = isBanned ? 'block' : 'none';
     document.getElementById('muteUserBtn').style.display = isMuted ? 'none' : 'block';
     document.getElementById('unmuteUserBtn').style.display = isMuted ? 'block' : 'none';
-
-    // Founder God Mode yetkiler
-    if (currentRole === 'founder') {
-        document.getElementById('founderGodActions').style.display = 'block';
-    } else {
-        document.getElementById('founderGodActions').style.display = 'none';
-    }
-
+    
+    // Hide options
     document.getElementById('muteOptions').style.display = 'none';
     document.getElementById('passwordResetOptions').style.display = 'none';
     document.getElementById('adminActionMessage').textContent = '';
-}
+};
 
+// Ban User
 document.getElementById('banUserBtn').addEventListener('click', async () => {
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const messageEl = document.getElementById('adminActionMessage');
-
+    
     try {
         await updateDoc(doc(db, 'users', uid), { banned: true });
         messageEl.className = 'admin-message success';
@@ -467,10 +463,11 @@ document.getElementById('banUserBtn').addEventListener('click', async () => {
     }
 });
 
+// Unban User
 document.getElementById('unbanUserBtn').addEventListener('click', async () => {
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const messageEl = document.getElementById('adminActionMessage');
-
+    
     try {
         await updateDoc(doc(db, 'users', uid), { banned: false });
         messageEl.className = 'admin-message success';
@@ -485,6 +482,7 @@ document.getElementById('unbanUserBtn').addEventListener('click', async () => {
     }
 });
 
+// Mute User
 document.getElementById('muteUserBtn').addEventListener('click', () => {
     document.getElementById('muteOptions').style.display = 'block';
 });
@@ -493,10 +491,10 @@ document.getElementById('confirmMuteBtn').addEventListener('click', async () => 
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const duration = parseInt(document.getElementById('muteDuration').value);
     const messageEl = document.getElementById('adminActionMessage');
-
+    
     try {
-        const muteUntil = Date.now() + (duration * 60000);
-        await updateDoc(doc(db, 'users', uid), {
+        const muteUntil = Date.now() + duration;
+        await updateDoc(doc(db, 'users', uid), { 
             muted: true,
             muteUntil: muteUntil
         });
@@ -512,12 +510,13 @@ document.getElementById('confirmMuteBtn').addEventListener('click', async () => 
     }
 });
 
+// Unmute User
 document.getElementById('unmuteUserBtn').addEventListener('click', async () => {
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const messageEl = document.getElementById('adminActionMessage');
-
+    
     try {
-        await updateDoc(doc(db, 'users', uid), {
+        await updateDoc(doc(db, 'users', uid), { 
             muted: false,
             muteUntil: null
         });
@@ -533,12 +532,14 @@ document.getElementById('unmuteUserBtn').addEventListener('click', async () => {
     }
 });
 
+// Reset Password (email ile gerçek sıfırlama linki)
 document.getElementById('resetPasswordBtn').addEventListener('click', () => {
     document.getElementById('passwordResetOptions').style.display = 'block';
+    // İsteğe bağlı: input'u pasif hale getirebilirsin
     const input = document.getElementById('newPasswordInput');
     if (input) {
         input.disabled = true;
-        input.placeholder = 'Mail ile sıfırlama linki gönderilecek';
+        input.placeholder = 'Bu alan kullanılmıyor, mail ile link gönderilecek';
     }
 });
 
@@ -547,6 +548,7 @@ document.getElementById('confirmResetBtn').addEventListener('click', async () =>
     const uid = document.getElementById('adminActionModal').dataset.uid;
 
     try {
+        // Firestore'dan kullanıcının email'ini al
         const userSnap = await getDoc(doc(db, 'users', uid));
         if (!userSnap.exists()) {
             messageEl.className = 'admin-message error';
@@ -561,6 +563,7 @@ document.getElementById('confirmResetBtn').addEventListener('click', async () =>
             return;
         }
 
+        // Firebase Auth üzerinden reset maili gönder
         await sendPasswordResetEmail(auth, email);
 
         messageEl.className = 'admin-message success';
@@ -572,106 +575,44 @@ document.getElementById('confirmResetBtn').addEventListener('click', async () =>
     }
 });
 
-// Founder God Mode Actions
-document.getElementById('setAdminBtn')?.addEventListener('click', async () => {
-    const uid = document.getElementById('adminActionModal').dataset.uid;
-    const messageEl = document.getElementById('adminActionMessage');
-    try {
-        await updateDoc(doc(db, 'users', uid), { role: 'admin' });
-        messageEl.className = 'admin-message success';
-        messageEl.textContent = '✅ Kullanıcı admin yapıldı';
-        setTimeout(() => { document.getElementById('adminActionModal').style.display = 'none'; loadAdminUsers(); }, 1500);
-    } catch (error) {
-        messageEl.className = 'admin-message error';
-        messageEl.textContent = error.message;
-    }
-});
-
-document.getElementById('removeAdminBtn')?.addEventListener('click', async () => {
-    const uid = document.getElementById('adminActionModal').dataset.uid;
-    const messageEl = document.getElementById('adminActionMessage');
-    try {
-        await updateDoc(doc(db, 'users', uid), { role: 'user' });
-        messageEl.className = 'admin-message success';
-        messageEl.textContent = '✅ Admin yetkisi kaldırıldı';
-        setTimeout(() => { document.getElementById('adminActionModal').style.display = 'none'; loadAdminUsers(); }, 1500);
-    } catch (error) {
-        messageEl.className = 'admin-message error';
-        messageEl.textContent = error.message;
-    }
-});
-
-document.getElementById('givePointsBtn')?.addEventListener('click', async () => {
-    const uid = document.getElementById('adminActionModal').dataset.uid;
-    const messageEl = document.getElementById('adminActionMessage');
-    const amount = parseInt(prompt('Kaç puan vermek istiyorsun?', '1000'));
-    if (!amount || amount <= 0) return;
-    try {
-        await updateDoc(doc(db, 'users', uid), { score: increment(amount) });
-        messageEl.className = 'admin-message success';
-        messageEl.textContent = `✅ ${amount} puan verildi`;
-        setTimeout(() => { document.getElementById('adminActionModal').style.display = 'none'; loadAdminUsers(); }, 1500);
-    } catch (error) {
-        messageEl.className = 'admin-message error';
-        messageEl.textContent = error.message;
-    }
-});
-
-document.getElementById('takePointsBtn')?.addEventListener('click', async () => {
-    const uid = document.getElementById('adminActionModal').dataset.uid;
-    const messageEl = document.getElementById('adminActionMessage');
-    const amount = parseInt(prompt('Kaç puan almak istiyorsun?', '1000'));
-    if (!amount || amount <= 0) return;
-    try {
-        await updateDoc(doc(db, 'users', uid), { score: increment(-amount) });
-        messageEl.className = 'admin-message success';
-        messageEl.textContent = `✅ ${amount} puan alındı`;
-        setTimeout(() => { document.getElementById('adminActionModal').style.display = 'none'; loadAdminUsers(); }, 1500);
-    } catch (error) {
-        messageEl.className = 'admin-message error';
-        messageEl.textContent = error.message;
-    }
-});
-
+// Load Presence Data
 async function loadPresenceData() {
     const presenceListEl = document.getElementById('presenceList');
     presenceListEl.innerHTML = '<div class="loading">Yükleniyor...</div>';
-
+    
     const presenceRef = ref(rtdb, 'presence');
     onValue(presenceRef, async (snapshot) => {
         const presenceData = snapshot.val() || {};
         const usersSnapshot = await getDocs(collection(db, 'users'));
-
+        
         let onlineCount = 0;
         let offlineCount = 0;
-
+        
         presenceListEl.innerHTML = '';
-
+        
         usersSnapshot.forEach(docSnap => {
             const userData = docSnap.data();
             const presence = presenceData[docSnap.id];
             const isOnline = presence && presence.online;
-
+            
             if (isOnline) onlineCount++;
             else offlineCount++;
-
+            
             const item = document.createElement('div');
             item.className = 'presence-item';
-            const lastSeen = presence && presence.lastSeen;
-            const lastSeenStr = (lastSeen && typeof lastSeen === 'number') ? new Date(lastSeen).toLocaleString('tr-TR') : '';
             item.innerHTML = `
                 <div class="presence-user-info">
                     <div class="presence-status-dot ${isOnline ? 'online' : 'offline'}"></div>
                     <div>
                         <div class="presence-user-name">${userData.username}</div>
-                        ${!isOnline && lastSeenStr ? `<div class="presence-last-seen">Son görülme: ${lastSeenStr}</div>` : ''}
+                        ${!isOnline && presence ? `<div class="presence-last-seen">Son görülme: ${new Date(presence.lastSeen).toLocaleString('tr-TR')}</div>` : ''}
                     </div>
                 </div>
             `;
             presenceListEl.appendChild(item);
         });
-
-        document.getElementById('onlineCountAdmin').textContent = onlineCount;
+        
+        document.getElementById('onlineCount').textContent = onlineCount;
         document.getElementById('offlineCount').textContent = offlineCount;
         document.getElementById('totalCount').textContent = usersSnapshot.size;
     });
@@ -688,16 +629,16 @@ document.getElementById('leaderboardBtn').addEventListener('click', () => {
 async function loadLeaderboard() {
     const listEl = document.getElementById('leaderboardList');
     listEl.innerHTML = '<div class="loading">Yükleniyor...</div>';
-
+    
     const leaderboardQuery = query(
         collection(db, 'users'),
         orderBy('score', 'desc'),
         limit(50)
     );
-
+    
     const snapshot = await getDocs(leaderboardQuery);
     listEl.innerHTML = '';
-
+    
     let rank = 1;
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
@@ -718,31 +659,33 @@ async function loadLeaderboard() {
     });
 }
 
+// Leaderboard Search
 document.getElementById('userSearchInput').addEventListener('input', async (e) => {
     const searchTerm = e.target.value.toLowerCase();
-
+    
     if (!searchTerm) {
-        document.querySelectorAll('.leaderboard-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('topUsersTab').style.display = 'block';
         document.getElementById('searchResultsTab').style.display = 'none';
-        document.querySelectorAll('.leaderboard-tab')[0].classList.add('active');
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
         return;
     }
-
-    document.querySelectorAll('.leaderboard-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.leaderboard-tab')[1].classList.add('active');
+    
+    // Switch to search tab
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
     document.getElementById('topUsersTab').style.display = 'none';
     document.getElementById('searchResultsTab').style.display = 'block';
-
+    
     const resultsEl = document.getElementById('searchResultsList');
     resultsEl.innerHTML = '<div class="loading">Aranıyor...</div>';
-
+    
     const usersQuery = query(collection(db, 'users'));
     const snapshot = await getDocs(usersQuery);
-
+    
     resultsEl.innerHTML = '';
     let found = false;
-
+    
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
         if (data.username.toLowerCase().includes(searchTerm)) {
@@ -761,17 +704,18 @@ document.getElementById('userSearchInput').addEventListener('input', async (e) =
             resultsEl.appendChild(item);
         }
     });
-
+    
     if (!found) {
         resultsEl.innerHTML = '<div class="search-placeholder">Kullanıcı bulunamadı</div>';
     }
 });
 
-document.querySelectorAll('.leaderboard-tab').forEach(btn => {
+// Leaderboard Tabs
+document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.leaderboard-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
+        
         if (btn.dataset.tab === 'top') {
             document.getElementById('topUsersTab').style.display = 'block';
             document.getElementById('searchResultsTab').style.display = 'none';
@@ -785,38 +729,28 @@ document.querySelectorAll('.leaderboard-tab').forEach(btn => {
 // ========================================
 // CHAT SYSTEM (Global + DM)
 // ========================================
-document.querySelectorAll('.chat-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.chat-tab').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.chat-tab-content').forEach(c => c.classList.remove('active'));
 
+// Chat Tabs
+document.querySelectorAll('.chat-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.chat-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.chat-tab-content').forEach(c => c.classList.remove('active'));
+        
         btn.classList.add('active');
         const tabName = btn.dataset.tab;
         document.getElementById(`${tabName}ChatTab`).classList.add('active');
-
+        
         if (tabName === 'dm') {
             loadDmUsers();
         }
     });
 });
 
-document.getElementById('sendVsRequestBtn')?.addEventListener('click', async () => {
-    const userRef = doc(db, 'users', currentUser.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
-
-    await addDoc(collection(db, 'chat'), {
-        username: userData.username,
-        message: '⚔️ VS gelmek isteyen var mı?',
-        timestamp: serverTimestamp(),
-        userId: currentUser.uid,
-        isVsRequest: true
-    });
-});
-
+// Load Global Chat
 async function loadChat() {
     const messagesEl = document.getElementById('chatMessages');
 
+    // Eski listener varsa iptal et
     if (chatUnsubscribe) {
         chatUnsubscribe();
         chatUnsubscribe = null;
@@ -832,8 +766,9 @@ async function loadChat() {
 
     if (snapshot.docs.length > 0) {
         lastChatDoc = snapshot.docs[snapshot.docs.length - 1];
+
         if (snapshot.docs.length >= chatLoadedCount) {
-            document.getElementById('loadMoreBtn').style.display = 'block';
+            document.getElementById('chatLoadMore').style.display = 'block';
         }
     }
 
@@ -850,6 +785,7 @@ async function loadChat() {
 
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
+    // Tüm listeyi real-time dinleyen listener
     chatUnsubscribe = onSnapshot(
         query(collection(db, 'chat'), orderBy('timestamp', 'asc')),
         (snap) => {
@@ -867,28 +803,23 @@ function appendChatMessage(msg) {
     const msgEl = document.createElement('div');
     msgEl.className = 'chat-message';
     msgEl.dataset.msgId = msg.id;
-
+    
     const time = msg.timestamp
         ? new Date(msg.timestamp.toMillis()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
         : '';
-
-    let messageContent = msg.message;
-    if (msg.isVsRequest) {
-        messageContent = `${msg.message} <button class="vs-accept-btn" data-sender-id="${msg.userId}" data-sender-name="${msg.username}">✅ Kabul Et</button>`;
-    }
-
+    
     msgEl.innerHTML = `
         <div class="message-header">
             <div class="message-user">${msg.username}</div>
-            ${(isUserAdmin || isUserFounder) ? `<button class="chat-delete-btn" data-msg-id="${msg.id}">Sil</button>` : ''}
+            ${isUserAdmin ? `<button class="chat-delete-btn">Sil</button>` : ''}
         </div>
-        <div class="message-text">${messageContent}</div>
+        <div class="message-text">${msg.message}</div>
         <div class="message-time">${time}</div>
     `;
 
-    if (isUserAdmin || isUserFounder) {
+    if (isUserAdmin) {
         const deleteBtn = msgEl.querySelector('.chat-delete-btn');
-        deleteBtn?.addEventListener('click', async (e) => {
+        deleteBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             try {
                 await deleteDoc(doc(db, 'chat', msg.id));
@@ -900,52 +831,42 @@ function appendChatMessage(msg) {
         });
     }
 
-    // Add event listener to VS accept button
-    const vsAcceptBtn = msgEl.querySelector('.vs-accept-btn');
-    if (vsAcceptBtn) {
-        vsAcceptBtn.addEventListener('click', async (e) => {
-            const senderId = e.target.dataset.senderId;
-            const senderName = e.target.dataset.senderName;
-            alert(`VS isteği kabul edildi! ${senderName} ile eşleşiyorsun...`);
-            // VS lobisine yönlendirme yapılabilir
-        });
-    }
-
     messagesEl.appendChild(msgEl);
 }
 
+// Load More Chat
 document.getElementById('loadMoreBtn').addEventListener('click', async () => {
     if (!lastChatDoc) return;
-
+    
     chatLoadedCount += 5;
-
+    
     const chatQuery = query(
         collection(db, 'chat'),
         orderBy('timestamp', 'desc'),
         startAfter(lastChatDoc),
         limit(5)
     );
-
+    
     const snapshot = await getDocs(chatQuery);
-
+    
     if (snapshot.docs.length > 0) {
         lastChatDoc = snapshot.docs[snapshot.docs.length - 1];
-
+        
         const messages = [];
         snapshot.forEach(docSnap => {
             messages.push({ id: docSnap.id, ...docSnap.data() });
         });
-
+        
         const messagesEl = document.getElementById('chatMessages');
         messages.reverse().forEach(msg => {
             const msgEl = document.createElement('div');
             msgEl.className = 'chat-message';
             msgEl.dataset.msgId = msg.id;
-
+            
             const time = msg.timestamp
                 ? new Date(msg.timestamp.toMillis()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
                 : '';
-
+            
             msgEl.innerHTML = `
                 <div class="message-user">${msg.username}</div>
                 <div class="message-text">${msg.message}</div>
@@ -954,36 +875,39 @@ document.getElementById('loadMoreBtn').addEventListener('click', async () => {
             messagesEl.insertBefore(msgEl, messagesEl.firstChild);
         });
     } else {
-        document.getElementById('loadMoreBtn').style.display = 'none';
+        document.getElementById('chatLoadMore').style.display = 'none';
     }
 });
 
+// Send Global Chat
 async function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
-
+    
     if (!message) return;
-
+    
+    // Check if muted
     const userRef = doc(db, 'users', currentUser.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.data();
-
+    
     if (userData.muted && userData.muteUntil > Date.now()) {
         alert('Susturulduğunuz için mesaj gönderemezsiniz.');
         return;
     }
-
+    
+    // Clear mute if expired
     if (userData.muted && userData.muteUntil <= Date.now()) {
         await updateDoc(userRef, { muted: false, muteUntil: null });
     }
-
+    
     await addDoc(collection(db, 'chat'), {
         username: userData.username,
         message: message,
         timestamp: serverTimestamp(),
         userId: currentUser.uid
     });
-
+    
     input.value = '';
 }
 
@@ -997,247 +921,108 @@ document.getElementById('chatInput').addEventListener('keypress', (e) => {
 // ========================================
 async function loadDmUsers() {
     const listEl = document.getElementById('dmUserList');
-    listEl.innerHTML = '<div class="loading">Kullanıcıları yükleniyor...</div>';
-
+    listEl.innerHTML = '<div class="chat-welcome">Kullanıcıları yükleniyor...</div>';
+    
     const usersQuery = query(collection(db, 'users'));
     const snapshot = await getDocs(usersQuery);
-    const presenceRef = ref(rtdb, 'presence');
-
+    
     listEl.innerHTML = '';
-    const presenceData = await new Promise((resolve) => {
-        onValue(presenceRef, (s) => resolve(s.val() || {}), { onlyOnce: true });
-    });
-
-    // Son mesaj zamanlarını al ve sırala
-    const lastMessages = {};
-    for (const docSnap of snapshot.docs) {
-        if (docSnap.id === currentUser.uid) continue;
-        const conversationId = [currentUser.uid, docSnap.id].sort().join('_');
-        const lastMsgQuery = query(collection(db, 'dm', conversationId, 'messages'), orderBy('timestamp', 'desc'), limit(1));
-        const lastMsgSnap = await getDocs(lastMsgQuery);
-        if (!lastMsgSnap.empty) {
-            const lastMsg = lastMsgSnap.docs[0].data();
-            lastMessages[docSnap.id] = lastMsg.timestamp?.toMillis() || 0;
-        } else {
-            lastMessages[docSnap.id] = 0;
-        }
-    }
-
-    // Kullanıcıları son mesaj zamanına göre sırala
-    const userList = [];
     snapshot.forEach(docSnap => {
-        if (docSnap.id === currentUser.uid) return;
-        userList.push({ id: docSnap.id, data: docSnap.data(), lastMessageTime: lastMessages[docSnap.id] || 0 });
-    });
-    userList.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-
-    userList.forEach(({ id, data }) => {
-        const isOnline = !!(presenceData[id] && presenceData[id].online);
-        const unread = dmUnreadCounts[id] || 0;
+        if (docSnap.id === currentUser.uid) return; // Skip self
+        
+        const data = docSnap.data();
         const item = document.createElement('div');
         item.className = 'dm-user-item';
-        item.dataset.recipientId = id;
         item.innerHTML = `
             <div class="dm-user-avatar">
                 ${data.profileImage ? `<img src="${data.profileImage}" alt="">` : '👤'}
             </div>
             <div class="dm-user-info">
-                <div class="dm-user-name-display">
-                    ${data.username}
-                    ${unread > 0 ? `<span class="dm-unread-dot">${unread}</span>` : ''}
-                </div>
-                <div class="dm-user-status dm-user-status--${isOnline ? 'online' : 'offline'}">
-                    ${isOnline ? '🟢 Çevrimiçi' : '⚫ Çevrimdışı'}
-                </div>
+                <div class="dm-user-name-display">${data.username}</div>
+                <div class="dm-user-status">${data.email}</div>
             </div>
         `;
-        item.addEventListener('click', () => openDmConversation(id, data.username));
+        item.addEventListener('click', () => openDmConversation(docSnap.id, data.username));
         listEl.appendChild(item);
     });
 }
 
-// DM bildirimlerini dinle
-function listenToDmNotifications() {
-    const usersQuery = query(collection(db, 'users'));
-    getDocs(usersQuery).then(snapshot => {
-        snapshot.forEach(docSnap => {
-            if (docSnap.id === currentUser.uid) return;
-            const conversationId = [currentUser.uid, docSnap.id].sort().join('_');
-            const messagesRef = collection(db, 'dm', conversationId, 'messages');
-
-            const unsubscribe = onSnapshot(query(messagesRef, orderBy('timestamp', 'desc'), limit(1)), (snap) => {
-                if (snap.empty) return;
-                const lastMsg = snap.docs[0].data();
-                if (lastMsg.senderId !== currentUser.uid && currentDmRecipient !== docSnap.id) {
-                    // Yeni mesaj geldi, okunmadı olarak işaretle
-                    dmUnreadCounts[docSnap.id] = (dmUnreadCounts[docSnap.id] || 0) + 1;
-                    updateDmUnreadBadge();
-                    loadDmUsers(); // Listeyi güncelle
-                }
-            });
-
-            dmUnsubscribers[docSnap.id] = unsubscribe;
-        });
-    });
-}
-
 function openDmConversation(recipientId, recipientName) {
-    // Önceki dinleyicileri temizle
-    if (currentDmMessagesUnsubscribe) {
-        currentDmMessagesUnsubscribe();
-        currentDmMessagesUnsubscribe = null;
-    }
-    if (dmReceiptsUnsubscribe) {
-        dmReceiptsUnsubscribe();
-        dmReceiptsUnsubscribe = null;
-    }
-
     currentDmRecipient = recipientId;
     document.getElementById('dmUserName').textContent = recipientName;
     document.getElementById('dmUserList').style.display = 'none';
     document.getElementById('dmConversation').style.display = 'flex';
-
-    const onlineRef = ref(rtdb, `presence/${recipientId}`);
-    onValue(onlineRef, (s) => {
-        const v = s.val();
-        const el = document.getElementById('dmUserOnline');
-        if (el) el.textContent = v && v.online ? '🟢 Çevrimiçi' : '⚫ Çevrimdışı';
-    });
-
-    dmUnreadCounts[recipientId] = 0; // Okundu olarak işaretle
-    updateDmUnreadBadge();
+    
     loadDmMessages(recipientId);
-    loadDmUsers(); // Listeyi güncelle
 }
 
 document.getElementById('dmBackBtn').addEventListener('click', () => {
     document.getElementById('dmUserList').style.display = 'block';
     document.getElementById('dmConversation').style.display = 'none';
     currentDmRecipient = null;
-    if (currentDmMessagesUnsubscribe) {
-        currentDmMessagesUnsubscribe();
-        currentDmMessagesUnsubscribe = null;
-    }
-    if (dmReceiptsUnsubscribe) {
-        dmReceiptsUnsubscribe();
-        dmReceiptsUnsubscribe = null;
-    }
 });
 
 async function loadDmMessages(recipientId) {
     const messagesEl = document.getElementById('dmMessages');
     messagesEl.innerHTML = '';
-
+    
     const conversationId = [currentUser.uid, recipientId].sort().join('_');
-    const messagesRef = collection(db, 'dm', conversationId, 'messages');
-    const receiptsRef = collection(db, 'dm', conversationId, 'receipts');
-
-    const receiptsSnapshot = await getDocs(receiptsRef);
-    const readByRecipient = {};
-    receiptsSnapshot.forEach(d => {
-        const dta = d.data();
-        if (dta.readBy === recipientId) readByRecipient[dta.messageId] = true;
-    });
-
-    // Mesajları dinle
-    currentDmMessagesUnsubscribe = onSnapshot(query(messagesRef, orderBy('timestamp', 'asc')), async (snapshot) => {
+    
+    const dmQuery = query(
+        collection(db, 'dm', conversationId, 'messages'),
+        orderBy('timestamp', 'asc')
+    );
+    
+    onSnapshot(dmQuery, (snapshot) => {
         messagesEl.innerHTML = '';
         snapshot.forEach(docSnap => {
             const msg = docSnap.data();
             const msgEl = document.createElement('div');
             msgEl.className = 'chat-message';
-            msgEl.dataset.msgId = docSnap.id;
-
+            
             const time = msg.timestamp
                 ? new Date(msg.timestamp.toMillis()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
                 : '';
-            const isOwn = msg.senderId === currentUser.uid;
-            const read = readByRecipient[docSnap.id];
-            const check = isOwn ? (read ? '✓✓' : '✓') : '';
-
+            
             msgEl.innerHTML = `
-                <div class="message-user">${isOwn ? 'Sen' : msg.username}</div>
+                <div class="message-user">${msg.senderId === currentUser.uid ? 'Sen' : msg.username}</div>
                 <div class="message-text">${msg.message}</div>
-                <div class="message-meta">
-                    <span class="message-time">${time}</span>
-                    ${check ? `<span class="message-read">${check}</span>` : ''}
-                </div>
+                <div class="message-time">${time}</div>
             `;
             messagesEl.appendChild(msgEl);
         });
         messagesEl.scrollTop = messagesEl.scrollHeight;
-
-        // Mesajları okundu olarak işaretle
-        for (const docSnap of snapshot.docs) {
-            const msg = docSnap.data();
-            if (msg.senderId !== recipientId) continue;
-            const recRef = doc(db, 'dm', conversationId, 'receipts', docSnap.id);
-            try {
-                const recSnap = await getDoc(recRef);
-                if (recSnap.exists() && !recSnap.data().readBy) {
-                    await updateDoc(recRef, { readBy: currentUser.uid });
-                }
-            } catch (_) {}
-        }
-    });
-
-    // Okundu bilgilerini dinle
-    dmReceiptsUnsubscribe = onSnapshot(receiptsRef, (snap) => {
-        snap.forEach(d => {
-            const dta = d.data();
-            if (dta.readBy === recipientId) readByRecipient[dta.messageId] = true;
-        });
-        document.querySelectorAll('#dmMessages .chat-message').forEach((el) => {
-            const mid = el.dataset.msgId;
-            const meta = el.querySelector('.message-meta');
-            if (!meta) return;
-            let readSpan = meta.querySelector('.message-read');
-            if (readByRecipient[mid]) {
-                if (!readSpan) { 
-                    readSpan = document.createElement('span'); 
-                    readSpan.className = 'message-read'; 
-                    meta.appendChild(readSpan); 
-                }
-                readSpan.textContent = '✓✓';
-            }
-        });
     });
 }
 
 async function sendDmMessage() {
     if (!currentDmRecipient) return;
-
+    
     const input = document.getElementById('dmInput');
     const message = input.value.trim();
-
+    
     if (!message) return;
-
+    
+    // Check if muted
     const userRef = doc(db, 'users', currentUser.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.data();
-
+    
     if (userData.muted && userData.muteUntil > Date.now()) {
         alert('Susturulduğunuz için mesaj gönderemezsiniz.');
         return;
     }
-
+    
     const conversationId = [currentUser.uid, currentDmRecipient].sort().join('_');
-    const messagesRef = collection(db, 'dm', conversationId, 'messages');
-
-    const ref = await addDoc(messagesRef, {
+    
+    await addDoc(collection(db, 'dm', conversationId, 'messages'), {
         senderId: currentUser.uid,
         username: userData.username,
         message: message,
         timestamp: serverTimestamp()
     });
-
+    
     input.value = '';
-
-    await setDoc(doc(db, 'dm', conversationId, 'receipts', ref.id), {
-        messageId: ref.id,
-        readBy: null,
-        sentAt: serverTimestamp()
-    });
 }
 
 document.getElementById('dmSend').addEventListener('click', sendDmMessage);
@@ -1245,18 +1030,7 @@ document.getElementById('dmInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendDmMessage();
 });
 
-function updateDmUnreadBadge() {
-    const total = Object.values(dmUnreadCounts).reduce((a, b) => a + b, 0);
-    const badge = document.getElementById('dmUnreadBadge');
-    if (!badge) return;
-    if (total) {
-        badge.style.display = 'inline';
-        badge.textContent = total > 99 ? '99+' : total;
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
+// Mobile Chat Toggle
 document.getElementById('chatToggleMobile').addEventListener('click', () => {
     document.getElementById('chatSidebar').classList.toggle('minimized');
 });
@@ -1266,32 +1040,34 @@ document.getElementById('chatToggleMobile').addEventListener('click', () => {
 // ========================================
 document.getElementById('watchAdBtn').addEventListener('click', async () => {
     if (adCooldown) return;
-
+    
     const btn = document.getElementById('watchAdBtn');
     btn.disabled = true;
     btn.textContent = 'Reklam gösteriliyor...';
-
+    
     setTimeout(async () => {
         const userRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(userRef, { score: increment(30) });
-
+        await updateDoc(userRef, {
+            score: increment(50)
+        });
+        
         btn.style.display = 'none';
         document.getElementById('adCooldown').style.display = 'block';
-
-        let timeLeft = 300;
+        
+        let timeLeft = 300; // 5 minutes
         adCooldown = true;
-
+        
         const timer = setInterval(() => {
             timeLeft--;
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
             document.getElementById('adTimer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
+            
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 btn.style.display = 'block';
                 btn.disabled = false;
-                btn.textContent = '+30 Puan Kazan';
+                btn.textContent = '+50 Puan Kazan';
                 document.getElementById('adCooldown').style.display = 'none';
                 adCooldown = false;
             }
@@ -1304,194 +1080,901 @@ document.getElementById('watchAdBtn').addEventListener('click', async () => {
 // ========================================
 document.getElementById('marketBtn').addEventListener('click', () => {
     document.getElementById('marketModal').style.display = 'flex';
-    loadInventory();
 });
-
-const BOX_PRICES = { bronze: 50, silver: 150, gold: 400, epic: 250, legendary: 600, daily: 0 };
 
 document.querySelectorAll('.buy-box-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         const boxType = btn.dataset.box;
-        const price = BOX_PRICES[boxType];
-
-        if (boxType === 'daily') {
-            await claimDailyBox();
-            return;
-        }
-
+        const prices = { bronze: 50, silver: 150, gold: 400 };
+        const price = prices[boxType];
+        
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
         const currentScore = userSnap.data().score;
-
+        
         if (currentScore < price) {
             showBoxResult('Yetersiz bakiye!', 'error');
             return;
         }
-
-        await updateDoc(userRef, { score: increment(-price) });
-
+        
+        await updateDoc(userRef, {
+            score: increment(-price)
+        });
+        
         const result = openBox(boxType);
-        await playBoxOpenAnimation(boxType, result);
         showBoxResult(result.message, 'success');
-
+        
         if (result.scoreReward) {
-            await updateDoc(userRef, { score: increment(result.scoreReward) });
+            await updateDoc(userRef, {
+                score: increment(result.scoreReward)
+            });
         }
+        
         if (result.multiplier) {
-            await updateDoc(userRef, { multiplier: result.multiplier });
+            await updateDoc(userRef, {
+                multiplier: result.multiplier
+            });
         }
-        loadInventory();
     });
 });
 
-async function claimDailyBox() {
-    const userRef = doc(db, 'users', currentUser.uid);
-    const claimRef = doc(db, 'dailyBoxClaims', currentUser.uid);
-    const claimSnap = await getDoc(claimRef);
-    const now = Date.now();
-    const dayMs = 86400000;
-    const last = (claimSnap.data() || {}).lastClaim || 0;
-    if (now - last < dayMs) {
-        const next = Math.ceil((last + dayMs - now) / 60000);
-        showBoxResult(`Günlük kutu ${next} dakika sonra tekrar açılabilir.`, 'error');
-        return;
-    }
-    await setDoc(claimRef, { lastClaim: now });
-    const result = openBox('daily');
-    await playBoxOpenAnimation('daily', result);
-    showBoxResult(result.message, 'success');
-    if (result.scoreReward) await updateDoc(userRef, { score: increment(result.scoreReward) });
-    if (result.multiplier) await updateDoc(userRef, { multiplier: result.multiplier });
-    loadInventory();
-}
-
 function openBox(type) {
     const rand = Math.random();
-    if (type === 'daily') {
-        const score = Math.floor(Math.random() * 101) + 20;
-        if (rand < 0.02) return { scoreReward: score, multiplier: 2, message: `📅 ${score} Puan + x2!` };
-        return { scoreReward: score, message: `📅 ${score} Puan kazandın!` };
-    }
+    
     if (type === 'bronze') {
-        const score = Math.floor(Math.random() * 81) + 20;
-        if (rand < 0.05) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        const score = Math.floor(Math.random() * 151) + 50;
+        if (rand < 0.1) {
+            return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        }
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
+    
     if (type === 'silver') {
-        const score = Math.floor(Math.random() * 151) + 100;
-        if (rand < 0.03) return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
-        if (rand < 0.10) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        const score = Math.floor(Math.random() * 301) + 200;
+        if (rand < 0.05) {
+            return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
+        } else if (rand < 0.2) {
+            return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        }
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
+    
     if (type === 'gold') {
-        const score = Math.floor(Math.random() * 401) + 200;
-        if (rand < 0.02) return { scoreReward: score, multiplier: 10, message: `💥 ${score} Puan + x10 MEGA Katlayıcı!` };
-        if (rand < 0.08) return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
-        if (rand < 0.15) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        const score = Math.floor(Math.random() * 1001) + 500;
+        if (rand < 0.05) {
+            return { scoreReward: score, multiplier: 10, message: `💥 ${score} Puan + x10 MEGA Katlayıcı!` };
+        } else if (rand < 0.15) {
+            return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
+        } else if (rand < 0.3) {
+            return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        }
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
-    if (type === 'epic') {
-        const score = Math.floor(Math.random() * 251) + 150;
-        if (rand < 0.04) return { scoreReward: score, multiplier: 10, message: `💜 ${score} Puan + x10 Epic!` };
-        if (rand < 0.12) return { scoreReward: score, multiplier: 5, message: `💜 ${score} Puan + x5!` };
-        if (rand < 0.20) return { scoreReward: score, multiplier: 2, message: `💜 ${score} Puan + x2!` };
-        return { scoreReward: score, message: `💜 ${score} Puan kazandın!` };
-    }
-    if (type === 'legendary') {
-        const score = Math.floor(Math.random() * 501) + 400;
-        if (rand < 0.03) return { scoreReward: score, multiplier: 10, message: `🌈 ${score} Puan + x10 Legendary!` };
-        if (rand < 0.10) return { scoreReward: score, multiplier: 5, message: `🌈 ${score} Puan + x5!` };
-        if (rand < 0.20) return { scoreReward: score, multiplier: 2, message: `🌈 ${score} Puan + x2!` };
-        return { scoreReward: score, message: `🌈 ${score} Puan kazandın!` };
-    }
-    return { message: 'Bilinmeyen kutu.' };
 }
 
 function showBoxResult(message, type) {
     const resultEl = document.getElementById('boxResult');
     resultEl.className = `box-result ${type}`;
     resultEl.textContent = message;
-    setTimeout(() => { resultEl.textContent = ''; resultEl.className = 'box-result'; }, 5000);
-}
-
-async function playBoxOpenAnimation(boxType, result) {
-    const modal = document.getElementById('boxOpenModal');
-    const rewardEl = document.getElementById('boxOpenReward');
-    const lid = document.getElementById('boxOpenLid');
-    const glow = document.getElementById('boxOpenGlow');
-    if (!modal || !rewardEl) return;
-    rewardEl.textContent = result.message || '';
-    rewardEl.className = 'box-open-reward';
-    modal.style.display = 'flex';
-    lid.classList.add('box-open-lid--open');
-    glow.classList.add('box-open-glow--active');
-    await new Promise(r => setTimeout(r, 1800));
-    lid.classList.remove('box-open-lid--open');
-    glow.classList.remove('box-open-glow--active');
-    modal.style.display = 'none';
-}
-
-async function loadInventory() {
-    const grid = document.getElementById('inventoryGrid');
-    if (!grid) return;
-    const invRef = collection(db, 'users', currentUser.uid, 'inventory');
-    const snap = await getDocs(invRef);
-    grid.innerHTML = '';
-    snap.forEach(d => {
-        const dta = d.data();
-        const div = document.createElement('div');
-        div.className = 'inventory-item';
-        div.innerHTML = `<span class="inventory-name">${dta.name || 'Öğe'}</span><span class="inventory-qty">${dta.qty || 1}</span>`;
-        grid.appendChild(div);
-    });
-    if (snap.empty) grid.innerHTML = '<div class="inventory-empty">Envanterde öğe yok.</div>';
+    
+    setTimeout(() => {
+        resultEl.textContent = '';
+        resultEl.className = 'box-result';
+    }, 5000);
 }
 
 // ========================================
-// MODAL CLOSING & UTILITIES
+// SIMPLE GAMES (Coin, RPS, Wheel)
 // ========================================
-document.querySelectorAll('.modal-close, .modal-backdrop').forEach(el => {
-    el.addEventListener('click', (e) => {
-        if (e.target === el || e.target.classList.contains('modal-close')) {
-            const modal = e.target.closest('.modal');
-            if (modal) {
-                modal.style.display = 'none';
-                
-                if (modal.id === 'game2048Modal') {
-                    game2048 = null;
-                }
-                if (modal.id === 'chessModal') {
-                    chessGame = null;
-                }
-                if (modal.id === 'dmConversation') {
-                    document.getElementById('dmUserList').style.display = 'block';
-                    document.getElementById('dmConversation').style.display = 'none';
-                    currentDmRecipient = null;
-                    if (currentDmMessagesUnsubscribe) {
-                        currentDmMessagesUnsubscribe();
-                        currentDmMessagesUnsubscribe = null;
-                    }
-                    if (dmReceiptsUnsubscribe) {
-                        dmReceiptsUnsubscribe();
-                        dmReceiptsUnsubscribe = null;
-                    }
-                }
-            }
+
+// Coin Flip
+document.getElementById('coinFlipCard').addEventListener('click', () => {
+    document.getElementById('coinFlipModal').style.display = 'flex';
+});
+
+document.querySelectorAll('#coinFlipModal .choice-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const choice = btn.dataset.choice;
+        const betAmount = parseInt(document.getElementById('coinBetAmount').value);
+        
+        if (betAmount < 10) {
+            showGameResult('coinResult', 'Minimum bahis 10!', 'lose');
+            return;
+        }
+        
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        const currentScore = userSnap.data().score;
+        
+        if (currentScore < betAmount) {
+            showGameResult('coinResult', 'Yetersiz bakiye!', 'lose');
+            return;
+        }
+        
+        const result = Math.random() < 0.5 ? 'heads' : 'tails';
+        const won = result === choice;
+        
+        if (won) {
+            const winAmount = Math.floor(betAmount * 1.8 * userMultiplier);
+            await updateDoc(userRef, {
+                score: increment(winAmount - betAmount)
+            });
+            showGameResult('coinResult', `🎉 Kazandın! +${winAmount - betAmount} Puan`, 'win');
+        } else {
+            await updateDoc(userRef, {
+                score: increment(-betAmount)
+            });
+            showGameResult('coinResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
         }
     });
 });
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        document.querySelectorAll('.modal').forEach(modal => {
-            if (modal.style.display === 'flex') {
-                modal.style.display = 'none';
-            }
-        });
-    }
+// Rock Paper Scissors
+document.getElementById('rpsCard').addEventListener('click', () => {
+    document.getElementById('rpsModal').style.display = 'flex';
 });
 
+document.querySelectorAll('#rpsModal .choice-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const choice = btn.dataset.choice;
+        const betAmount = parseInt(document.getElementById('rpsBetAmount').value);
+        
+        if (betAmount < 10) {
+            showGameResult('rpsResult', 'Minimum bahis 10!', 'lose');
+            return;
+        }
+        
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        const currentScore = userSnap.data().score;
+        
+        if (currentScore < betAmount) {
+            showGameResult('rpsResult', 'Yetersiz bakiye!', 'lose');
+            return;
+        }
+        
+        const choices = ['rock', 'paper', 'scissors'];
+        const botChoice = choices[Math.floor(Math.random() * 3)];
+        
+        const wins = {
+            rock: 'scissors',
+            paper: 'rock',
+            scissors: 'paper'
+        };
+        
+        let result = 'draw';
+        if (wins[choice] === botChoice) result = 'win';
+        else if (wins[botChoice] === choice) result = 'lose';
+        
+        if (result === 'win') {
+            const winAmount = Math.floor(betAmount * 1.9 * userMultiplier);
+            await updateDoc(userRef, {
+                score: increment(winAmount - betAmount)
+            });
+            showGameResult('rpsResult', `🎉 Kazandın! +${winAmount - betAmount} Puan`, 'win');
+        } else if (result === 'lose') {
+            await updateDoc(userRef, {
+                score: increment(-betAmount)
+            });
+            showGameResult('rpsResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
+        } else {
+            showGameResult('rpsResult', `🤝 Berabere! Bahis iade edildi`, 'win');
+        }
+    });
+});
+
+// Spin Wheel
+document.getElementById('spinWheelCard').addEventListener('click', () => {
+    document.getElementById('spinWheelModal').style.display = 'flex';
+    drawWheel();
+});
+
+function drawWheel() {
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Önce temizle ve dönüşü sıfırla
+    canvas.style.transform = 'rotate(0deg)';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const segments = 8;
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+    const prizes = ['x0.5', 'x1', 'x1.5', 'x2', 'x3', 'x0', 'x1.2', 'x5'];
+    
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 140;
+    const anglePerSegment = (2 * Math.PI) / segments;
+    
+    for (let i = 0; i < segments; i++) {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, i * anglePerSegment, (i + 1) * anglePerSegment);
+        ctx.closePath();
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(i * anglePerSegment + anglePerSegment / 2);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText(prizes[i], radius / 1.5, 8);
+        ctx.restore();
+    }
+}
+
+document.getElementById('spinBtn').addEventListener('click', async () => {
+    const betAmount = parseInt(document.getElementById('wheelBetAmount').value);
+    
+    if (betAmount < 10) {
+        showGameResult('wheelResult', 'Minimum bahis 10!', 'lose');
+        return;
+    }
+    
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const currentScore = userSnap.data().score;
+    
+    if (currentScore < betAmount) {
+        showGameResult('wheelResult', 'Yetersiz bakiye!', 'lose');
+        return;
+    }
+    
+    const btn = document.getElementById('spinBtn');
+    btn.disabled = true;
+    btn.textContent = 'Çevriliyor...';
+    
+    const canvas = document.getElementById('wheelCanvas');
+    const multipliers = [0.5, 1, 1.5, 2, 3, 0, 1.2, 5];
+    const result = multipliers[Math.floor(Math.random() * multipliers.length)];
+
+    // Bahsi önce düş
+    await updateDoc(userRef, {
+        score: increment(-betAmount)
+    });
+    
+    // Spin animation
+    let rotation = 0;
+    const spinTime = 3000;
+    const startTime = Date.now();
+    
+    const spin = setInterval(async () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / spinTime, 1);
+        
+        rotation = progress * 360 * 5;
+        canvas.style.transform = `rotate(${rotation}deg)`;
+        
+        if (progress >= 1) {
+            clearInterval(spin);
+            
+            const winAmount = Math.floor(betAmount * result * userMultiplier);
+            
+            if (result > 0) {
+                await updateDoc(userRef, {
+                    score: increment(winAmount)
+                });
+                showGameResult('wheelResult', `🎉 x${result}! +${winAmount} Puan`, 'win');
+            } else {
+                showGameResult('wheelResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'ÇEVİR!';
+        }
+    }, 16);
+});
+
+function showGameResult(elementId, message, type) {
+    const resultEl = document.getElementById(elementId);
+    resultEl.className = `game-result ${type}`;
+    resultEl.textContent = message;
+    
+    setTimeout(() => {
+        resultEl.textContent = '';
+        resultEl.className = 'game-result';
+    }, 5000);
+}
+
 // ========================================
-// INITIALIZATION COMPLETE
+// CHESS ENGINE
 // ========================================
-console.log('🚀 Uygulama başlatıldı! Tüm sistemler çalışıyor.');
+document.getElementById('chessCard').addEventListener('click', () => {
+    document.getElementById('chessModal').style.display = 'flex';
+});
+
+document.getElementById('chessStartBtn').addEventListener('click', async () => {
+    const betAmount = parseInt(document.getElementById('chessBetAmount').value);
+    const difficulty = document.getElementById('chessDifficulty').value;
+    
+    if (betAmount < 50) {
+        showGameResult('chessResult', 'Minimum bahis 50!', 'lose');
+        return;
+    }
+    
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const currentScore = userSnap.data().score;
+    
+    if (currentScore < betAmount) {
+        showGameResult('chessResult', 'Yetersiz bakiye!', 'lose');
+        return;
+    }
+    
+    await updateDoc(userRef, { score: increment(-betAmount) });
+    
+    document.getElementById('chessBetDisplay').textContent = betAmount;
+    document.getElementById('chessStartBtn').style.display = 'none';
+    document.getElementById('chessBetAmount').disabled = true;
+    document.getElementById('chessDifficulty').disabled = true;
+    
+    chessGame = new ChessGame(betAmount, difficulty);
+    chessGame.render();
+});
+
+class ChessGame {
+    constructor(betAmount, difficulty) {
+        this.betAmount = betAmount;
+        this.difficulty = difficulty;
+        this.board = this.initializeBoard();
+        this.currentTurn = 'white';
+        this.selectedSquare = null;
+        this.gameOver = false;
+        this.whiteKingMoved = false;
+        this.blackKingMoved = false;
+        this.whiteRookAMoved = false;
+        this.whiteRookHMoved = false;
+        this.blackRookAMoved = false;
+        this.blackRookHMoved = false;
+        this.enPassantTarget = null;
+    }
+    
+    initializeBoard() {
+        return [
+            ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+            ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+            ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+        ];
+    }
+    
+    render() {
+        const boardEl = document.getElementById('chessBoard');
+        boardEl.innerHTML = '';
+        
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const square = document.createElement('div');
+                square.className = `chess-square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                square.textContent = this.board[row][col];
+                square.dataset.row = row;
+                square.dataset.col = col;
+                
+                if (this.selectedSquare && this.selectedSquare.row === row && this.selectedSquare.col === col) {
+                    square.classList.add('selected');
+                }
+                
+                square.addEventListener('click', () => this.handleSquareClick(row, col));
+                boardEl.appendChild(square);
+            }
+        }
+        
+        this.updateStatus();
+    }
+    
+    handleSquareClick(row, col) {
+        if (this.gameOver || this.currentTurn === 'black') return;
+        
+        const piece = this.board[row][col];
+        
+        if (this.selectedSquare) {
+            const validMoves = this.getValidMoves(this.selectedSquare.row, this.selectedSquare.col);
+            const isValidMove = validMoves.some(move => move.row === row && move.col === col);
+            
+            if (isValidMove) {
+                this.movePiece(this.selectedSquare.row, this.selectedSquare.col, row, col);
+                this.selectedSquare = null;
+                this.currentTurn = 'black';
+                this.render();
+                
+                if (this.isCheckmate('black')) {
+                    this.endGame(true);
+                } else if (this.isStalemate('black')) {
+                    this.endGame(false, true);
+                } else {
+                    setTimeout(() => this.botMove(), 500);
+                }
+            } else if (piece && this.isWhitePiece(piece)) {
+                this.selectedSquare = { row, col };
+                this.render();
+                this.highlightValidMoves(row, col);
+            } else {
+                this.selectedSquare = null;
+                this.render();
+            }
+        } else if (piece && this.isWhitePiece(piece)) {
+            this.selectedSquare = { row, col };
+            this.render();
+            this.highlightValidMoves(row, col);
+        }
+    }
+    
+    highlightValidMoves(row, col) {
+        const validMoves = this.getValidMoves(row, col);
+        const squares = document.querySelectorAll('.chess-square');
+        
+        validMoves.forEach(move => {
+            const index = move.row * 8 + move.col;
+            squares[index].classList.add('valid-move');
+        });
+    }
+    
+    movePiece(fromRow, fromCol, toRow, toCol) {
+        const piece = this.board[fromRow][fromCol];
+        
+        // Castling
+        if (piece === '♔' && Math.abs(toCol - fromCol) === 2) {
+            if (toCol === 6) { // Kingside
+                this.board[7][5] = this.board[7][7];
+                this.board[7][7] = '';
+            } else if (toCol === 2) { // Queenside
+                this.board[7][3] = this.board[7][0];
+                this.board[7][0] = '';
+            }
+            this.whiteKingMoved = true;
+        }
+        
+        if (piece === '♚' && Math.abs(toCol - fromCol) === 2) {
+            if (toCol === 6) {
+                this.board[0][5] = this.board[0][7];
+                this.board[0][7] = '';
+            } else if (toCol === 2) {
+                this.board[0][3] = this.board[0][0];
+                this.board[0][0] = '';
+            }
+            this.blackKingMoved = true;
+        }
+        
+        // En passant
+        if (piece === '♙' && this.enPassantTarget && toRow === this.enPassantTarget.row && toCol === this.enPassantTarget.col) {
+            this.board[toRow + 1][toCol] = '';
+        }
+        if (piece === '♟' && this.enPassantTarget && toRow === this.enPassantTarget.row && toCol === this.enPassantTarget.col) {
+            this.board[toRow - 1][toCol] = '';
+        }
+        
+        // Set en passant target
+        this.enPassantTarget = null;
+        if (piece === '♙' && fromRow === 6 && toRow === 4) {
+            this.enPassantTarget = { row: 5, col: fromCol };
+        }
+        if (piece === '♟' && fromRow === 1 && toRow === 3) {
+            this.enPassantTarget = { row: 2, col: fromCol };
+        }
+        
+        // Track rook moves
+        if (piece === '♖') {
+            if (fromRow === 7 && fromCol === 0) this.whiteRookAMoved = true;
+            if (fromRow === 7 && fromCol === 7) this.whiteRookHMoved = true;
+        }
+        if (piece === '♜') {
+            if (fromRow === 0 && fromCol === 0) this.blackRookAMoved = true;
+            if (fromRow === 0 && fromCol === 7) this.blackRookHMoved = true;
+        }
+        
+        // Track king moves
+        if (piece === '♔') this.whiteKingMoved = true;
+        if (piece === '♚') this.blackKingMoved = true;
+        
+        this.board[toRow][toCol] = piece;
+        this.board[fromRow][fromCol] = '';
+        
+        // Pawn promotion
+        if (piece === '♙' && toRow === 0) this.board[toRow][toCol] = '♕';
+        if (piece === '♟' && toRow === 7) this.board[toRow][toCol] = '♛';
+    }
+
+    getValidMoves(row, col) {
+        const piece = this.board[row][col];
+        if (!piece) return [];
+
+        const isWhite = this.isWhitePiece(piece);
+        const color = isWhite ? 'white' : 'black';
+
+        // Önce ham (kurallı ama "şah güvenliği" kontrolsüz) hareketleri al
+        const pseudoMoves = this.getPseudoMoves(row, col, { forAttack: false });
+
+        // Sonra her hareketi simüle edip şahı tehdit altında bırakmayanları filtrele
+        const legalMoves = [];
+
+        for (const move of pseudoMoves) {
+            const backupBoard = this.board.map(r => [...r]);
+
+            this.board[move.row][move.col] = piece;
+            this.board[row][col] = '';
+
+            const kingInCheck = this.isInCheck(color);
+
+            // tahtayı geri al
+            this.board = backupBoard;
+
+            if (!kingInCheck) {
+                legalMoves.push(move);
+            }
+        }
+
+        return legalMoves;
+    }
+
+    getPseudoMoves(row, col, options = { forAttack: false }) {
+        const piece = this.board[row][col];
+        const moves = [];
+        const isWhite = this.isWhitePiece(piece);
+        const forAttack = options.forAttack;
+
+        const pawnMoves = (r, c) => {
+            const direction = isWhite ? -1 : 1;
+            const startRow = isWhite ? 6 : 1;
+
+            // Piyon saldırı karelerini bul (hem saldırı hesabında hem normalde lazım)
+            for (let dc of [-1, 1]) {
+                const nr = r + direction;
+                const nc = c + dc;
+                if (!this.isInBounds(nr, nc)) continue;
+                const target = this.board[nr][nc];
+                if (forAttack) {
+                    // Saldırı hesabında sadece çapraz kareleri dikkate al
+                    moves.push({ row: nr, col: nc });
+                } else {
+                    // Normal hamlede, karşı renk taş varsa çapraz yiyebilir
+                    if (target && this.isWhitePiece(target) !== isWhite) {
+                        moves.push({ row: nr, col: nc });
+                    }
+                }
+            }
+
+            if (forAttack) return; // Saldırı modunda ileri gitmeyi ekleme
+
+            // İleri tek kare
+            if (this.isInBounds(r + direction, c) && !this.board[r + direction][c]) {
+                moves.push({ row: r + direction, col: c });
+
+                // Başlangıçtan çift kare
+                if (r === startRow && !this.board[r + 2 * direction][c]) {
+                    moves.push({ row: r + 2 * direction, col: c });
+                }
+            }
+
+            // En passant
+            if (this.enPassantTarget && r + direction === this.enPassantTarget.row) {
+                if (c + 1 === this.enPassantTarget.col || c - 1 === this.enPassantTarget.col) {
+                    moves.push({ row: this.enPassantTarget.row, col: this.enPassantTarget.col });
+                }
+            }
+        };
+
+        const knightMoves = (r, c) => {
+            const deltas = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            deltas.forEach(([dr, dc]) => {
+                const nr = r + dr, nc = c + dc;
+                if (this.isInBounds(nr, nc)) {
+                    const target = this.board[nr][nc];
+                    if (!target || this.isWhitePiece(target) !== isWhite) {
+                        moves.push({ row: nr, col: nc });
+                    }
+                }
+            });
+        };
+
+        const slidingMoves = (r, c, directions) => {
+            directions.forEach(([dr, dc]) => {
+                let nr = r + dr, nc = c + dc;
+                while (this.isInBounds(nr, nc)) {
+                    const target = this.board[nr][nc];
+                    if (!target) {
+                        moves.push({ row: nr, col: nc });
+                    } else {
+                        if (this.isWhitePiece(target) !== isWhite) {
+                            moves.push({ row: nr, col: nc });
+                        }
+                        break;
+                    }
+                    nr += dr;
+                    nc += dc;
+                }
+            });
+        };
+
+        const kingMoves = (r, c) => {
+            const deltas = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+            deltas.forEach(([dr, dc]) => {
+                const nr = r + dr, nc = c + dc;
+                if (this.isInBounds(nr, nc)) {
+                    const target = this.board[nr][nc];
+                    if (!target || this.isWhitePiece(target) !== isWhite) {
+                        moves.push({ row: nr, col: nc });
+                    }
+                }
+            });
+
+            if (forAttack) return; // Saldırı hesabında rok karelerini eklemeye gerek yok
+
+            // Rok (castling) hamlelerini de burada ekliyoruz
+            if (isWhite && !this.whiteKingMoved && !this.isInCheck('white')) {
+                if (!this.whiteRookHMoved && !this.board[7][5] && !this.board[7][6]) {
+                    moves.push({ row: 7, col: 6 }); // kısa rok
+                }
+                if (!this.whiteRookAMoved && !this.board[7][1] && !this.board[7][2] && !this.board[7][3]) {
+                    moves.push({ row: 7, col: 2 }); // uzun rok
+                }
+            }
+
+            if (!isWhite && !this.blackKingMoved && !this.isInCheck('black')) {
+                if (!this.blackRookHMoved && !this.board[0][5] && !this.board[0][6]) {
+                    moves.push({ row: 0, col: 6 });
+                }
+                if (!this.blackRookAMoved && !this.board[0][1] && !this.board[0][2] && !this.board[0][3]) {
+                    moves.push({ row: 0, col: 2 });
+                }
+            }
+        };
+
+        if (piece === '♙' || piece === '♟') pawnMoves(row, col);
+        else if (piece === '♘' || piece === '♞') knightMoves(row, col);
+        else if (piece === '♗' || piece === '♝') slidingMoves(row, col, [[-1, -1], [-1, 1], [1, -1], [1, 1]]);
+        else if (piece === '♖' || piece === '♜') slidingMoves(row, col, [[-1, 0], [1, 0], [0, -1], [0, 1]]);
+        else if (piece === '♕' || piece === '♛') slidingMoves(row, col, [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]);
+        else if (piece === '♔' || piece === '♚') kingMoves(row, col);
+
+        return moves;
+    }
+    
+    isWhitePiece(piece) {
+        return ['♙', '♘', '♗', '♖', '♕', '♔'].includes(piece);
+    }
+    
+    isBlackPiece(piece) {
+        return ['♟', '♞', '♝', '♜', '♛', '♚'].includes(piece);
+    }
+    
+    isInBounds(row, col) {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+    
+    findKing(color) {
+        const king = color === 'white' ? '♔' : '♚';
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (this.board[r][c] === king) return { row: r, col: c };
+            }
+        }
+        return null;
+    }
+    
+    isSquareAttacked(row, col, byColor) {
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = this.board[r][c];
+                if (!piece) continue;
+
+                const isPieceWhite = this.isWhitePiece(piece);
+                if ((byColor === 'white' && !isPieceWhite) || (byColor === 'black' && isPieceWhite)) {
+                    continue;
+                }
+
+                // Saldırı için pseudo hamleleri kullan
+                const attackMoves = this.getPseudoMoves(r, c, { forAttack: true });
+                if (attackMoves.some(m => m.row === row && m.col === col)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    isInCheck(color) {
+        const kingPos = this.findKing(color);
+        if (!kingPos) return false;
+        return this.isSquareAttacked(kingPos.row, kingPos.col, color === 'white' ? 'black' : 'white');
+    }
+    
+    isCheckmate(color) {
+        if (!this.isInCheck(color)) return false;
+        
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = this.board[r][c];
+                if (!piece) continue;
+                
+                const isPieceWhite = this.isWhitePiece(piece);
+                if ((color === 'white' && !isPieceWhite) || (color === 'black' && isPieceWhite)) continue;
+                
+                const moves = this.getValidMoves(r, c);
+                if (moves.length > 0) return false;
+            }
+        }
+        return true;
+    }
+    
+    isStalemate(color) {
+        if (this.isInCheck(color)) return false;
+        
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = this.board[r][c];
+                if (!piece) continue;
+                
+                const isPieceWhite = this.isWhitePiece(piece);
+                if ((color === 'white' && !isPieceWhite) || (color === 'black' && isPieceWhite)) continue;
+                
+                const moves = this.getValidMoves(r, c);
+                if (moves.length > 0) return false;
+            }
+        }
+        return true;
+    }
+    
+    botMove() {
+        const depth = this.difficulty === 'easy' ? 1 : this.difficulty === 'medium' ? 2 : 3;
+        const bestMove = this.minimax(depth, -Infinity, Infinity, true);
+        
+        if (bestMove.move) {
+            this.movePiece(bestMove.move.from.row, bestMove.move.from.col, bestMove.move.to.row, bestMove.move.to.col);
+            this.currentTurn = 'white';
+            this.render();
+            
+            if (this.isCheckmate('white')) {
+                this.endGame(false);
+            } else if (this.isStalemate('white')) {
+                this.endGame(false, true);
+            }
+        }
+    }
+    
+    minimax(depth, alpha, beta, maximizingPlayer) {
+        if (depth === 0) {
+            return { score: this.evaluateBoard() };
+        }
+        
+        const moves = [];
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = this.board[r][c];
+                if (!piece) continue;
+                
+                const isPieceBlack = this.isBlackPiece(piece);
+                if ((maximizingPlayer && !isPieceBlack) || (!maximizingPlayer && isPieceBlack)) continue;
+                
+                const validMoves = this.getValidMoves(r, c);
+                validMoves.forEach(move => {
+                    moves.push({ from: { row: r, col: c }, to: move });
+                });
+            }
+        }
+        
+        if (moves.length === 0) {
+            if (this.isCheckmate(maximizingPlayer ? 'black' : 'white')) {
+                return { score: maximizingPlayer ? -10000 : 10000 };
+            }
+            return { score: 0 };
+        }
+        
+        if (maximizingPlayer) {
+            let maxEval = -Infinity;
+            let bestMove = null;
+            
+            for (let move of moves) {
+                const tempBoard = this.board.map(r => [...r]);
+                this.movePiece(move.from.row, move.from.col, move.to.row, move.to.col);
+                
+                const evaluation = this.minimax(depth - 1, alpha, beta, false).score;
+                
+                this.board = tempBoard;
+                
+                if (evaluation > maxEval) {
+                    maxEval = evaluation;
+                    bestMove = move;
+                }
+                
+                alpha = Math.max(alpha, evaluation);
+                if (beta <= alpha) break;
+            }
+            
+            return { score: maxEval, move: bestMove };
+        } else {
+            let minEval = Infinity;
+            let bestMove = null;
+            
+            for (let move of moves) {
+                const tempBoard = this.board.map(r => [...r]);
+                this.movePiece(move.from.row, move.from.col, move.to.row, move.to.col);
+                
+                const evaluation = this.minimax(depth - 1, alpha, beta, true).score;
+                
+                this.board = tempBoard;
+                
+                if (evaluation < minEval) {
+                    minEval = evaluation;
+                    bestMove = move;
+                }
+                
+                beta = Math.min(beta, evaluation);
+                if (beta <= alpha) break;
+            }
+            
+            return { score: minEval, move: bestMove };
+        }
+    }
+    
+    evaluateBoard() {
+        const pieceValues = {
+            '♙': 1, '♘': 3, '♗': 3, '♖': 5, '♕': 9, '♔': 0,
+            '♟': -1, '♞': -3, '♝': -3, '♜': -5, '♛': -9, '♚': 0
+        };
+        
+        let score = 0;
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = this.board[r][c];
+                if (piece) score += pieceValues[piece] || 0;
+            }
+        }
+        return score;
+    }
+    
+    async endGame(playerWon, isDraw = false) {
+        this.gameOver = true;
+        const userRef = doc(db, 'users', currentUser.uid);
+        
+        if (isDraw) {
+            await updateDoc(userRef, { score: increment(this.betAmount) });
+            showGameResult('chessResult', '🤝 Berabere! Bahis iade edildi', 'win');
+        } else if (playerWon) {
+            const winAmount = Math.floor(this.betAmount * 2.5 * userMultiplier);
+            await updateDoc(userRef, { score: increment(winAmount) });
+            showGameResult('chessResult', `🎉 Kazandın! +${winAmount} Puan`, 'win');
+        } else {
+            showGameResult('chessResult', `😢 Kaybettin! Bot kazandı`, 'lose');
+        }
+        
+        document.getElementById('chessStartBtn').style.display = 'block';
+        document.getElementById('chessBetAmount').disabled = false;
+        document.getElementById('chessDifficulty').disabled = false;
+    }
+    
+    updateStatus() {
+        const statusEl = document.getElementById('chessStatus');
+        if (this.gameOver) return;
+        
+        if (this.currentTurn === 'white') {
+            statusEl.textContent = this.isInCheck('white') ? 'Şah! - Senin Sıran' : 'Senin Sıran (Beyaz)';
+        } else {
+            statusEl.textContent = this.isInCheck('black') ? 'Şah! - Bot Düşünüyor...' : 'Bot Düşünüyor...';
+        }
+    }
+}
+
+// ========================================
+// MODAL CLOSE HANDLERS
+// ========================================
+document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const modalId = btn.dataset.modal;
+        document.getElementById(modalId).style.display = 'none';
+    });
+});
+
+document.querySelectorAll('.game-modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
