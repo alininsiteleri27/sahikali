@@ -2,23 +2,23 @@
 // FIREBASE CONFIGURATION
 // ========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    onAuthStateChanged, 
     signOut,
     updatePassword,
     setPersistence,
     inMemoryPersistence,
     sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import {
-    getFirestore,
-    doc,
-    setDoc,
-    getDoc,
-    updateDoc,
+   import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    getDoc, 
+    updateDoc, 
     increment,
     collection,
     query,
@@ -31,10 +31,7 @@ import {
     addDoc,
     startAfter,
     Timestamp,
-    deleteDoc,
-    runTransaction,
-    arrayUnion,
-    arrayRemove
+    deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
     getDatabase,
@@ -42,11 +39,10 @@ import {
     set,
     onValue,
     onDisconnect,
-    serverTimestamp as rtdbServerTimestamp,
-    push,
-    remove
+    serverTimestamp as rtdbServerTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+// Firebase Config (ASLA BOZMA!)
 const firebaseConfig = {
     apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
     authDomain: "ali23-cfd02.firebaseapp.com",
@@ -62,6 +58,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
+// Oturum sadece sayfa açıkken geçerli olsun (yenileyince logout)
 setPersistence(auth, inMemoryPersistence).catch((err) => {
     console.error('Auth persistence hatası:', err);
 });
@@ -76,12 +73,9 @@ let lastChatDoc = null;
 let chatLoadedCount = 5;
 let currentDmRecipient = null;
 let chessGame = null;
+let game2048 = null;
 let isUserAdmin = false;
 let chatUnsubscribe = null;
-let activeVsMatch = null;
-let vsListeners = [];
-let dmUnreadCounts = {};
-let dmReceiptsUnsubscribe = null;
 
 // ========================================
 // AUTH & USER MANAGEMENT
@@ -96,8 +90,6 @@ onAuthStateChanged(auth, async (user) => {
         setupPresence(user.uid);
         loadChat();
         loadDmUsers();
-        initEnhancements();
-        initVsSystem();
     } else {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('mainApp').classList.remove('show');
@@ -107,14 +99,12 @@ onAuthStateChanged(auth, async (user) => {
 async function initializeUser(user) {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
-
+    
     if (!userSnap.exists()) {
         await setDoc(userRef, {
             email: user.email,
             username: user.email.split('@')[0],
             score: 100,
-            vsWins: 0,
-            vsLosses: 0,
             createdAt: serverTimestamp(),
             role: 'user',
             profileImage: '',
@@ -124,10 +114,11 @@ async function initializeUser(user) {
             muteUntil: null
         });
     }
-
+    
+    // Check admin status
     const userData = (await getDoc(userRef)).data();
     isUserAdmin = userData.role === 'admin';
-
+    
     if (isUserAdmin) {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
     }
@@ -135,29 +126,30 @@ async function initializeUser(user) {
 
 async function loadUserData() {
     const userRef = doc(db, 'users', currentUser.uid);
-
+    
     onSnapshot(userRef, (docSnap) => {
         const data = docSnap.data();
         if (!data) return;
-
+        
+        // Check if banned
         if (data.banned) {
             alert('Hesabınız yasaklanmış. Lütfen yönetici ile iletişime geçin.');
             signOut(auth);
             return;
         }
-
+        
         document.getElementById('headerUsername').textContent = data.username;
         document.getElementById('headerEmail').textContent = data.email;
         document.getElementById('userScore').textContent = data.score;
         document.getElementById('dropdownUsername').textContent = data.username;
         document.getElementById('dropdownEmail').textContent = data.email;
-
+        
         if (data.profileImage) {
             document.getElementById('profileImage').src = data.profileImage;
             document.getElementById('profileImage').style.display = 'block';
             document.getElementById('profileEmoji').style.display = 'none';
         }
-
+        
         userMultiplier = data.multiplier || 1;
         if (userMultiplier > 1) {
             document.getElementById('activeMultiplier').style.display = 'block';
@@ -166,6 +158,7 @@ async function loadUserData() {
     });
 }
 
+// Login/Register
 let isRegisterMode = false;
 
 document.getElementById('loginToggle').addEventListener('click', () => {
@@ -188,17 +181,17 @@ document.getElementById('loginButton').addEventListener('click', async () => {
     const password = document.getElementById('loginPassword').value;
     const username = document.getElementById('loginUsername').value;
     const errorEl = document.getElementById('loginError');
-
+    
     if (!email || !password) {
         errorEl.textContent = 'Lütfen tüm alanları doldurun';
         return;
     }
-
+    
     if (password.length < 6) {
         errorEl.textContent = 'Şifre en az 6 karakter olmalı';
         return;
     }
-
+    
     try {
         if (isRegisterMode) {
             if (!username) {
@@ -220,10 +213,13 @@ document.getElementById('loginButton').addEventListener('click', async () => {
 // ========================================
 function setupPresence(uid) {
     const presenceRef = ref(rtdb, `presence/${uid}`);
+    const userStatusRef = ref(rtdb, `status/${uid}`);
+    
     set(presenceRef, {
         online: true,
         lastSeen: rtdbServerTimestamp()
     });
+    
     onDisconnect(presenceRef).set({
         online: false,
         lastSeen: rtdbServerTimestamp()
@@ -233,8 +229,7 @@ function setupPresence(uid) {
 // ========================================
 // PROFILE & SETTINGS
 // ========================================
-document.getElementById('profileIcon').addEventListener('click', (e) => {
-    e.stopPropagation();
+document.getElementById('profileIcon').addEventListener('click', () => {
     document.getElementById('dropdown').classList.toggle('active');
 });
 
@@ -248,6 +243,7 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     signOut(auth);
 });
 
+// Theme Toggle
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('theme') || 'light';
 
@@ -260,7 +256,7 @@ if (savedTheme === 'dark') {
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     themeToggle.classList.toggle('active');
-
+    
     if (document.body.classList.contains('dark-mode')) {
         localStorage.setItem('theme', 'dark');
         document.getElementById('themeLabel').textContent = 'Light Mode';
@@ -270,6 +266,7 @@ themeToggle.addEventListener('click', () => {
     }
 });
 
+// Edit Profile
 document.getElementById('editProfileBtn').addEventListener('click', () => {
     document.getElementById('dropdown').classList.remove('active');
     document.getElementById('profileModal').style.display = 'flex';
@@ -291,25 +288,25 @@ document.getElementById('saveProfileBtn').addEventListener('click', async () => 
     const newUsername = document.getElementById('newUsername').value;
     const newPass = document.getElementById('newPassword').value;
     const messageEl = document.getElementById('profileMessage');
-
+    
     try {
         const userRef = doc(db, 'users', currentUser.uid);
         const updates = {};
-
+        
         if (imageUrl) updates.profileImage = imageUrl;
         if (newUsername) updates.username = newUsername;
-
+        
         if (Object.keys(updates).length > 0) {
             await updateDoc(userRef, updates);
         }
-
+        
         if (newPass && newPass.length >= 6) {
             await updatePassword(currentUser, newPass);
         }
-
+        
         messageEl.className = 'profile-message success';
         messageEl.textContent = '✅ Profil güncellendi!';
-
+        
         setTimeout(() => {
             document.getElementById('profileModal').style.display = 'none';
             messageEl.textContent = '';
@@ -330,30 +327,30 @@ document.getElementById('adminPanelBtn')?.addEventListener('click', () => {
     loadPresenceData();
 });
 
+// Admin Tabs
 document.querySelectorAll('.admin-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-
+        
         btn.classList.add('active');
         const tabName = btn.dataset.tab;
-        const tabId = `admin${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`;
-        const tabEl = document.getElementById(tabId);
-        if (tabEl) tabEl.classList.add('active');
-
-        if (tabName === 'presence') loadPresenceData();
-        else if (tabName === 'dashboard') loadAdminDashboard();
-        else if (tabName === 'analytics') loadAdminAnalytics();
+        document.getElementById(`admin${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`).classList.add('active');
+        
+        if (tabName === 'presence') {
+            loadPresenceData();
+        }
     });
 });
 
+// Load Users for Admin
 async function loadAdminUsers() {
     const listEl = document.getElementById('adminUserList');
     listEl.innerHTML = '<div class="loading">Yükleniyor...</div>';
-
+    
     const usersQuery = query(collection(db, 'users'), orderBy('score', 'desc'));
     const snapshot = await getDocs(usersQuery);
-
+    
     listEl.innerHTML = '';
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
@@ -376,7 +373,7 @@ async function loadAdminUsers() {
                 </div>
             </div>
             <div class="admin-user-actions">
-                <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${!!data.banned}, ${!!data.muted})">
+                <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${data.banned}, ${data.muted})">
                     ⚙️ İşlemler
                 </button>
             </div>
@@ -385,17 +382,18 @@ async function loadAdminUsers() {
     });
 }
 
+// Admin Search
 document.getElementById('adminUserSearch').addEventListener('input', async (e) => {
     const searchTerm = e.target.value.toLowerCase();
     if (!searchTerm) {
         loadAdminUsers();
         return;
     }
-
+    
     const listEl = document.getElementById('adminUserList');
     const usersQuery = query(collection(db, 'users'));
     const snapshot = await getDocs(usersQuery);
-
+    
     listEl.innerHTML = '';
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
@@ -412,6 +410,7 @@ document.getElementById('adminUserSearch').addEventListener('input', async (e) =
                         <div class="admin-user-email">${data.email}</div>
                         <div class="admin-user-score">💎 ${data.score}</div>
                         <div class="admin-user-badges">
+                            ${data.role === 'founder' ? '<span class="admin-badge founder">Kurucu</span>' : ''}
                             ${data.role === 'admin' ? '<span class="admin-badge admin">Admin</span>' : ''}
                             ${data.banned ? '<span class="admin-badge banned">Banned</span>' : ''}
                             ${data.muted ? '<span class="admin-badge muted">Muted</span>' : ''}
@@ -419,7 +418,7 @@ document.getElementById('adminUserSearch').addEventListener('input', async (e) =
                     </div>
                 </div>
                 <div class="admin-user-actions">
-                    <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${!!data.banned}, ${!!data.muted})">
+                    <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${data.banned}, ${data.muted})">
                         ⚙️ İşlemler
                     </button>
                 </div>
@@ -429,25 +428,29 @@ document.getElementById('adminUserSearch').addEventListener('input', async (e) =
     });
 });
 
+// Admin Actions
 window.openAdminAction = (uid, username, isBanned, isMuted) => {
     document.getElementById('adminActionModal').style.display = 'flex';
     document.getElementById('actionUserName').textContent = username;
     document.getElementById('adminActionModal').dataset.uid = uid;
-
+    
+    // Show/hide buttons
     document.getElementById('banUserBtn').style.display = isBanned ? 'none' : 'block';
     document.getElementById('unbanUserBtn').style.display = isBanned ? 'block' : 'none';
     document.getElementById('muteUserBtn').style.display = isMuted ? 'none' : 'block';
     document.getElementById('unmuteUserBtn').style.display = isMuted ? 'block' : 'none';
-
+    
+    // Hide options
     document.getElementById('muteOptions').style.display = 'none';
     document.getElementById('passwordResetOptions').style.display = 'none';
     document.getElementById('adminActionMessage').textContent = '';
 };
 
+// Ban User
 document.getElementById('banUserBtn').addEventListener('click', async () => {
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const messageEl = document.getElementById('adminActionMessage');
-
+    
     try {
         await updateDoc(doc(db, 'users', uid), { banned: true });
         messageEl.className = 'admin-message success';
@@ -462,10 +465,11 @@ document.getElementById('banUserBtn').addEventListener('click', async () => {
     }
 });
 
+// Unban User
 document.getElementById('unbanUserBtn').addEventListener('click', async () => {
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const messageEl = document.getElementById('adminActionMessage');
-
+    
     try {
         await updateDoc(doc(db, 'users', uid), { banned: false });
         messageEl.className = 'admin-message success';
@@ -480,6 +484,7 @@ document.getElementById('unbanUserBtn').addEventListener('click', async () => {
     }
 });
 
+// Mute User
 document.getElementById('muteUserBtn').addEventListener('click', () => {
     document.getElementById('muteOptions').style.display = 'block';
 });
@@ -488,10 +493,10 @@ document.getElementById('confirmMuteBtn').addEventListener('click', async () => 
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const duration = parseInt(document.getElementById('muteDuration').value);
     const messageEl = document.getElementById('adminActionMessage');
-
+    
     try {
         const muteUntil = Date.now() + duration;
-        await updateDoc(doc(db, 'users', uid), {
+        await updateDoc(doc(db, 'users', uid), { 
             muted: true,
             muteUntil: muteUntil
         });
@@ -507,12 +512,13 @@ document.getElementById('confirmMuteBtn').addEventListener('click', async () => 
     }
 });
 
+// Unmute User
 document.getElementById('unmuteUserBtn').addEventListener('click', async () => {
     const uid = document.getElementById('adminActionModal').dataset.uid;
     const messageEl = document.getElementById('adminActionMessage');
-
+    
     try {
-        await updateDoc(doc(db, 'users', uid), {
+        await updateDoc(doc(db, 'users', uid), { 
             muted: false,
             muteUntil: null
         });
@@ -528,12 +534,14 @@ document.getElementById('unmuteUserBtn').addEventListener('click', async () => {
     }
 });
 
+// Reset Password (email ile gerçek sıfırlama linki)
 document.getElementById('resetPasswordBtn').addEventListener('click', () => {
     document.getElementById('passwordResetOptions').style.display = 'block';
+    // İsteğe bağlı: input'u pasif hale getirebilirsin
     const input = document.getElementById('newPasswordInput');
     if (input) {
         input.disabled = true;
-        input.placeholder = 'Mail ile sıfırlama linki gönderilecek';
+        input.placeholder = 'Bu alan kullanılmıyor, mail ile link gönderilecek';
     }
 });
 
@@ -542,6 +550,7 @@ document.getElementById('confirmResetBtn').addEventListener('click', async () =>
     const uid = document.getElementById('adminActionModal').dataset.uid;
 
     try {
+        // Firestore'dan kullanıcının email'ini al
         const userSnap = await getDoc(doc(db, 'users', uid));
         if (!userSnap.exists()) {
             messageEl.className = 'admin-message error';
@@ -556,6 +565,7 @@ document.getElementById('confirmResetBtn').addEventListener('click', async () =>
             return;
         }
 
+        // Firebase Auth üzerinden reset maili gönder
         await sendPasswordResetEmail(auth, email);
 
         messageEl.className = 'admin-message success';
@@ -567,44 +577,43 @@ document.getElementById('confirmResetBtn').addEventListener('click', async () =>
     }
 });
 
+// Load Presence Data
 async function loadPresenceData() {
     const presenceListEl = document.getElementById('presenceList');
     presenceListEl.innerHTML = '<div class="loading">Yükleniyor...</div>';
-
+    
     const presenceRef = ref(rtdb, 'presence');
     onValue(presenceRef, async (snapshot) => {
         const presenceData = snapshot.val() || {};
         const usersSnapshot = await getDocs(collection(db, 'users'));
-
+        
         let onlineCount = 0;
         let offlineCount = 0;
-
+        
         presenceListEl.innerHTML = '';
-
+        
         usersSnapshot.forEach(docSnap => {
             const userData = docSnap.data();
             const presence = presenceData[docSnap.id];
             const isOnline = presence && presence.online;
-
+            
             if (isOnline) onlineCount++;
             else offlineCount++;
-
+            
             const item = document.createElement('div');
             item.className = 'presence-item';
-            const lastSeen = presence && presence.lastSeen;
-            const lastSeenStr = (lastSeen && typeof lastSeen === 'number') ? new Date(lastSeen).toLocaleString('tr-TR') : '';
             item.innerHTML = `
                 <div class="presence-user-info">
                     <div class="presence-status-dot ${isOnline ? 'online' : 'offline'}"></div>
                     <div>
                         <div class="presence-user-name">${userData.username}</div>
-                        ${!isOnline && lastSeenStr ? `<div class="presence-last-seen">Son görülme: ${lastSeenStr}</div>` : ''}
+                        ${!isOnline && presence ? `<div class="presence-last-seen">Son görülme: ${new Date(presence.lastSeen).toLocaleString('tr-TR')}</div>` : ''}
                     </div>
                 </div>
             `;
             presenceListEl.appendChild(item);
         });
-
+        
         document.getElementById('onlineCount').textContent = onlineCount;
         document.getElementById('offlineCount').textContent = offlineCount;
         document.getElementById('totalCount').textContent = usersSnapshot.size;
@@ -622,16 +631,16 @@ document.getElementById('leaderboardBtn').addEventListener('click', () => {
 async function loadLeaderboard() {
     const listEl = document.getElementById('leaderboardList');
     listEl.innerHTML = '<div class="loading">Yükleniyor...</div>';
-
+    
     const leaderboardQuery = query(
         collection(db, 'users'),
         orderBy('score', 'desc'),
         limit(50)
     );
-
+    
     const snapshot = await getDocs(leaderboardQuery);
     listEl.innerHTML = '';
-
+    
     let rank = 1;
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
@@ -652,9 +661,10 @@ async function loadLeaderboard() {
     });
 }
 
+// Leaderboard Search
 document.getElementById('userSearchInput').addEventListener('input', async (e) => {
     const searchTerm = e.target.value.toLowerCase();
-
+    
     if (!searchTerm) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('topUsersTab').style.display = 'block';
@@ -662,21 +672,22 @@ document.getElementById('userSearchInput').addEventListener('input', async (e) =
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
         return;
     }
-
+    
+    // Switch to search tab
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-btn')[1].classList.add('active');
     document.getElementById('topUsersTab').style.display = 'none';
     document.getElementById('searchResultsTab').style.display = 'block';
-
+    
     const resultsEl = document.getElementById('searchResultsList');
     resultsEl.innerHTML = '<div class="loading">Aranıyor...</div>';
-
+    
     const usersQuery = query(collection(db, 'users'));
     const snapshot = await getDocs(usersQuery);
-
+    
     resultsEl.innerHTML = '';
     let found = false;
-
+    
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
         if (data.username.toLowerCase().includes(searchTerm)) {
@@ -695,17 +706,18 @@ document.getElementById('userSearchInput').addEventListener('input', async (e) =
             resultsEl.appendChild(item);
         }
     });
-
+    
     if (!found) {
         resultsEl.innerHTML = '<div class="search-placeholder">Kullanıcı bulunamadı</div>';
     }
 });
 
+// Leaderboard Tabs
 document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
+        
         if (btn.dataset.tab === 'top') {
             document.getElementById('topUsersTab').style.display = 'block';
             document.getElementById('searchResultsTab').style.display = 'none';
@@ -719,32 +731,28 @@ document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach(btn => {
 // ========================================
 // CHAT SYSTEM (Global + DM)
 // ========================================
+
+// Chat Tabs
 document.querySelectorAll('.chat-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.chat-tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.chat-tab-content').forEach(c => c.classList.remove('active'));
-
+        
         btn.classList.add('active');
         const tabName = btn.dataset.tab;
         document.getElementById(`${tabName}ChatTab`).classList.add('active');
-
+        
         if (tabName === 'dm') {
             loadDmUsers();
         }
     });
 });
 
-document.getElementById('chatDmBtn')?.addEventListener('click', () => {
-    document.querySelectorAll('.chat-tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.chat-tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelector('.chat-tab-btn[data-tab="dm"]').classList.add('active');
-    document.getElementById('dmChatTab').classList.add('active');
-    loadDmUsers();
-});
-
+// Load Global Chat
 async function loadChat() {
     const messagesEl = document.getElementById('chatMessages');
 
+    // Eski listener varsa iptal et
     if (chatUnsubscribe) {
         chatUnsubscribe();
         chatUnsubscribe = null;
@@ -760,6 +768,7 @@ async function loadChat() {
 
     if (snapshot.docs.length > 0) {
         lastChatDoc = snapshot.docs[snapshot.docs.length - 1];
+
         if (snapshot.docs.length >= chatLoadedCount) {
             document.getElementById('chatLoadMore').style.display = 'block';
         }
@@ -778,6 +787,7 @@ async function loadChat() {
 
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
+    // Tüm listeyi real-time dinleyen listener
     chatUnsubscribe = onSnapshot(
         query(collection(db, 'chat'), orderBy('timestamp', 'asc')),
         (snap) => {
@@ -795,11 +805,11 @@ function appendChatMessage(msg) {
     const msgEl = document.createElement('div');
     msgEl.className = 'chat-message';
     msgEl.dataset.msgId = msg.id;
-
+    
     const time = msg.timestamp
         ? new Date(msg.timestamp.toMillis()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
         : '';
-
+    
     msgEl.innerHTML = `
         <div class="message-header">
             <div class="message-user">${msg.username}</div>
@@ -826,38 +836,39 @@ function appendChatMessage(msg) {
     messagesEl.appendChild(msgEl);
 }
 
+// Load More Chat
 document.getElementById('loadMoreBtn').addEventListener('click', async () => {
     if (!lastChatDoc) return;
-
+    
     chatLoadedCount += 5;
-
+    
     const chatQuery = query(
         collection(db, 'chat'),
         orderBy('timestamp', 'desc'),
         startAfter(lastChatDoc),
         limit(5)
     );
-
+    
     const snapshot = await getDocs(chatQuery);
-
+    
     if (snapshot.docs.length > 0) {
         lastChatDoc = snapshot.docs[snapshot.docs.length - 1];
-
+        
         const messages = [];
         snapshot.forEach(docSnap => {
             messages.push({ id: docSnap.id, ...docSnap.data() });
         });
-
+        
         const messagesEl = document.getElementById('chatMessages');
         messages.reverse().forEach(msg => {
             const msgEl = document.createElement('div');
             msgEl.className = 'chat-message';
             msgEl.dataset.msgId = msg.id;
-
+            
             const time = msg.timestamp
                 ? new Date(msg.timestamp.toMillis()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
                 : '';
-
+            
             msgEl.innerHTML = `
                 <div class="message-user">${msg.username}</div>
                 <div class="message-text">${msg.message}</div>
@@ -870,32 +881,35 @@ document.getElementById('loadMoreBtn').addEventListener('click', async () => {
     }
 });
 
+// Send Global Chat
 async function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
-
+    
     if (!message) return;
-
+    
+    // Check if muted
     const userRef = doc(db, 'users', currentUser.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.data();
-
+    
     if (userData.muted && userData.muteUntil > Date.now()) {
         alert('Susturulduğunuz için mesaj gönderemezsiniz.');
         return;
     }
-
+    
+    // Clear mute if expired
     if (userData.muted && userData.muteUntil <= Date.now()) {
         await updateDoc(userRef, { muted: false, muteUntil: null });
     }
-
+    
     await addDoc(collection(db, 'chat'), {
         username: userData.username,
         message: message,
         timestamp: serverTimestamp(),
         userId: currentUser.uid
     });
-
+    
     input.value = '';
 }
 
@@ -910,35 +924,24 @@ document.getElementById('chatInput').addEventListener('keypress', (e) => {
 async function loadDmUsers() {
     const listEl = document.getElementById('dmUserList');
     listEl.innerHTML = '<div class="chat-welcome">Kullanıcıları yükleniyor...</div>';
-
+    
     const usersQuery = query(collection(db, 'users'));
     const snapshot = await getDocs(usersQuery);
-    const presenceRef = ref(rtdb, 'presence');
-
+    
     listEl.innerHTML = '';
-    const presenceData = await new Promise((resolve) => {
-        onValue(presenceRef, (s) => resolve(s.val() || {}), { onlyOnce: true });
-    });
-
     snapshot.forEach(docSnap => {
-        if (docSnap.id === currentUser.uid) return;
-
+        if (docSnap.id === currentUser.uid) return; // Skip self
+        
         const data = docSnap.data();
-        const isOnline = !!(presenceData[docSnap.id] && presenceData[docSnap.id].online);
-        const unread = dmUnreadCounts[docSnap.id] || 0;
         const item = document.createElement('div');
         item.className = 'dm-user-item';
-        item.dataset.recipientId = docSnap.id;
         item.innerHTML = `
             <div class="dm-user-avatar">
                 ${data.profileImage ? `<img src="${data.profileImage}" alt="">` : '👤'}
             </div>
             <div class="dm-user-info">
                 <div class="dm-user-name-display">${data.username}</div>
-                <div class="dm-user-status dm-user-status--${isOnline ? 'online' : 'offline'}">
-                    ${isOnline ? '🟢 Çevrimiçi' : '⚫ Çevrimdışı'}
-                </div>
-                ${unread ? `<span class="dm-unread-dot">${unread}</span>` : ''}
+                <div class="dm-user-status">${data.email}</div>
             </div>
         `;
         item.addEventListener('click', () => openDmConversation(docSnap.id, data.username));
@@ -951,16 +954,7 @@ function openDmConversation(recipientId, recipientName) {
     document.getElementById('dmUserName').textContent = recipientName;
     document.getElementById('dmUserList').style.display = 'none';
     document.getElementById('dmConversation').style.display = 'flex';
-
-    const onlineRef = ref(rtdb, `presence/${recipientId}`);
-    onValue(onlineRef, (s) => {
-        const v = s.val();
-        const el = document.getElementById('dmUserOnline');
-        if (el) el.textContent = v && v.online ? '🟢 Çevrimiçi' : '⚫ Çevrimdışı';
-    });
-
-    dmUnreadCounts[recipientId] = 0;
-    updateDmUnreadBadge();
+    
     loadDmMessages(recipientId);
 }
 
@@ -968,116 +962,69 @@ document.getElementById('dmBackBtn').addEventListener('click', () => {
     document.getElementById('dmUserList').style.display = 'block';
     document.getElementById('dmConversation').style.display = 'none';
     currentDmRecipient = null;
-    if (dmReceiptsUnsubscribe) { dmReceiptsUnsubscribe(); dmReceiptsUnsubscribe = null; }
 });
 
 async function loadDmMessages(recipientId) {
     const messagesEl = document.getElementById('dmMessages');
     messagesEl.innerHTML = '';
-
+    
     const conversationId = [currentUser.uid, recipientId].sort().join('_');
-    const messagesRef = collection(db, 'dm', conversationId, 'messages');
-    const receiptsRef = collection(db, 'dm', conversationId, 'receipts');
-
-    const receiptsSnapshot = await getDocs(receiptsRef);
-    const readByRecipient = {};
-    receiptsSnapshot.forEach(d => {
-        const dta = d.data();
-        if (dta.readBy === recipientId) readByRecipient[dta.messageId] = true;
-    });
-
-    onSnapshot(query(messagesRef, orderBy('timestamp', 'asc')), async (snapshot) => {
+    
+    const dmQuery = query(
+        collection(db, 'dm', conversationId, 'messages'),
+        orderBy('timestamp', 'asc')
+    );
+    
+    onSnapshot(dmQuery, (snapshot) => {
         messagesEl.innerHTML = '';
         snapshot.forEach(docSnap => {
             const msg = docSnap.data();
             const msgEl = document.createElement('div');
             msgEl.className = 'chat-message';
-            msgEl.dataset.msgId = docSnap.id;
-
+            
             const time = msg.timestamp
                 ? new Date(msg.timestamp.toMillis()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
                 : '';
-            const isOwn = msg.senderId === currentUser.uid;
-            const read = readByRecipient[docSnap.id];
-            const check = isOwn ? (read ? '✓✓' : '✓') : '';
-
+            
             msgEl.innerHTML = `
-                <div class="message-user">${isOwn ? 'Sen' : msg.username}</div>
+                <div class="message-user">${msg.senderId === currentUser.uid ? 'Sen' : msg.username}</div>
                 <div class="message-text">${msg.message}</div>
-                <div class="message-meta">
-                    <span class="message-time">${time}</span>
-                    ${check ? `<span class="message-read">${check}</span>` : ''}
-                </div>
+                <div class="message-time">${time}</div>
             `;
             messagesEl.appendChild(msgEl);
         });
         messagesEl.scrollTop = messagesEl.scrollHeight;
-
-        for (const docSnap of snapshot.docs) {
-            const msg = docSnap.data();
-            if (msg.senderId !== recipientId) continue;
-            const recRef = doc(db, 'dm', conversationId, 'receipts', docSnap.id);
-            try {
-                const recSnap = await getDoc(recRef);
-                if (recSnap.exists() && !recSnap.data().readBy) {
-                    await updateDoc(recRef, { readBy: currentUser.uid });
-                }
-            } catch (_) {}
-        }
-    });
-
-    dmReceiptsUnsubscribe = onSnapshot(receiptsRef, (snap) => {
-        snap.forEach(d => {
-            const dta = d.data();
-            if (dta.readBy === recipientId) readByRecipient[dta.messageId] = true;
-        });
-        document.querySelectorAll('#dmMessages .chat-message').forEach((el) => {
-            const mid = el.dataset.msgId;
-            const meta = el.querySelector('.message-meta');
-            if (!meta) return;
-            let readSpan = meta.querySelector('.message-read');
-            if (readByRecipient[mid]) {
-                if (!readSpan) { readSpan = document.createElement('span'); readSpan.className = 'message-read'; meta.appendChild(readSpan); }
-                readSpan.textContent = '✓✓';
-            }
-        });
     });
 }
 
 async function sendDmMessage() {
     if (!currentDmRecipient) return;
-
+    
     const input = document.getElementById('dmInput');
     const message = input.value.trim();
-
+    
     if (!message) return;
-
+    
+    // Check if muted
     const userRef = doc(db, 'users', currentUser.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.data();
-
+    
     if (userData.muted && userData.muteUntil > Date.now()) {
         alert('Susturulduğunuz için mesaj gönderemezsiniz.');
         return;
     }
-
+    
     const conversationId = [currentUser.uid, currentDmRecipient].sort().join('_');
-    const messagesRef = collection(db, 'dm', conversationId, 'messages');
-
-    const ref = await addDoc(messagesRef, {
+    
+    await addDoc(collection(db, 'dm', conversationId, 'messages'), {
         senderId: currentUser.uid,
         username: userData.username,
         message: message,
         timestamp: serverTimestamp()
     });
-
+    
     input.value = '';
-
-    await setDoc(doc(db, 'dm', conversationId, 'receipts', ref.id), {
-        messageId: ref.id,
-        readBy: null,
-        sentAt: serverTimestamp()
-    });
 }
 
 document.getElementById('dmSend').addEventListener('click', sendDmMessage);
@@ -1085,18 +1032,7 @@ document.getElementById('dmInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendDmMessage();
 });
 
-function updateDmUnreadBadge() {
-    const total = Object.values(dmUnreadCounts).reduce((a, b) => a + b, 0);
-    const badge = document.getElementById('dmUnreadBadge');
-    if (!badge) return;
-    if (total) {
-        badge.style.display = 'inline';
-        badge.textContent = total > 99 ? '99+' : total;
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
+// Mobile Chat Toggle
 document.getElementById('chatToggleMobile').addEventListener('click', () => {
     document.getElementById('chatSidebar').classList.toggle('minimized');
 });
@@ -1106,27 +1042,29 @@ document.getElementById('chatToggleMobile').addEventListener('click', () => {
 // ========================================
 document.getElementById('watchAdBtn').addEventListener('click', async () => {
     if (adCooldown) return;
-
+    
     const btn = document.getElementById('watchAdBtn');
     btn.disabled = true;
     btn.textContent = 'Reklam gösteriliyor...';
-
+    
     setTimeout(async () => {
         const userRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(userRef, { score: increment(50) });
-
+        await updateDoc(userRef, {
+            score: increment(50)
+        });
+        
         btn.style.display = 'none';
         document.getElementById('adCooldown').style.display = 'block';
-
-        let timeLeft = 300;
+        
+        let timeLeft = 300; // 5 minutes
         adCooldown = true;
-
+        
         const timer = setInterval(() => {
             timeLeft--;
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
             document.getElementById('adTimer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
+            
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 btn.style.display = 'block';
@@ -1144,152 +1082,94 @@ document.getElementById('watchAdBtn').addEventListener('click', async () => {
 // ========================================
 document.getElementById('marketBtn').addEventListener('click', () => {
     document.getElementById('marketModal').style.display = 'flex';
-    loadInventory();
 });
-
-const BOX_PRICES = { bronze: 50, silver: 150, gold: 400, epic: 250, legendary: 600, daily: 0 };
 
 document.querySelectorAll('.buy-box-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         const boxType = btn.dataset.box;
-        const price = BOX_PRICES[boxType];
-
-        if (boxType === 'daily') {
-            await claimDailyBox();
-            return;
-        }
-
+        const prices = { bronze: 50, silver: 150, gold: 400 };
+        const price = prices[boxType];
+        
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
         const currentScore = userSnap.data().score;
-
+        
         if (currentScore < price) {
             showBoxResult('Yetersiz bakiye!', 'error');
             return;
         }
-
-        await updateDoc(userRef, { score: increment(-price) });
-
+        
+        await updateDoc(userRef, {
+            score: increment(-price)
+        });
+        
         const result = openBox(boxType);
-        await playBoxOpenAnimation(boxType, result);
         showBoxResult(result.message, 'success');
-
+        
         if (result.scoreReward) {
-            await updateDoc(userRef, { score: increment(result.scoreReward) });
+            await updateDoc(userRef, {
+                score: increment(result.scoreReward)
+            });
         }
+        
         if (result.multiplier) {
-            await updateDoc(userRef, { multiplier: result.multiplier });
+            await updateDoc(userRef, {
+                multiplier: result.multiplier
+            });
         }
-        loadInventory();
     });
 });
 
-async function claimDailyBox() {
-    const userRef = doc(db, 'users', currentUser.uid);
-    const claimRef = doc(db, 'dailyBoxClaims', currentUser.uid);
-    const claimSnap = await getDoc(claimRef);
-    const now = Date.now();
-    const dayMs = 86400000;
-    const last = (claimSnap.data() || {}).lastClaim || 0;
-    if (now - last < dayMs) {
-        const next = Math.ceil((last + dayMs - now) / 60000);
-        showBoxResult(`Günlük kutu ${next} dakika sonra tekrar açılabilir.`, 'error');
-        return;
-    }
-    await setDoc(claimRef, { lastClaim: now });
-    const result = openBox('daily');
-    await playBoxOpenAnimation('daily', result);
-    showBoxResult(result.message, 'success');
-    if (result.scoreReward) await updateDoc(userRef, { score: increment(result.scoreReward) });
-    if (result.multiplier) await updateDoc(userRef, { multiplier: result.multiplier });
-    loadInventory();
-}
-
 function openBox(type) {
     const rand = Math.random();
-    if (type === 'daily') {
-        const score = Math.floor(Math.random() * 251) + 50;
-        if (rand < 0.05) return { scoreReward: score, multiplier: 2, message: `📅 ${score} Puan + x2!` };
-        return { scoreReward: score, message: `📅 ${score} Puan kazandın!` };
-    }
+    
     if (type === 'bronze') {
         const score = Math.floor(Math.random() * 151) + 50;
-        if (rand < 0.1) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        if (rand < 0.1) {
+            return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        }
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
+    
     if (type === 'silver') {
         const score = Math.floor(Math.random() * 301) + 200;
-        if (rand < 0.05) return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
-        if (rand < 0.2) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        if (rand < 0.05) {
+            return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
+        } else if (rand < 0.2) {
+            return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        }
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
+    
     if (type === 'gold') {
         const score = Math.floor(Math.random() * 1001) + 500;
-        if (rand < 0.05) return { scoreReward: score, multiplier: 10, message: `💥 ${score} Puan + x10 MEGA Katlayıcı!` };
-        if (rand < 0.15) return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
-        if (rand < 0.3) return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        if (rand < 0.05) {
+            return { scoreReward: score, multiplier: 10, message: `💥 ${score} Puan + x10 MEGA Katlayıcı!` };
+        } else if (rand < 0.15) {
+            return { scoreReward: score, multiplier: 5, message: `🔥 ${score} Puan + x5 Katlayıcı!` };
+        } else if (rand < 0.3) {
+            return { scoreReward: score, multiplier: 2, message: `🎉 ${score} Puan + x2 Katlayıcı!` };
+        }
         return { scoreReward: score, message: `✨ ${score} Puan kazandın!` };
     }
-    if (type === 'epic') {
-        const score = Math.floor(Math.random() * 501) + 300;
-        if (rand < 0.08) return { scoreReward: score, multiplier: 10, message: `💜 ${score} Puan + x10 Epic!` };
-        if (rand < 0.2) return { scoreReward: score, multiplier: 5, message: `💜 ${score} Puan + x5!` };
-        if (rand < 0.35) return { scoreReward: score, multiplier: 2, message: `💜 ${score} Puan + x2!` };
-        return { scoreReward: score, message: `💜 ${score} Puan kazandın!` };
-    }
-    if (type === 'legendary') {
-        const score = Math.floor(Math.random() * 1201) + 800;
-        if (rand < 0.05) return { scoreReward: score, multiplier: 10, message: `🌈 ${score} Puan + x10 Legendary!` };
-        if (rand < 0.15) return { scoreReward: score, multiplier: 5, message: `🌈 ${score} Puan + x5!` };
-        if (rand < 0.35) return { scoreReward: score, multiplier: 2, message: `🌈 ${score} Puan + x2!` };
-        return { scoreReward: score, message: `🌈 ${score} Puan kazandın!` };
-    }
-    return { message: 'Bilinmeyen kutu.' };
 }
 
 function showBoxResult(message, type) {
     const resultEl = document.getElementById('boxResult');
     resultEl.className = `box-result ${type}`;
     resultEl.textContent = message;
-    setTimeout(() => { resultEl.textContent = ''; resultEl.className = 'box-result'; }, 5000);
-}
-
-async function playBoxOpenAnimation(boxType, result) {
-    const modal = document.getElementById('boxOpenModal');
-    const rewardEl = document.getElementById('boxOpenReward');
-    const lid = document.getElementById('boxOpenLid');
-    const glow = document.getElementById('boxOpenGlow');
-    if (!modal || !rewardEl) return;
-    rewardEl.textContent = result.message || '';
-    rewardEl.className = 'box-open-reward';
-    modal.style.display = 'flex';
-    lid.classList.add('box-open-lid--open');
-    glow.classList.add('box-open-glow--active');
-    await new Promise(r => setTimeout(r, 1800));
-    lid.classList.remove('box-open-lid--open');
-    glow.classList.remove('box-open-glow--active');
-    modal.style.display = 'none';
-}
-
-async function loadInventory() {
-    const grid = document.getElementById('inventoryGrid');
-    if (!grid) return;
-    const invRef = collection(db, 'users', currentUser.uid, 'inventory');
-    const snap = await getDocs(invRef);
-    grid.innerHTML = '';
-    snap.forEach(d => {
-        const dta = d.data();
-        const div = document.createElement('div');
-        div.className = 'inventory-item';
-        div.innerHTML = `<span class="inventory-name">${dta.name || 'Öğe'}</span><span class="inventory-qty">${dta.qty || 1}</span>`;
-        grid.appendChild(div);
-    });
-    if (snap.empty) grid.innerHTML = '<div class="inventory-empty">Envanterde öğe yok.</div>';
+    
+    setTimeout(() => {
+        resultEl.textContent = '';
+        resultEl.className = 'box-result';
+    }, 5000);
 }
 
 // ========================================
 // SIMPLE GAMES (Coin, RPS, Wheel)
 // ========================================
+
+// Coin Flip
 document.getElementById('coinFlipCard').addEventListener('click', () => {
     document.getElementById('coinFlipModal').style.display = 'flex';
 });
@@ -1298,247 +1178,227 @@ document.querySelectorAll('#coinFlipModal .choice-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         const choice = btn.dataset.choice;
         const betAmount = parseInt(document.getElementById('coinBetAmount').value);
-
+        
         if (betAmount < 10) {
             showGameResult('coinResult', 'Minimum bahis 10!', 'lose');
             return;
         }
-
+        
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
         const currentScore = userSnap.data().score;
-
+        
         if (currentScore < betAmount) {
             showGameResult('coinResult', 'Yetersiz bakiye!', 'lose');
             return;
         }
-
+        
         const result = Math.random() < 0.5 ? 'heads' : 'tails';
         const won = result === choice;
-
-        showGameLoading(true);
-        await playCoinFlipAnimation(choice, result);
-        showGameLoading(false);
-
+        
         if (won) {
             const winAmount = Math.floor(betAmount * 1.8 * userMultiplier);
-            await updateDoc(userRef, { score: increment(winAmount - betAmount) });
+            await updateDoc(userRef, {
+                score: increment(winAmount - betAmount)
+            });
             showGameResult('coinResult', `🎉 Kazandın! +${winAmount - betAmount} Puan`, 'win');
-            playCelebrationAnimation('win');
         } else {
-            await updateDoc(userRef, { score: increment(-betAmount) });
+            await updateDoc(userRef, {
+                score: increment(-betAmount)
+            });
             showGameResult('coinResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
-            playCelebrationAnimation('lose');
         }
     });
 });
 
+// Rock Paper Scissors
 document.getElementById('rpsCard').addEventListener('click', () => {
     document.getElementById('rpsModal').style.display = 'flex';
-    const rev = document.getElementById('rpsRevealContainer');
-    if (rev) { rev.classList.remove('rps-reveal-container--active'); rev.querySelector('#rpsPlayerChoice').textContent = ''; rev.querySelector('#rpsBotChoice').textContent = ''; }
 });
 
 document.querySelectorAll('#rpsModal .choice-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         const choice = btn.dataset.choice;
         const betAmount = parseInt(document.getElementById('rpsBetAmount').value);
-
+        
         if (betAmount < 10) {
             showGameResult('rpsResult', 'Minimum bahis 10!', 'lose');
             return;
         }
-
+        
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
         const currentScore = userSnap.data().score;
-
+        
         if (currentScore < betAmount) {
             showGameResult('rpsResult', 'Yetersiz bakiye!', 'lose');
             return;
         }
-
+        
         const choices = ['rock', 'paper', 'scissors'];
         const botChoice = choices[Math.floor(Math.random() * 3)];
-        const wins = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+        
+        const wins = {
+            rock: 'scissors',
+            paper: 'rock',
+            scissors: 'paper'
+        };
+        
         let result = 'draw';
         if (wins[choice] === botChoice) result = 'win';
         else if (wins[botChoice] === choice) result = 'lose';
-
-        showGameLoading(true);
-        await playRpsRevealAnimation(choice, botChoice);
-        showGameLoading(false);
-
+        
         if (result === 'win') {
             const winAmount = Math.floor(betAmount * 1.9 * userMultiplier);
-            await updateDoc(userRef, { score: increment(winAmount - betAmount) });
+            await updateDoc(userRef, {
+                score: increment(winAmount - betAmount)
+            });
             showGameResult('rpsResult', `🎉 Kazandın! +${winAmount - betAmount} Puan`, 'win');
-            playCelebrationAnimation('win');
         } else if (result === 'lose') {
-            await updateDoc(userRef, { score: increment(-betAmount) });
+            await updateDoc(userRef, {
+                score: increment(-betAmount)
+            });
             showGameResult('rpsResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
-            playCelebrationAnimation('lose');
         } else {
             showGameResult('rpsResult', `🤝 Berabere! Bahis iade edildi`, 'win');
         }
     });
 });
 
+// Spin Wheel
 document.getElementById('spinWheelCard').addEventListener('click', () => {
     document.getElementById('spinWheelModal').style.display = 'flex';
     drawWheel();
 });
 
-const WHEEL_SEGMENTS = [
-    { label: 'x0', mult: 0 },
-    { label: 'x1', mult: 1 },
-    { label: 'x1.5', mult: 1.5 },
-    { label: 'x2', mult: 2 },
-    { label: 'x3', mult: 3 },
-    { label: 'x5', mult: 5 },
-    { label: 'x10', mult: 10 },
-    { label: 'x2', mult: 2 }
-];
-const WHEEL_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
-
 function drawWheel() {
     const canvas = document.getElementById('wheelCanvas');
-    if (!canvas) return;
     const ctx = canvas.getContext('2d');
+
+    // Önce temizle ve dönüşü sıfırla
     canvas.style.transform = 'rotate(0deg)';
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const segments = WHEEL_SEGMENTS.length;
+    const segments = 8;
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+    const prizes = ['x0.5', 'x1', 'x1.5', 'x2', 'x3', 'x0', 'x1.2', 'x5'];
+    
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const radius = 140;
     const anglePerSegment = (2 * Math.PI) / segments;
-
+    
     for (let i = 0; i < segments; i++) {
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, i * anglePerSegment, (i + 1) * anglePerSegment);
         ctx.closePath();
-        ctx.fillStyle = WHEEL_COLORS[i];
+        ctx.fillStyle = colors[i];
         ctx.fill();
         ctx.stroke();
+        
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(i * anglePerSegment + anglePerSegment / 2);
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = 'white';
         ctx.font = 'bold 18px Arial';
-        ctx.fillText(WHEEL_SEGMENTS[i].label, radius / 1.5, 8);
+        ctx.fillText(prizes[i], radius / 1.5, 8);
         ctx.restore();
     }
 }
 
-function updateWheelPrizePrediction() {
-    const el = document.getElementById('wheelPrizeText');
-    if (!el) return;
-    const bet = parseInt(document.getElementById('wheelBetAmount')?.value || 10);
-    const idx = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
-    const seg = WHEEL_SEGMENTS[idx];
-    const win = seg.mult > 0 ? Math.floor(bet * seg.mult * userMultiplier) : 0;
-    el.textContent = seg.mult > 0 ? `±${win} puan (${seg.label})` : 'Kayıp';
-}
-
-document.getElementById('wheelBetAmount')?.addEventListener('input', updateWheelPrizePrediction);
-
 document.getElementById('spinBtn').addEventListener('click', async () => {
     const betAmount = parseInt(document.getElementById('wheelBetAmount').value);
-
+    
     if (betAmount < 10) {
         showGameResult('wheelResult', 'Minimum bahis 10!', 'lose');
         return;
     }
-
+    
     const userRef = doc(db, 'users', currentUser.uid);
     const userSnap = await getDoc(userRef);
     const currentScore = userSnap.data().score;
-
+    
     if (currentScore < betAmount) {
         showGameResult('wheelResult', 'Yetersiz bakiye!', 'lose');
         return;
     }
-
+    
     const btn = document.getElementById('spinBtn');
     btn.disabled = true;
     btn.textContent = 'Çevriliyor...';
-
-    const segmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
-    const seg = WHEEL_SEGMENTS[segmentIndex];
-    const resultMult = seg.mult;
-
-    await updateDoc(userRef, { score: increment(-betAmount) });
-
+    
     const canvas = document.getElementById('wheelCanvas');
-    const anglePerSeg = (2 * Math.PI) / WHEEL_SEGMENTS.length;
-    const targetRotation = 360 * 5 + (segmentIndex * anglePerSeg + anglePerSeg / 2) * (180 / Math.PI);
-    const spinTime = 3000;
+    const multipliers = [0.5, 1, 1.5, 2, 3, 0, 1.2, 5];
+    // Rastgele bir açı belirle (5-10 tam tur + rastgele bitiş açısı)
+    const extraSpins = 5 + Math.floor(Math.random() * 5);
+    const randomAngle = Math.floor(Math.random() * 360);
+    const totalRotation = (extraSpins * 360) + randomAngle;
+    
+    // Sonucun ne olacağını hesapla
+    const segmentAngle = 360 / multipliers.length;
+    // Canvas döndüğünde, ibre (saat 12 yönü / 270 derece) hangi dilime denk gelecek?
+    // Canvas saat yönünde dönüyor (pozitif açı).
+    // Başlangıçta 0 derece.
+    // 270 derecedeki (üstteki) dilimi bulmak için:
+    // İbre sabittir, çark döner.
+    // Çark X derece döndüğünde, ibrenin altındaki dilim: (270 - (X % 360) + 360) % 360
+    const finalAngle = totalRotation % 360;
+    const pointerAngle = (270 - finalAngle + 360) % 360;
+    const winningIndex = Math.floor(pointerAngle / segmentAngle);
+    const result = multipliers[winningIndex];
+
+    // Bahsi önce düş
+    await updateDoc(userRef, {
+        score: increment(-betAmount)
+    });
+    
+    // Spin animation
+    let currentRotation = 0;
+    const spinTime = 4000; // Biraz daha uzun dönsün
     const startTime = Date.now();
-
-    const spin = setInterval(() => {
+    
+    // Easing function for smooth stop
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+    
+    const spin = setInterval(async () => {
         const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / spinTime, 1);
-        const ease = 1 - Math.pow(1 - progress, 3);
-        const rotation = ease * targetRotation;
-        canvas.style.transform = `rotate(${rotation}deg)`;
-
-        if (progress >= 1) {
+        const rawProgress = Math.min(elapsed / spinTime, 1);
+        const easedProgress = easeOutCubic(rawProgress);
+        
+        currentRotation = easedProgress * totalRotation;
+        canvas.style.transform = `rotate(${currentRotation}deg)`;
+        
+        if (rawProgress >= 1) {
             clearInterval(spin);
-            const winAmount = resultMult > 0 ? Math.floor(betAmount * resultMult * userMultiplier) : 0;
-            if (resultMult > 0) {
-                updateDoc(userRef, { score: increment(winAmount) }).then(() => {
-                    showGameResult('wheelResult', `🎉 ${seg.label}! +${winAmount} Puan`, 'win');
+            
+            const winAmount = Math.floor(betAmount * result * userMultiplier);
+            
+            if (result > 0) {
+                await updateDoc(userRef, {
+                    score: increment(winAmount)
                 });
+                showGameResult('wheelResult', `🎉 x${result}! +${winAmount} Puan`, 'win');
             } else {
                 showGameResult('wheelResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
             }
+            
             btn.disabled = false;
             btn.textContent = 'ÇEVİR!';
-            updateWheelPrizePrediction();
         }
     }, 16);
 });
 
 function showGameResult(elementId, message, type) {
     const resultEl = document.getElementById(elementId);
-    if (!resultEl) return;
     resultEl.className = `game-result ${type}`;
     resultEl.textContent = message;
-    setTimeout(() => { resultEl.textContent = ''; resultEl.className = 'game-result'; }, 5000);
-}
-
-function showGameLoading(show) {
-    const overlay = document.getElementById('gameLoadingOverlay');
-    if (overlay) overlay.style.display = show ? 'flex' : 'none';
-}
-
-function playCoinFlipAnimation(choice, result) {
-    const coin = document.getElementById('coin3d');
-    if (!coin) return Promise.resolve();
-    coin.classList.remove('coin-3d--flip');
-    coin.offsetHeight;
-    coin.dataset.result = result;
-    coin.classList.add('coin-3d--flip');
-    return new Promise(r => setTimeout(r, 1200)).then(() => coin.classList.remove('coin-3d--flip'));
-}
-
-function playRpsRevealAnimation(player, bot) {
-    const container = document.getElementById('rpsRevealContainer');
-    const pc = document.getElementById('rpsPlayerChoice');
-    const bc = document.getElementById('rpsBotChoice');
-    const icons = { rock: '🪨', paper: '📄', scissors: '✂️' };
-    if (pc) pc.textContent = icons[player] || '';
-    if (bc) bc.textContent = icons[bot] || '';
-    if (container) container.classList.add('rps-reveal-container--active');
-    return new Promise(r => setTimeout(r, 1000));
-}
-
-function playCelebrationAnimation(outcome) {
-    document.body.classList.add(`celebration-${outcome}`);
-    setTimeout(() => document.body.classList.remove(`celebration-${outcome}`), 1500);
+    
+    setTimeout(() => {
+        resultEl.textContent = '';
+        resultEl.className = 'game-result';
+    }, 5000);
 }
 
 // ========================================
@@ -1551,28 +1411,28 @@ document.getElementById('chessCard').addEventListener('click', () => {
 document.getElementById('chessStartBtn').addEventListener('click', async () => {
     const betAmount = parseInt(document.getElementById('chessBetAmount').value);
     const difficulty = document.getElementById('chessDifficulty').value;
-
+    
     if (betAmount < 50) {
         showGameResult('chessResult', 'Minimum bahis 50!', 'lose');
         return;
     }
-
+    
     const userRef = doc(db, 'users', currentUser.uid);
     const userSnap = await getDoc(userRef);
     const currentScore = userSnap.data().score;
-
+    
     if (currentScore < betAmount) {
         showGameResult('chessResult', 'Yetersiz bakiye!', 'lose');
         return;
     }
-
+    
     await updateDoc(userRef, { score: increment(-betAmount) });
-
+    
     document.getElementById('chessBetDisplay').textContent = betAmount;
     document.getElementById('chessStartBtn').style.display = 'none';
     document.getElementById('chessBetAmount').disabled = true;
     document.getElementById('chessDifficulty').disabled = true;
-
+    
     chessGame = new ChessGame(betAmount, difficulty);
     chessGame.render();
 });
@@ -1593,7 +1453,7 @@ class ChessGame {
         this.blackRookHMoved = false;
         this.enPassantTarget = null;
     }
-
+    
     initializeBoard() {
         return [
             ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
@@ -1606,13 +1466,11 @@ class ChessGame {
             ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
         ];
     }
-
+    
     render() {
         const boardEl = document.getElementById('chessBoard');
-        if (!boardEl) return;
         boardEl.innerHTML = '';
-        boardEl.className = 'chess-board chess-board--8x8';
-
+        
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
                 const square = document.createElement('div');
@@ -1620,33 +1478,34 @@ class ChessGame {
                 square.textContent = this.board[row][col];
                 square.dataset.row = row;
                 square.dataset.col = col;
-
+                
                 if (this.selectedSquare && this.selectedSquare.row === row && this.selectedSquare.col === col) {
                     square.classList.add('selected');
                 }
-
+                
                 square.addEventListener('click', () => this.handleSquareClick(row, col));
                 boardEl.appendChild(square);
             }
         }
+        
         this.updateStatus();
     }
-
+    
     handleSquareClick(row, col) {
         if (this.gameOver || this.currentTurn === 'black') return;
-
+        
         const piece = this.board[row][col];
-
+        
         if (this.selectedSquare) {
             const validMoves = this.getValidMoves(this.selectedSquare.row, this.selectedSquare.col);
             const isValidMove = validMoves.some(move => move.row === row && move.col === col);
-
+            
             if (isValidMove) {
                 this.movePiece(this.selectedSquare.row, this.selectedSquare.col, row, col);
                 this.selectedSquare = null;
                 this.currentTurn = 'black';
                 this.render();
-
+                
                 if (this.isCheckmate('black')) {
                     this.endGame(true);
                 } else if (this.isStalemate('black')) {
@@ -1668,41 +1527,61 @@ class ChessGame {
             this.highlightValidMoves(row, col);
         }
     }
-
+    
     highlightValidMoves(row, col) {
         const validMoves = this.getValidMoves(row, col);
         const squares = document.querySelectorAll('.chess-square');
+        
         validMoves.forEach(move => {
             const index = move.row * 8 + move.col;
-            if (squares[index]) squares[index].classList.add('valid-move');
+            squares[index].classList.add('valid-move');
         });
     }
-
+    
     movePiece(fromRow, fromCol, toRow, toCol) {
         const piece = this.board[fromRow][fromCol];
-
+        
+        // Castling
         if (piece === '♔' && Math.abs(toCol - fromCol) === 2) {
-            if (toCol === 6) { this.board[7][5] = this.board[7][7]; this.board[7][7] = ''; }
-            else if (toCol === 2) { this.board[7][3] = this.board[7][0]; this.board[7][0] = ''; }
+            if (toCol === 6) { // Kingside
+                this.board[7][5] = this.board[7][7];
+                this.board[7][7] = '';
+            } else if (toCol === 2) { // Queenside
+                this.board[7][3] = this.board[7][0];
+                this.board[7][0] = '';
+            }
             this.whiteKingMoved = true;
         }
+        
         if (piece === '♚' && Math.abs(toCol - fromCol) === 2) {
-            if (toCol === 6) { this.board[0][5] = this.board[0][7]; this.board[0][7] = ''; }
-            else if (toCol === 2) { this.board[0][3] = this.board[0][0]; this.board[0][0] = ''; }
+            if (toCol === 6) {
+                this.board[0][5] = this.board[0][7];
+                this.board[0][7] = '';
+            } else if (toCol === 2) {
+                this.board[0][3] = this.board[0][0];
+                this.board[0][0] = '';
+            }
             this.blackKingMoved = true;
         }
-
+        
+        // En passant
         if (piece === '♙' && this.enPassantTarget && toRow === this.enPassantTarget.row && toCol === this.enPassantTarget.col) {
             this.board[toRow + 1][toCol] = '';
         }
         if (piece === '♟' && this.enPassantTarget && toRow === this.enPassantTarget.row && toCol === this.enPassantTarget.col) {
             this.board[toRow - 1][toCol] = '';
         }
-
+        
+        // Set en passant target
         this.enPassantTarget = null;
-        if (piece === '♙' && fromRow === 6 && toRow === 4) this.enPassantTarget = { row: 5, col: fromCol };
-        if (piece === '♟' && fromRow === 1 && toRow === 3) this.enPassantTarget = { row: 2, col: fromCol };
-
+        if (piece === '♙' && fromRow === 6 && toRow === 4) {
+            this.enPassantTarget = { row: 5, col: fromCol };
+        }
+        if (piece === '♟' && fromRow === 1 && toRow === 3) {
+            this.enPassantTarget = { row: 2, col: fromCol };
+        }
+        
+        // Track rook moves
         if (piece === '♖') {
             if (fromRow === 7 && fromCol === 0) this.whiteRookAMoved = true;
             if (fromRow === 7 && fromCol === 7) this.whiteRookHMoved = true;
@@ -1711,12 +1590,15 @@ class ChessGame {
             if (fromRow === 0 && fromCol === 0) this.blackRookAMoved = true;
             if (fromRow === 0 && fromCol === 7) this.blackRookHMoved = true;
         }
+        
+        // Track king moves
         if (piece === '♔') this.whiteKingMoved = true;
         if (piece === '♚') this.blackKingMoved = true;
-
+        
         this.board[toRow][toCol] = piece;
         this.board[fromRow][fromCol] = '';
-
+        
+        // Pawn promotion
         if (piece === '♙' && toRow === 0) this.board[toRow][toCol] = '♕';
         if (piece === '♟' && toRow === 7) this.board[toRow][toCol] = '♛';
     }
@@ -1724,19 +1606,32 @@ class ChessGame {
     getValidMoves(row, col) {
         const piece = this.board[row][col];
         if (!piece) return [];
+
         const isWhite = this.isWhitePiece(piece);
         const color = isWhite ? 'white' : 'black';
+
+        // Önce ham (kurallı ama "şah güvenliği" kontrolsüz) hareketleri al
         const pseudoMoves = this.getPseudoMoves(row, col, { forAttack: false });
+
+        // Sonra her hareketi simüle edip şahı tehdit altında bırakmayanları filtrele
         const legalMoves = [];
 
         for (const move of pseudoMoves) {
             const backupBoard = this.board.map(r => [...r]);
+
             this.board[move.row][move.col] = piece;
             this.board[row][col] = '';
+
             const kingInCheck = this.isInCheck(color);
+
+            // tahtayı geri al
             this.board = backupBoard;
-            if (!kingInCheck) legalMoves.push(move);
+
+            if (!kingInCheck) {
+                legalMoves.push(move);
+            }
         }
+
         return legalMoves;
     }
 
@@ -1749,29 +1644,53 @@ class ChessGame {
         const pawnMoves = (r, c) => {
             const direction = isWhite ? -1 : 1;
             const startRow = isWhite ? 6 : 1;
+
+            // Piyon saldırı karelerini bul (hem saldırı hesabında hem normalde lazım)
             for (let dc of [-1, 1]) {
-                const nr = r + direction, nc = c + dc;
+                const nr = r + direction;
+                const nc = c + dc;
                 if (!this.isInBounds(nr, nc)) continue;
                 const target = this.board[nr][nc];
-                if (forAttack) moves.push({ row: nr, col: nc });
-                else if (target && this.isWhitePiece(target) !== isWhite) moves.push({ row: nr, col: nc });
+                if (forAttack) {
+                    // Saldırı hesabında sadece çapraz kareleri dikkate al
+                    moves.push({ row: nr, col: nc });
+                } else {
+                    // Normal hamlede, karşı renk taş varsa çapraz yiyebilir
+                    if (target && this.isWhitePiece(target) !== isWhite) {
+                        moves.push({ row: nr, col: nc });
+                    }
+                }
             }
-            if (forAttack) return;
+
+            if (forAttack) return; // Saldırı modunda ileri gitmeyi ekleme
+
+            // İleri tek kare
             if (this.isInBounds(r + direction, c) && !this.board[r + direction][c]) {
                 moves.push({ row: r + direction, col: c });
-                if (r === startRow && !this.board[r + 2 * direction][c]) moves.push({ row: r + 2 * direction, col: c });
+
+                // Başlangıçtan çift kare
+                if (r === startRow && !this.board[r + 2 * direction][c]) {
+                    moves.push({ row: r + 2 * direction, col: c });
+                }
             }
-            if (this.enPassantTarget && r + direction === this.enPassantTarget.row && (c + 1 === this.enPassantTarget.col || c - 1 === this.enPassantTarget.col)) {
-                moves.push({ row: this.enPassantTarget.row, col: this.enPassantTarget.col });
+
+            // En passant
+            if (this.enPassantTarget && r + direction === this.enPassantTarget.row) {
+                if (c + 1 === this.enPassantTarget.col || c - 1 === this.enPassantTarget.col) {
+                    moves.push({ row: this.enPassantTarget.row, col: this.enPassantTarget.col });
+                }
             }
         };
 
         const knightMoves = (r, c) => {
-            [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr, dc]) => {
+            const deltas = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+            deltas.forEach(([dr, dc]) => {
                 const nr = r + dr, nc = c + dc;
                 if (this.isInBounds(nr, nc)) {
                     const target = this.board[nr][nc];
-                    if (!target || this.isWhitePiece(target) !== isWhite) moves.push({ row: nr, col: nc });
+                    if (!target || this.isWhitePiece(target) !== isWhite) {
+                        moves.push({ row: nr, col: nc });
+                    }
                 }
             });
         };
@@ -1781,172 +1700,262 @@ class ChessGame {
                 let nr = r + dr, nc = c + dc;
                 while (this.isInBounds(nr, nc)) {
                     const target = this.board[nr][nc];
-                    if (!target) moves.push({ row: nr, col: nc });
-                    else {
-                        if (this.isWhitePiece(target) !== isWhite) moves.push({ row: nr, col: nc });
+                    if (!target) {
+                        moves.push({ row: nr, col: nc });
+                    } else {
+                        if (this.isWhitePiece(target) !== isWhite) {
+                            moves.push({ row: nr, col: nc });
+                        }
                         break;
                     }
-                    nr += dr; nc += dc;
+                    nr += dr;
+                    nc += dc;
                 }
             });
         };
 
         const kingMoves = (r, c) => {
-            [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr, dc]) => {
+            const deltas = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+            deltas.forEach(([dr, dc]) => {
                 const nr = r + dr, nc = c + dc;
                 if (this.isInBounds(nr, nc)) {
                     const target = this.board[nr][nc];
-                    if (!target || this.isWhitePiece(target) !== isWhite) moves.push({ row: nr, col: nc });
+                    if (!target || this.isWhitePiece(target) !== isWhite) {
+                        moves.push({ row: nr, col: nc });
+                    }
                 }
             });
-            if (forAttack) return;
+
+            if (forAttack) return; // Saldırı hesabında rok karelerini eklemeye gerek yok
+
+            // Rok (castling) hamlelerini de burada ekliyoruz
             if (isWhite && !this.whiteKingMoved && !this.isInCheck('white')) {
-                if (!this.whiteRookHMoved && !this.board[7][5] && !this.board[7][6]) moves.push({ row: 7, col: 6 });
-                if (!this.whiteRookAMoved && !this.board[7][1] && !this.board[7][2] && !this.board[7][3]) moves.push({ row: 7, col: 2 });
+                if (!this.whiteRookHMoved && !this.board[7][5] && !this.board[7][6]) {
+                    moves.push({ row: 7, col: 6 }); // kısa rok
+                }
+                if (!this.whiteRookAMoved && !this.board[7][1] && !this.board[7][2] && !this.board[7][3]) {
+                    moves.push({ row: 7, col: 2 }); // uzun rok
+                }
             }
+
             if (!isWhite && !this.blackKingMoved && !this.isInCheck('black')) {
-                if (!this.blackRookHMoved && !this.board[0][5] && !this.board[0][6]) moves.push({ row: 0, col: 6 });
-                if (!this.blackRookAMoved && !this.board[0][1] && !this.board[0][2] && !this.board[0][3]) moves.push({ row: 0, col: 2 });
+                if (!this.blackRookHMoved && !this.board[0][5] && !this.board[0][6]) {
+                    moves.push({ row: 0, col: 6 });
+                }
+                if (!this.blackRookAMoved && !this.board[0][1] && !this.board[0][2] && !this.board[0][3]) {
+                    moves.push({ row: 0, col: 2 });
+                }
             }
         };
 
-        if (['♙','♟'].includes(piece)) pawnMoves(row, col);
-        else if (['♘','♞'].includes(piece)) knightMoves(row, col);
-        else if (['♗','♝'].includes(piece)) slidingMoves(row, col, [[-1,-1],[-1,1],[1,-1],[1,1]]);
-        else if (['♖','♜'].includes(piece)) slidingMoves(row, col, [[-1,0],[1,0],[0,-1],[0,1]]);
-        else if (['♕','♛'].includes(piece)) slidingMoves(row, col, [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]);
-        else if (['♔','♚'].includes(piece)) kingMoves(row, col);
+        if (piece === '♙' || piece === '♟') pawnMoves(row, col);
+        else if (piece === '♘' || piece === '♞') knightMoves(row, col);
+        else if (piece === '♗' || piece === '♝') slidingMoves(row, col, [[-1, -1], [-1, 1], [1, -1], [1, 1]]);
+        else if (piece === '♖' || piece === '♜') slidingMoves(row, col, [[-1, 0], [1, 0], [0, -1], [0, 1]]);
+        else if (piece === '♕' || piece === '♛') slidingMoves(row, col, [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]);
+        else if (piece === '♔' || piece === '♚') kingMoves(row, col);
+
         return moves;
     }
-
-    isWhitePiece(p) { return ['♙','♘','♗','♖','♕','♔'].includes(p); }
-    isBlackPiece(p) { return ['♟','♞','♝','♜','♛','♚'].includes(p); }
-    isInBounds(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
-
+    
+    isWhitePiece(piece) {
+        return ['♙', '♘', '♗', '♖', '♕', '♔'].includes(piece);
+    }
+    
+    isBlackPiece(piece) {
+        return ['♟', '♞', '♝', '♜', '♛', '♚'].includes(piece);
+    }
+    
+    isInBounds(row, col) {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+    
     findKing(color) {
         const king = color === 'white' ? '♔' : '♚';
-        for (let r = 0; r < 8; r++)
-            for (let c = 0; c < 8; c++)
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
                 if (this.board[r][c] === king) return { row: r, col: c };
+            }
+        }
         return null;
     }
-
+    
     isSquareAttacked(row, col, byColor) {
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const piece = this.board[r][c];
                 if (!piece) continue;
+
                 const isPieceWhite = this.isWhitePiece(piece);
-                if ((byColor === 'white' && !isPieceWhite) || (byColor === 'black' && isPieceWhite)) continue;
+                if ((byColor === 'white' && !isPieceWhite) || (byColor === 'black' && isPieceWhite)) {
+                    continue;
+                }
+
+                // Saldırı için pseudo hamleleri kullan
                 const attackMoves = this.getPseudoMoves(r, c, { forAttack: true });
-                if (attackMoves.some(m => m.row === row && m.col === col)) return true;
+                if (attackMoves.some(m => m.row === row && m.col === col)) {
+                    return true;
+                }
             }
         }
         return false;
     }
-
+    
     isInCheck(color) {
         const kingPos = this.findKing(color);
-        return kingPos ? this.isSquareAttacked(kingPos.row, kingPos.col, color === 'white' ? 'black' : 'white') : false;
+        if (!kingPos) return false;
+        return this.isSquareAttacked(kingPos.row, kingPos.col, color === 'white' ? 'black' : 'white');
     }
-
+    
     isCheckmate(color) {
         if (!this.isInCheck(color)) return false;
-        for (let r = 0; r < 8; r++)
+        
+        for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const piece = this.board[r][c];
                 if (!piece) continue;
+                
                 const isPieceWhite = this.isWhitePiece(piece);
                 if ((color === 'white' && !isPieceWhite) || (color === 'black' && isPieceWhite)) continue;
-                if (this.getValidMoves(r, c).length > 0) return false;
+                
+                const moves = this.getValidMoves(r, c);
+                if (moves.length > 0) return false;
             }
+        }
         return true;
     }
-
+    
     isStalemate(color) {
         if (this.isInCheck(color)) return false;
-        for (let r = 0; r < 8; r++)
+        
+        for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const piece = this.board[r][c];
                 if (!piece) continue;
+                
                 const isPieceWhite = this.isWhitePiece(piece);
                 if ((color === 'white' && !isPieceWhite) || (color === 'black' && isPieceWhite)) continue;
-                if (this.getValidMoves(r, c).length > 0) return false;
+                
+                const moves = this.getValidMoves(r, c);
+                if (moves.length > 0) return false;
             }
+        }
         return true;
     }
-
+    
     botMove() {
-        const depthMap = { easy: 1, medium: 2, hard: 3, master: 4 };
-        const depth = depthMap[this.difficulty] || 2;
-        const bestMove = this.minimax(depth, -Infinity, Infinity, true);
-
+        const depth = this.difficulty === 'easy' ? 1 : this.difficulty === 'medium' ? 2 : 3;
+        // Bot siyahtır, siyahlar negatif puandır. Bu yüzden minimize etmeli (false).
+        const bestMove = this.minimax(depth, -Infinity, Infinity, false);
+        
         if (bestMove.move) {
-            this.movePiece(bestMove.move.from.row, bestMove.move.from.col, bestMove.move.to.row, bestMove.to.col);
+            this.movePiece(bestMove.move.from.row, bestMove.move.from.col, bestMove.move.to.row, bestMove.move.to.col);
             this.currentTurn = 'white';
             this.render();
-
-            if (this.isCheckmate('white')) this.endGame(false);
-            else if (this.isStalemate('white')) this.endGame(false, true);
+            
+            if (this.isCheckmate('white')) {
+                this.endGame(false);
+            } else if (this.isStalemate('white')) {
+                this.endGame(false, true);
+            }
         }
     }
-
+    
     minimax(depth, alpha, beta, maximizingPlayer) {
-        if (depth === 0) return { score: this.evaluateBoard() };
-
+        if (depth === 0) {
+            return { score: this.evaluateBoard() };
+        }
+        
         const moves = [];
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const piece = this.board[r][c];
                 if (!piece) continue;
+                
                 const isPieceBlack = this.isBlackPiece(piece);
                 if ((maximizingPlayer && !isPieceBlack) || (!maximizingPlayer && isPieceBlack)) continue;
-                this.getValidMoves(r, c).forEach(move => moves.push({ from: { row: r, col: c }, to: move }));
+                
+                const validMoves = this.getValidMoves(r, c);
+                validMoves.forEach(move => {
+                    moves.push({ from: { row: r, col: c }, to: move });
+                });
             }
         }
+        
         if (moves.length === 0) {
-            if (this.isCheckmate(maximizingPlayer ? 'black' : 'white')) return { score: maximizingPlayer ? -10000 : 10000 };
+            if (this.isCheckmate(maximizingPlayer ? 'black' : 'white')) {
+                return { score: maximizingPlayer ? -10000 : 10000 };
+            }
             return { score: 0 };
         }
-
+        
         if (maximizingPlayer) {
-            let maxEval = -Infinity, bestMove = null;
-            for (const move of moves) {
-                const temp = this.board.map(r => [...r]);
+            let maxEval = -Infinity;
+            let bestMove = null;
+            
+            for (let move of moves) {
+                const tempBoard = this.board.map(r => [...r]);
                 this.movePiece(move.from.row, move.from.col, move.to.row, move.to.col);
-                const ev = this.minimax(depth - 1, alpha, beta, false).score;
-                this.board = temp;
-                if (ev > maxEval) { maxEval = ev; bestMove = move; }
-                alpha = Math.max(alpha, ev);
+                
+                const evaluation = this.minimax(depth - 1, alpha, beta, false).score;
+                
+                this.board = tempBoard;
+                
+                if (evaluation > maxEval) {
+                    maxEval = evaluation;
+                    bestMove = move;
+                }
+                
+                alpha = Math.max(alpha, evaluation);
                 if (beta <= alpha) break;
             }
+            
             return { score: maxEval, move: bestMove };
         } else {
-            let minEval = Infinity, bestMove = null;
-            for (const move of moves) {
-                const temp = this.board.map(r => [...r]);
+            let minEval = Infinity;
+            let bestMove = null;
+            
+            for (let move of moves) {
+                const tempBoard = this.board.map(r => [...r]);
                 this.movePiece(move.from.row, move.from.col, move.to.row, move.to.col);
-                const ev = this.minimax(depth - 1, alpha, beta, true).score;
-                this.board = temp;
-                if (ev < minEval) { minEval = ev; bestMove = move; }
-                beta = Math.min(beta, ev);
+                
+                const evaluation = this.minimax(depth - 1, alpha, beta, true).score;
+                
+                this.board = tempBoard;
+                
+                if (evaluation < minEval) {
+                    minEval = evaluation;
+                    bestMove = move;
+                }
+                
+                beta = Math.min(beta, evaluation);
                 if (beta <= alpha) break;
             }
+            
             return { score: minEval, move: bestMove };
         }
     }
-
+    
     evaluateBoard() {
-        const v = { '♙':1,'♘':3,'♗':3,'♖':5,'♕':9,'♔':0,'♟':-1,'♞':-3,'♝':-3,'♜':-5,'♛':-9,'♚':0 };
-        let s = 0;
-        for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (this.board[r][c]) s += v[this.board[r][c]] || 0;
-        return s;
+        const pieceValues = {
+            '♙': 1, '♘': 3, '♗': 3, '♖': 5, '♕': 9, '♔': 0,
+            '♟': -1, '♞': -3, '♝': -3, '♜': -5, '♛': -9, '♚': 0
+        };
+        
+        let score = 0;
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = this.board[r][c];
+                if (piece) score += pieceValues[piece] || 0;
+            }
+        }
+        return score;
     }
-
+    
     async endGame(playerWon, isDraw = false) {
         this.gameOver = true;
         const userRef = doc(db, 'users', currentUser.uid);
-
+        
         if (isDraw) {
             await updateDoc(userRef, { score: increment(this.betAmount) });
             showGameResult('chessResult', '🤝 Berabere! Bahis iade edildi', 'win');
@@ -1954,25 +1963,257 @@ class ChessGame {
             const winAmount = Math.floor(this.betAmount * 2.5 * userMultiplier);
             await updateDoc(userRef, { score: increment(winAmount) });
             showGameResult('chessResult', `🎉 Kazandın! +${winAmount} Puan`, 'win');
-            playCelebrationAnimation('win');
         } else {
-            showGameResult('chessResult', '😢 Kaybettin! Bot kazandı', 'lose');
-            playCelebrationAnimation('lose');
+            showGameResult('chessResult', `😢 Kaybettin! Bot kazandı`, 'lose');
         }
-
+        
         document.getElementById('chessStartBtn').style.display = 'block';
         document.getElementById('chessBetAmount').disabled = false;
         document.getElementById('chessDifficulty').disabled = false;
     }
-
+    
     updateStatus() {
         const statusEl = document.getElementById('chessStatus');
-        if (!statusEl || this.gameOver) return;
+        if (this.gameOver) return;
+        
         if (this.currentTurn === 'white') {
-            statusEl.textContent = this.isInCheck('white') ? 'Şah! – Senin sıran' : 'Senin sıran (Beyaz)';
+            statusEl.textContent = this.isInCheck('white') ? 'Şah! - Senin Sıran' : 'Senin Sıran (Beyaz)';
         } else {
-            statusEl.textContent = this.isInCheck('black') ? 'Şah! – Bot düşünüyor...' : 'Bot düşünüyor...';
+            statusEl.textContent = this.isInCheck('black') ? 'Şah! - Bot Düşünüyor...' : 'Bot Düşünüyor...';
         }
+    }
+}
+
+// ========================================
+// 2048 GAME LOGIC
+// ========================================
+class Game2048 {
+    constructor() {
+        this.grid = Array(4).fill().map(() => Array(4).fill(0));
+        this.score = 0;
+        this.gameOver = false;
+        this.betAmount = 0;
+    }
+
+    async startGame(bet) {
+        this.betAmount = bet;
+        this.score = 0;
+        this.grid = Array(4).fill().map(() => Array(4).fill(0));
+        this.gameOver = false;
+        
+        // Başlangıçta 2 tane sayı ekle
+        this.addRandomTile();
+        this.addRandomTile();
+        
+        this.updateView();
+        
+        // Klavye dinleyicisi ekle
+        document.addEventListener('keydown', this.handleInput.bind(this));
+    }
+
+    addRandomTile() {
+        const emptyCells = [];
+        for(let r=0; r<4; r++) {
+            for(let c=0; c<4; c++) {
+                if(this.grid[r][c] === 0) emptyCells.push({r, c});
+            }
+        }
+        
+        if(emptyCells.length > 0) {
+            const {r, c} = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            this.grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+        }
+    }
+
+    handleInput(e) {
+        if(this.gameOver) return;
+        
+        let moved = false;
+        switch(e.key) {
+            case 'ArrowUp': moved = this.moveUp(); break;
+            case 'ArrowDown': moved = this.moveDown(); break;
+            case 'ArrowLeft': moved = this.moveLeft(); break;
+            case 'ArrowRight': moved = this.moveRight(); break;
+            default: return;
+        }
+        
+        if(moved) {
+            this.addRandomTile();
+            this.updateView();
+            
+            if(this.checkGameOver()) {
+                this.endGame();
+            }
+        }
+    }
+
+    moveLeft() {
+        let moved = false;
+        for(let r=0; r<4; r++) {
+            const row = this.grid[r];
+            const newRow = row.filter(val => val !== 0);
+            
+            for(let i=0; i<newRow.length-1; i++) {
+                if(newRow[i] === newRow[i+1]) {
+                    newRow[i] *= 2;
+                    this.score += newRow[i];
+                    newRow.splice(i+1, 1);
+                    moved = true;
+                }
+            }
+            
+            while(newRow.length < 4) newRow.push(0);
+            
+            if(JSON.stringify(this.grid[r]) !== JSON.stringify(newRow)) {
+                this.grid[r] = newRow;
+                moved = true;
+            }
+        }
+        return moved;
+    }
+
+    moveRight() {
+        let moved = false;
+        for(let r=0; r<4; r++) {
+            const row = this.grid[r];
+            const newRow = row.filter(val => val !== 0);
+            
+            for(let i=newRow.length-1; i>0; i--) {
+                if(newRow[i] === newRow[i-1]) {
+                    newRow[i] *= 2;
+                    this.score += newRow[i];
+                    newRow.splice(i-1, 1);
+                    moved = true;
+                }
+            }
+            
+            while(newRow.length < 4) newRow.unshift(0);
+            
+            if(JSON.stringify(this.grid[r]) !== JSON.stringify(newRow)) {
+                this.grid[r] = newRow;
+                moved = true;
+            }
+        }
+        return moved;
+    }
+
+    moveUp() {
+        let moved = false;
+        for(let c=0; c<4; c++) {
+            let col = [this.grid[0][c], this.grid[1][c], this.grid[2][c], this.grid[3][c]];
+            const newCol = col.filter(val => val !== 0);
+            
+            for(let i=0; i<newCol.length-1; i++) {
+                if(newCol[i] === newCol[i+1]) {
+                    newCol[i] *= 2;
+                    this.score += newCol[i];
+                    newCol.splice(i+1, 1);
+                    moved = true;
+                }
+            }
+            
+            while(newCol.length < 4) newCol.push(0);
+            
+            for(let r=0; r<4; r++) {
+                if(this.grid[r][c] !== newCol[r]) {
+                    this.grid[r][c] = newCol[r];
+                    moved = true;
+                }
+            }
+        }
+        return moved;
+    }
+
+    moveDown() {
+        let moved = false;
+        for(let c=0; c<4; c++) {
+            let col = [this.grid[0][c], this.grid[1][c], this.grid[2][c], this.grid[3][c]];
+            const newCol = col.filter(val => val !== 0);
+            
+            for(let i=newCol.length-1; i>0; i--) {
+                if(newCol[i] === newCol[i-1]) {
+                    newCol[i] *= 2;
+                    this.score += newCol[i];
+                    newCol.splice(i-1, 1);
+                    moved = true;
+                }
+            }
+            
+            while(newCol.length < 4) newCol.unshift(0);
+            
+            for(let r=0; r<4; r++) {
+                if(this.grid[r][c] !== newCol[r]) {
+                    this.grid[r][c] = newCol[r];
+                    moved = true;
+                }
+            }
+        }
+        return moved;
+    }
+
+    checkGameOver() {
+        // Boş hücre var mı?
+        for(let r=0; r<4; r++) {
+            for(let c=0; c<4; c++) {
+                if(this.grid[r][c] === 0) return false;
+            }
+        }
+        
+        // Yan yana aynı sayılar var mı?
+        for(let r=0; r<4; r++) {
+            for(let c=0; c<3; c++) {
+                if(this.grid[r][c] === this.grid[r][c+1]) return false;
+            }
+        }
+        for(let r=0; r<3; r++) {
+            for(let c=0; c<4; c++) {
+                if(this.grid[r][c] === this.grid[r+1][c]) return false;
+            }
+        }
+        
+        return true;
+    }
+
+    updateView() {
+        const gridContainer = document.getElementById('game2048Grid');
+        gridContainer.innerHTML = '';
+        
+        for(let r=0; r<4; r++) {
+            for(let c=0; c<4; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                
+                const value = this.grid[r][c];
+                if(value > 0) {
+                    const tile = document.createElement('div');
+                    tile.className = `tile tile-${value}`;
+                    tile.textContent = value;
+                    cell.appendChild(tile);
+                }
+                
+                gridContainer.appendChild(cell);
+            }
+        }
+        
+        document.getElementById('score2048').textContent = this.score;
+    }
+
+    async endGame() {
+        this.gameOver = true;
+        // Puan hesapla: Skorun %10'u kadar coin kazan
+        const winAmount = Math.floor(this.score * 0.1);
+        
+        if(winAmount > 0) {
+            const userRef = doc(db, 'users', currentUser.uid);
+            await updateDoc(userRef, {
+                score: increment(winAmount)
+            });
+            alert(`Oyun Bitti! Skor: ${this.score}. Kazanç: ${winAmount} Puan`);
+        } else {
+            alert(`Oyun Bitti! Skor: ${this.score}.`);
+        }
+        
+        document.getElementById('game2048Modal').style.display = 'none';
     }
 }
 
@@ -1982,636 +2223,115 @@ class ChessGame {
 document.querySelectorAll('.modal-close').forEach(btn => {
     btn.addEventListener('click', () => {
         const modalId = btn.dataset.modal;
-        const el = document.getElementById(modalId);
-        if (el) el.style.display = 'none';
+        document.getElementById(modalId).style.display = 'none';
     });
 });
 
 document.querySelectorAll('.game-modal').forEach(modal => {
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.style.display = 'none';
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
     });
 });
 
 // ========================================
-// ENHANCEMENTS INIT (VS, Admin Dashboard/Analytics, etc.)
+// VS SYSTEM LOGIC
 // ========================================
-function initEnhancements() {
-    updateWheelPrizePrediction();
-    setupAdminDashboardAndAnalytics();
-    document.getElementById('spinWheelModal')?.addEventListener('click', () => {
-        if (document.getElementById('spinWheelModal').style.display === 'flex') updateWheelPrizePrediction();
-    });
-}
+document.getElementById('chatVsBtn')?.addEventListener('click', () => {
+    document.getElementById('vsRequestModal').style.display = 'flex';
+});
 
-// ========================================
-// VS SYSTEM (TAM ÇALIŞIR - 2 KİŞİLİK)
-// ========================================
-function initVsSystem() {
-    // VS Kart Event Listeners
-    ['vsCoinCard', 'vsRpsCard', 'vsChessCard'].forEach((id, idx) => {
-        const card = document.getElementById(id);
-        if (!card) return;
-        const modes = ['coin', 'rps', 'chess'];
-        card.addEventListener('click', () => {
-            document.getElementById('vsLobbyModal').style.display = 'flex';
-            document.getElementById('vsLobbyTitle').textContent = 
-                modes[idx] === 'coin' ? '🪙 Yazı Tura VS' : 
-                modes[idx] === 'rps' ? '✊ Taş-Kağıt-Makas VS' : '♟️ Satranç VS';
-            document.getElementById('vsLobbyModal').dataset.vsMode = modes[idx];
-            document.getElementById('vsLobbyFind').style.display = 'block';
-            document.getElementById('vsLobbyRank').style.display = 'none';
-            document.getElementById('vsLobbyHistory').style.display = 'none';
-            document.querySelectorAll('.vs-tab-btn')[0].classList.add('active');
-            document.querySelectorAll('.vs-tab-btn')[1].classList.remove('active');
-            document.querySelectorAll('.vs-tab-btn')[2].classList.remove('active');
-        });
-    });
-
-    // VS Tab Buttons
-    document.querySelectorAll('.vs-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.vs-tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const t = btn.dataset.vsTab;
-            
-            document.getElementById('vsLobbyFind').style.display = t === 'find' ? 'block' : 'none';
-            document.getElementById('vsLobbyRank').style.display = t === 'rank' ? 'block' : 'none';
-            document.getElementById('vsLobbyHistory').style.display = t === 'history' ? 'block' : 'none';
-            
-            if (t === 'rank') loadVsRankings();
-            if (t === 'history') loadVsHistory();
-        });
-    });
-
-    // VS Find Match Button
-    document.getElementById('vsFindBtn')?.addEventListener('click', async () => {
-        const modal = document.getElementById('vsLobbyModal');
-        const mode = modal.dataset.vsMode;
-        const bet = parseInt(document.getElementById('vsBetAmount')?.value || 50);
-        
-        if (bet < 10) {
-            alert('Minimum bahis 10 puan!');
-            return;
-        }
-
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.data().score < bet) {
-            alert('Yetersiz bakiye.');
-            return;
-        }
-
-        // Önce bekleyen lobby ara
-        const lobbyRef = collection(db, 'vsLobby');
-        const q = query(
-            lobbyRef, 
-            where('mode', '==', mode), 
-            where('bet', '==', bet), 
-            where('status', '==', 'waiting'),
-            where('hostId', '!=', currentUser.uid),
-            limit(1)
-        );
-
-        const snapshot = await getDocs(q);
-        
-        if (!snapshot.empty) {
-            // Eşleşme bulundu, katıl
-            const lobbyDoc = snapshot.docs[0];
-            const lobbyData = lobbyDoc.data();
-            
-            // Lobby'yi güncelle
-            await updateDoc(lobbyDoc.ref, {
-                opponentId: currentUser.uid,
-                opponentName: userSnap.data().username,
-                status: 'matched',
-                matchedAt: serverTimestamp()
-            });
-
-            // VS Oyunu başlat
-            await startVsMatch(lobbyDoc.id, mode, bet, lobbyData.hostId, currentUser.uid, lobbyData.hostName, userSnap.data().username);
-            
-        } else {
-            // Yeni lobby oluştur
-            const userData = userSnap.data();
-            const newLobbyRef = await addDoc(lobbyRef, {
-                hostId: currentUser.uid,
-                hostName: userData.username,
-                mode: mode,
-                bet: bet,
-                status: 'waiting',
-                opponentId: null,
-                opponentName: null,
-                createdAt: serverTimestamp()
-            });
-
-            // Lobby dinleyicisi başlat
-            setupLobbyListener(newLobbyRef.id, mode, bet);
-            
-            document.getElementById('vsLobbyMessages').innerHTML = 
-                '<div class="chat-welcome">⚡ Eşleşme aranıyor... Başka bir oyuncu bekleniyor.</div>';
-        }
-    });
-
-    // VS Game Modals
-    setupVsGameModals();
-}
-
-function setupLobbyListener(lobbyId, mode, bet) {
-    const lobbyRef = doc(db, 'vsLobby', lobbyId);
+document.getElementById('sendVsRequestBtn')?.addEventListener('click', async () => {
+    const game = document.getElementById('vsGameSelect').value;
+    const bet = parseInt(document.getElementById('vsBetAmount').value);
     
-    const unsubscribe = onSnapshot(lobbyRef, async (docSnap) => {
-        if (!docSnap.exists()) return;
-        
-        const lobbyData = docSnap.data();
-        
-        if (lobbyData.status === 'matched' && lobbyData.opponentId) {
-            // Eşleşme bulundu
-            const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
-            const username = userSnap.data().username;
-            
-            const opponentName = currentUser.uid === lobbyData.hostId ? 
-                lobbyData.opponentName : lobbyData.hostName;
-            
-            await startVsMatch(
-                lobbyId, 
-                mode, 
-                bet, 
-                lobbyData.hostId, 
-                lobbyData.opponentId, 
-                lobbyData.hostName, 
-                opponentName
-            );
-            
-            unsubscribe(); // Dinlemeyi durdur
-        }
-        
-        // 5 dakika sonra lobby'yi temizle
-        setTimeout(async () => {
-            const lobbyCheck = await getDoc(lobbyRef);
-            if (lobbyCheck.exists() && lobbyCheck.data().status === 'waiting') {
-                await deleteDoc(lobbyRef);
-                if (document.getElementById('vsLobbyModal').style.display === 'flex') {
-                    alert('Eşleşme bulunamadı. Lütfen tekrar deneyin.');
-                    document.getElementById('vsLobbyModal').style.display = 'none';
-                }
-            }
-        }, 300000);
-    });
-}
-
-async function startVsMatch(lobbyId, mode, bet, player1Id, player2Id, player1Name, player2Name) {
-    // Lobby'yi temizle
-    const lobbyRef = doc(db, 'vsLobby', lobbyId);
-    await deleteDoc(lobbyRef);
-    
-    // VS Oyunu oluştur
-    const matchRef = await addDoc(collection(db, 'vsMatches'), {
-        player1Id: player1Id,
-        player2Id: player2Id,
-        player1Name: player1Name,
-        player2Name: player2Name,
-        mode: mode,
-        bet: bet,
-        status: 'active',
-        turn: player1Id, // İlk oyuncu başlar
-        createdAt: serverTimestamp(),
-        moves: [],
-        result: null,
-        winner: null,
-        player1Choice: null,
-        player2Choice: null
-    });
-
-    // Bahisleri kes
-    await runTransaction(db, async (transaction) => {
-        const player1Ref = doc(db, 'users', player1Id);
-        const player2Ref = doc(db, 'users', player2Id);
-        
-        transaction.update(player1Ref, { score: increment(-bet) });
-        transaction.update(player2Ref, { score: increment(-bet) });
-    });
-
-    // Oyun modalını aç
-    openVsGame(matchRef.id, mode, bet, player1Id === currentUser.uid ? player2Name : player1Name);
-    
-    // Oyun dinleyicisi başlat
-    setupVsGameListener(matchRef.id, mode);
-}
-
-function setupVsGameModals() {
-    // VS Coin Game
-    document.getElementById('vsCoinChoiceHeads')?.addEventListener('click', () => makeVsChoice('coin', 'heads'));
-    document.getElementById('vsCoinChoiceTails')?.addEventListener('click', () => makeVsChoice('coin', 'tails'));
-    
-    // VS RPS Game
-    document.getElementById('vsRpsChoiceRock')?.addEventListener('click', () => makeVsChoice('rps', 'rock'));
-    document.getElementById('vsRpsChoicePaper')?.addEventListener('click', () => makeVsChoice('rps', 'paper'));
-    document.getElementById('vsRpsChoiceScissors')?.addEventListener('click', () => makeVsChoice('rps', 'scissors'));
-
-    // VS Game close buttons
-    document.querySelectorAll('[data-modal^="vs"]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const modalId = btn.dataset.modal;
-            document.getElementById(modalId).style.display = 'none';
-            activeVsMatch = null;
-            vsListeners.forEach(unsub => unsub());
-            vsListeners = [];
-        });
-    });
-}
-
-function openVsGame(matchId, mode, bet, opponentName) {
-    activeVsMatch = matchId;
-    
-    // Lobby modalını kapat
-    document.getElementById('vsLobbyModal').style.display = 'none';
-    
-    // İlgili oyun modalını aç
-    if (mode === 'coin') {
-        document.getElementById('vsCoinGameModal').style.display = 'flex';
-        document.getElementById('vsCoinOpponentName').textContent = opponentName;
-        document.getElementById('vsCoinBetAmount').textContent = bet;
-        document.getElementById('vsCoinGameStatus').textContent = 'Seçim yapın...';
-        document.getElementById('vsCoinResult').textContent = '';
-        document.getElementById('vsCoinChoiceHeads').disabled = false;
-        document.getElementById('vsCoinChoiceTails').disabled = false;
-        startVsTimer('vsCoinTimer', matchId);
-    } else if (mode === 'rps') {
-        document.getElementById('vsRpsGameModal').style.display = 'flex';
-        document.getElementById('vsRpsOpponentName').textContent = opponentName;
-        document.getElementById('vsRpsBetAmount').textContent = bet;
-        document.getElementById('vsRpsGameStatus').textContent = 'Seçim yapın...';
-        document.getElementById('vsRpsResult').textContent = '';
-        document.getElementById('vsRpsChoiceRock').disabled = false;
-        document.getElementById('vsRpsChoicePaper').disabled = false;
-        document.getElementById('vsRpsChoiceScissors').disabled = false;
-        startVsTimer('vsRpsTimer', matchId);
+    if (bet < 50) {
+        alert('Minimum bahis 50 olmalıdır!');
+        return;
     }
-}
 
-function startVsTimer(timerId, matchId) {
-    let timeLeft = 30;
-    const timerElement = document.getElementById(timerId);
-    if (!timerElement) return;
-
-    const timer = setInterval(() => {
-        timeLeft--;
-        timerElement.textContent = timeLeft;
-        
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            // Zaman doldu, otomatik kaybet
-            if (activeVsMatch === matchId) {
-                forfeitVsMatch(matchId);
-            }
-        }
-    }, 1000);
-}
-
-function setupVsGameListener(matchId, mode) {
-    const matchRef = doc(db, 'vsMatches', matchId);
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.data();
     
-    const unsubscribe = onSnapshot(matchRef, async (docSnap) => {
-        if (!docSnap.exists()) return;
-        
-        const match = docSnap.data();
-        
-        if (match.status === 'finished') {
-            // Oyun bitti
-            showVsResult(matchId, match);
-            unsubscribe();
-            return;
-        }
-        
-        // Oyun durumunu güncelle
-        updateVsGameUI(matchId, match, mode);
-    });
-    
-    vsListeners.push(unsubscribe);
-}
-
-function updateVsGameUI(matchId, match, mode) {
-    const isPlayer1 = currentUser.uid === match.player1Id;
-    const playerChoice = isPlayer1 ? match.player1Choice : match.player2Choice;
-    const opponentChoice = isPlayer1 ? match.player2Choice : match.player1Choice;
-    
-    if (mode === 'coin') {
-        if (playerChoice) {
-            document.getElementById('vsCoinGameStatus').textContent = `Seçiminiz: ${playerChoice === 'heads' ? 'Yazı 📄' : 'Tura 🪙'}`;
-            document.getElementById('vsCoinChoiceHeads').disabled = true;
-            document.getElementById('vsCoinChoiceTails').disabled = true;
-        }
-        
-        if (opponentChoice) {
-            document.getElementById('vsCoinGameStatus').textContent = 'Rakip seçim yaptı! Sonuç bekleniyor...';
-        }
-        
-        if (playerChoice && opponentChoice) {
-            // Her iki oyuncu da seçim yaptı
-            document.getElementById('vsCoinGameStatus').textContent = 'Sonuç hesaplanıyor...';
-        }
-    } else if (mode === 'rps') {
-        if (playerChoice) {
-            const choiceText = playerChoice === 'rock' ? 'Taş 🪨' : playerChoice === 'paper' ? 'Kağıt 📄' : 'Makas ✂️';
-            document.getElementById('vsRpsGameStatus').textContent = `Seçiminiz: ${choiceText}`;
-            document.getElementById('vsRpsChoiceRock').disabled = true;
-            document.getElementById('vsRpsChoicePaper').disabled = true;
-            document.getElementById('vsRpsChoiceScissors').disabled = true;
-        }
-        
-        if (opponentChoice) {
-            document.getElementById('vsRpsGameStatus').textContent = 'Rakip seçim yaptı! Sonuç bekleniyor...';
-        }
-    }
-}
-
-async function makeVsChoice(mode, choice) {
-    if (!activeVsMatch) return;
-    
-    const matchRef = doc(db, 'vsMatches', activeVsMatch);
-    const matchSnap = await getDoc(matchRef);
-    if (!matchSnap.exists()) return;
-    
-    const match = matchSnap.data();
-    const isPlayer1 = currentUser.uid === match.player1Id;
-    
-    // Seçimi kaydet
-    await updateDoc(matchRef, {
-        [isPlayer1 ? 'player1Choice' : 'player2Choice']: choice,
-        moves: arrayUnion({
-            playerId: currentUser.uid,
-            choice: choice,
-            timestamp: serverTimestamp()
-        })
-    });
-    
-    // Her iki oyuncu da seçim yaptıysa sonucu hesapla
-    if (match.player1Choice && match.player2Choice) {
-        await calculateVsResult(activeVsMatch, mode);
-    }
-}
-
-async function calculateVsResult(matchId, mode) {
-    const matchRef = doc(db, 'vsMatches', matchId);
-    const matchSnap = await getDoc(matchRef);
-    const match = matchSnap.data();
-    
-    let winnerId = null;
-    let resultText = '';
-    
-    if (mode === 'coin') {
-        // Rastgele yazı/tura belirle
-        const coinResult = Math.random() < 0.5 ? 'heads' : 'tails';
-        
-        if (match.player1Choice === coinResult && match.player2Choice !== coinResult) {
-            winnerId = match.player1Id;
-            resultText = `${match.player1Name} kazandı! (${coinResult === 'heads' ? 'Yazı' : 'Tura'})`;
-        } else if (match.player2Choice === coinResult && match.player1Choice !== coinResult) {
-            winnerId = match.player2Id;
-            resultText = `${match.player2Name} kazandı! (${coinResult === 'heads' ? 'Yazı' : 'Tura'})`;
-        } else {
-            resultText = 'Berabere! Bahisler iade edildi.';
-        }
-        
-    } else if (mode === 'rps') {
-        const wins = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
-        
-        if (wins[match.player1Choice] === match.player2Choice) {
-            winnerId = match.player1Id;
-            resultText = `${match.player1Name} kazandı! (${match.player1Choice} > ${match.player2Choice})`;
-        } else if (wins[match.player2Choice] === match.player1Choice) {
-            winnerId = match.player2Id;
-            resultText = `${match.player2Name} kazandı! (${match.player2Choice} > ${match.player1Choice})`;
-        } else {
-            resultText = 'Berabere! Bahisler iade edildi.';
-        }
+    if (userData.score < bet) {
+        alert('Yetersiz bakiye!');
+        return;
     }
     
-    // Sonucu kaydet ve puanları dağıt
-    await runTransaction(db, async (transaction) => {
-        transaction.update(matchRef, {
-            status: 'finished',
-            result: resultText,
-            winner: winnerId,
-            finishedAt: serverTimestamp()
+    // Send VS Request to Chat
+    try {
+        await addDoc(collection(db, 'chat'), {
+            username: userData.username,
+            userId: currentUser.uid,
+            role: userData.role || 'user',
+            isVsRequest: true,
+            game: game,
+            bet: bet,
+            status: 'pending',
+            timestamp: serverTimestamp(),
+            message: `VS İsteği: ${game} (${bet})` // Fallback
         });
         
-        const player1Ref = doc(db, 'users', match.player1Id);
-        const player2Ref = doc(db, 'users', match.player2Id);
+        document.getElementById('vsRequestModal').style.display = 'none';
+    } catch (error) {
+        alert('İstek gönderilemedi: ' + error.message);
+    }
+});
+
+window.acceptVsRequest = async (msgId, game, bet, challengerId) => {
+    if (currentUser.uid === challengerId) {
+        alert('Kendi isteğini kabul edemezsin!');
+        return;
+    }
+
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.data();
+    
+    if (userData.score < bet) {
+        alert('Yetersiz bakiye! Bu maça girmek için puanın yetmiyor.');
+        return;
+    }
+    
+    if (!confirm(`${bet} Puan bahisle maça girmek istiyor musun?`)) return;
+    
+    try {
+        // 1. Update Chat Message
+        const chatRef = doc(db, 'chat', msgId);
+        await updateDoc(chatRef, {
+            status: 'accepted',
+            acceptedBy: currentUser.uid,
+            acceptedByName: userData.username
+        });
         
-        if (winnerId === match.player1Id) {
-            const winAmount = Math.floor(match.bet * 1.8);
-            transaction.update(player1Ref, { 
-                score: increment(winAmount),
-                vsWins: increment(1)
-            });
-            transaction.update(player2Ref, { 
-                vsLosses: increment(1)
-            });
-        } else if (winnerId === match.player2Id) {
-            const winAmount = Math.floor(match.bet * 1.8);
-            transaction.update(player2Ref, { 
-                score: increment(winAmount),
-                vsWins: increment(1)
-            });
-            transaction.update(player1Ref, { 
-                vsLosses: increment(1)
-            });
-        } else {
-            // Berabere - bahisler iade
-            transaction.update(player1Ref, { score: increment(match.bet) });
-            transaction.update(player2Ref, { score: increment(match.bet) });
+        // 2. Deduct Balance from Acceptor
+        await updateDoc(userRef, {
+            score: increment(-bet)
+        });
+        
+        // 3. Show Success
+        alert(`✅ Maç Kabul Edildi! Başarılar!`);
+        
+        // Open game modal
+        if (game === 'chess') {
+            document.getElementById('chessModal').style.display = 'flex';
+        } else if (game === '2048') {
+            document.getElementById('game2048Modal').style.display = 'flex';
+            if (!game2048) game2048 = new Game2048();
+            game2048.startGame(bet); // Bahisli oyun başlat
         }
-    });
-}
-
-async function forfeitVsMatch(matchId) {
-    const matchRef = doc(db, 'vsMatches', matchId);
-    const matchSnap = await getDoc(matchRef);
-    if (!matchSnap.exists()) return;
-    
-    const match = matchSnap.data();
-    const isPlayer1 = currentUser.uid === match.player1Id;
-    const winnerId = isPlayer1 ? match.player2Id : match.player1Id;
-    const winnerName = isPlayer1 ? match.player2Name : match.player1Name;
-    
-    await runTransaction(db, async (transaction) => {
-        transaction.update(matchRef, {
-            status: 'finished',
-            result: `${winnerName} kazandı! (Zaman doldu)`,
-            winner: winnerId,
-            finishedAt: serverTimestamp()
-        });
         
-        const winnerRef = doc(db, 'users', winnerId);
-        const loserRef = doc(db, 'users', currentUser.uid);
-        
-        const winAmount = Math.floor(match.bet * 1.8);
-        transaction.update(winnerRef, { 
-            score: increment(winAmount),
-            vsWins: increment(1)
-        });
-        transaction.update(loserRef, { 
-            vsLosses: increment(1)
-        });
-    });
-}
-
-function showVsResult(matchId, match) {
-    const isWinner = match.winner === currentUser.uid;
-    const isDraw = !match.winner;
-    const resultText = match.result || 'Bilinmeyen sonuç';
-    
-    if (document.getElementById('vsCoinGameModal').style.display === 'flex') {
-        document.getElementById('vsCoinGameStatus').textContent = resultText;
-        document.getElementById('vsCoinResult').textContent = isWinner ? '🎉 TEBRİKLER! KAZANDIN!' : 
-                                                           isDraw ? '🤝 Berabere!' : '😢 Kaybettiniz';
-        document.getElementById('vsCoinResult').className = isWinner ? 'game-result win' : 
-                                                           isDraw ? 'game-result' : 'game-result lose';
-        
-        setTimeout(() => {
-            document.getElementById('vsCoinGameModal').style.display = 'none';
-            activeVsMatch = null;
-        }, 5000);
-    } else if (document.getElementById('vsRpsGameModal').style.display === 'flex') {
-        document.getElementById('vsRpsGameStatus').textContent = resultText;
-        document.getElementById('vsRpsResult').textContent = isWinner ? '🎉 TEBRİKLER! KAZANDIN!' : 
-                                                           isDraw ? '🤝 Berabere!' : '😢 Kaybettiniz';
-        document.getElementById('vsRpsResult').className = isWinner ? 'game-result win' : 
-                                                           isDraw ? 'game-result' : 'game-result lose';
-        
-        setTimeout(() => {
-            document.getElementById('vsRpsGameModal').style.display = 'none';
-            activeVsMatch = null;
-        }, 5000);
+    } catch (error) {
+        console.error(error);
+        alert('Hata oluştu: ' + error.message);
     }
-}
+};
 
-async function loadVsRankings() {
-    const list = document.getElementById('vsRankList');
-    if (!list) return;
-    
-    list.innerHTML = '<div class="loading">Yükleniyor...</div>';
-    
-    const usersQuery = query(collection(db, 'users'), orderBy('vsWins', 'desc'), limit(20));
-    const snapshot = await getDocs(usersQuery);
-    
-    list.innerHTML = '';
-    let rank = 1;
-    
-    snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const item = document.createElement('div');
-        item.className = `vs-rank-item ${rank <= 3 ? `rank-${rank}` : ''}`;
-        item.innerHTML = `
-            <div class="rank-number">#${rank}</div>
-            <div class="user-avatar">
-                ${data.profileImage ? `<img src="${data.profileImage}" alt="">` : '👤'}
-            </div>
-            <div class="user-info">
-                <div class="user-name">${data.username}</div>
-                <div class="user-stats">${data.vsWins || 0}G / ${data.vsLosses || 0}K</div>
-            </div>
-            <div class="user-score">💎 ${data.score || 0}</div>
-        `;
-        list.appendChild(item);
-        rank++;
-    });
-    
-    if (snapshot.empty) {
-        list.innerHTML = '<div class="search-placeholder">Henüz VS sıralama yok.</div>';
-    }
-}
-
-async function loadVsHistory() {
-    const list = document.getElementById('vsHistoryList');
-    if (!list) return;
-    
-    list.innerHTML = '<div class="loading">Yükleniyor...</div>';
-    
-    const historyQuery = query(
-        collection(db, 'vsMatches'),
-        where('player1Id', '==', currentUser.uid),
-        orderBy('createdAt', 'desc'),
-        limit(10)
-    );
-    
-    const snapshot = await getDocs(historyQuery);
-    list.innerHTML = '';
-    
-    snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const isPlayer1 = currentUser.uid === data.player1Id;
-        const won = data.winner === currentUser.uid;
-        const draw = !data.winner && data.result && data.result.includes('Berabere');
-        
-        const item = document.createElement('div');
-        item.className = 'vs-history-item';
-        item.innerHTML = `
-            <div class="vs-history-mode">${data.mode === 'coin' ? '🪙' : data.mode === 'rps' ? '✊' : '♟️'} ${data.mode.toUpperCase()}</div>
-            <div class="vs-history-opponent">vs ${isPlayer1 ? data.player2Name : data.player1Name}</div>
-            <div class="vs-history-result ${won ? 'win' : draw ? 'draw' : 'lose'}">
-                ${won ? 'Kazandı' : draw ? 'Berabere' : 'Kaybetti'}
-            </div>
-            <div class="vs-history-bet">${data.bet} 💎</div>
-        `;
-        list.appendChild(item);
-    });
-    
-    if (snapshot.empty) {
-        list.innerHTML = '<div class="search-placeholder">Henüz VS maçı yok.</div>';
-    }
-}
-
-// ========================================
-// ADMIN DASHBOARD & ANALYTICS
-// ========================================
-function setupAdminDashboardAndAnalytics() {
-    const configRef = doc(db, 'config', 'featureToggles');
-    const listEl = document.getElementById('adminFeatureToggleList');
-    if (!listEl) return;
-
-    async function loadDashboard() {
-        listEl.innerHTML = '<div class="loading">Yükleniyor...</div>';
-        const snap = await getDoc(configRef);
-        const data = snap.exists() ? snap.data() : { vsMode: true, dailyBox: true, epicBox: true, legendaryBox: true };
-        listEl.innerHTML = '';
-        ['vsMode', 'dailyBox', 'epicBox', 'legendaryBox'].forEach(key => {
-            const div = document.createElement('div');
-            div.className = 'feature-toggle-item';
-            const label = { vsMode: 'VS Modu', dailyBox: 'Günlük Kutu', epicBox: 'Epic Kutu', legendaryBox: 'Legendary Kutu' }[key] || key;
-            div.innerHTML = `
-                <span>${label}</span>
-                <label class="feature-toggle-switch">
-                    <input type="checkbox" ${data[key] !== false ? 'checked' : ''} data-feature="${key}">
-                    <span class="feature-toggle-slider"></span>
-                </label>
-            `;
-            div.querySelector('input').addEventListener('change', async (e) => {
-                await setDoc(configRef, { [key]: e.target.checked }, { merge: true });
-            });
-            listEl.appendChild(div);
-        });
-    }
-
-    async function loadAnalytics() {
-        const statsEl = document.getElementById('adminAnalyticsStats');
-        if (!statsEl) return;
-        statsEl.innerHTML = '<div class="loading">Yükleniyor...</div>';
-        const usersSnap = await getDocs(collection(db, 'users'));
-        let totalScore = 0;
-        usersSnap.forEach(d => { totalScore += d.data().score || 0; });
-        const chatSnap = await getDocs(query(collection(db, 'chat'), limit(1)));
-        statsEl.innerHTML = `
-            <div class="analytics-grid">
-                <div class="stat-card"><div class="stat-value">${usersSnap.size}</div><div class="stat-label">Toplam kullanıcı</div></div>
-                <div class="stat-card"><div class="stat-value">${totalScore}</div><div class="stat-label">Toplam puan</div></div>
-                <div class="stat-card"><div class="stat-value">–</div><div class="stat-label">Chat mesajı</div></div>
-            </div>
-        `;
-    }
-
-    window.loadAdminDashboard = loadDashboard;
-    window.loadAdminAnalytics = loadAnalytics;
-}
+// 2048 Game Card Click Listener
+document.getElementById('game2048Card')?.addEventListener('click', () => {
+    document.getElementById('game2048Modal').style.display = 'flex';
+    if (!game2048) game2048 = new Game2048();
+    game2048.startGame(0); // Bahissiz pratik modu
+});
