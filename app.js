@@ -80,18 +80,35 @@ let chatUnsubscribe = null;
 // AUTH & USER MANAGEMENT
 // ========================================
 onAuthStateChanged(auth, async (user) => {
+    // New Discord-like Ids
+    const authOverlay = document.getElementById('auth-overlay');
+    const appDashboard = document.getElementById('app-dashboard');
+    const bootScreen = document.getElementById('boot-screen');
+
     if (user) {
+        // Logged In
         currentUser = user;
+
+        // Ensure boot screen is gone
+        if (bootScreen) {
+            bootScreen.style.opacity = '0';
+            setTimeout(() => bootScreen.style.display = 'none', 500);
+        }
+
+        // Hide Auth, Show App
+        if (authOverlay) authOverlay.classList.add('hidden');
+        if (appDashboard) appDashboard.classList.remove('hidden');
+
         await initializeUser(user);
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').classList.add('show');
         loadUserData();
         setupPresence(user.uid);
+
+        // Load Chat
         loadChat();
-        loadDmUsers();
     } else {
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('mainApp').classList.remove('show');
+        // Logged Out
+        if (authOverlay) authOverlay.classList.remove('hidden');
+        if (appDashboard) appDashboard.classList.add('hidden');
     }
 });
 
@@ -106,7 +123,7 @@ async function initializeUser(user) {
             score: 100,
             createdAt: serverTimestamp(),
             role: 'user',
-            profileImage: '',
+            profileImage: 'https://via.placeholder.com/150',
             multiplier: 1,
             banned: false,
             muted: false,
@@ -116,16 +133,16 @@ async function initializeUser(user) {
 
     // Check admin/founder status
     const userData = (await getDoc(userRef)).data();
-    isUserAdmin = userData.role === 'admin' || userData.role === 'KURUCU';
-    const isFounder = userData.role === 'KURUCU';
 
-    if (isUserAdmin) {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
+    // 300 IQ Logic: Normalize Role
+    const roleRaw = userData.role || 'user';
+    isUserAdmin = roleRaw === 'admin' || roleRaw === 'founder' || roleRaw === 'KURUCU';
 
-        // Founder ise extra UI açılabilir ama genel admin panelini kullanıyorlar şimdilik.
-        if (isFounder) {
-            // Founder'a özel init işlemleri buraya eklenebilir
-        }
+    const navAdmin = document.getElementById('navAdmin');
+    if (isUserAdmin && navAdmin) {
+        navAdmin.style.display = 'flex';
+        // Global admin items if any
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
     }
 }
 
@@ -349,6 +366,9 @@ document.getElementById('updateScoreBtn').addEventListener('click', async () => 
     }
 });
 
+// ========================================
+// UI & DATA LOADING
+// ========================================
 async function loadUserData() {
     const userRef = doc(db, 'users', currentUser.uid);
 
@@ -356,82 +376,120 @@ async function loadUserData() {
         const data = docSnap.data();
         if (!data) return;
 
-        // Check if banned
         if (data.banned) {
-            alert('Hesabınız yasaklanmış. Lütfen yönetici ile iletişime geçin.');
+            alert('Yasaklandınız.');
             signOut(auth);
             return;
         }
 
-        document.getElementById('headerUsername').textContent = data.username;
-        document.getElementById('headerEmail').textContent = data.email;
-        document.getElementById('userScore').textContent = data.score;
-        document.getElementById('dropdownUsername').textContent = data.username;
-        document.getElementById('dropdownEmail').textContent = data.email;
+        // Sidebar User Components (Bottom Left)
+        const elUsername = document.getElementById('sidebarUsername');
+        const elDiscriminator = document.getElementById('sidebarRole');
+        const elAvatar = document.getElementById('sidebarAvatar');
 
-        if (data.profileImage) {
-            document.getElementById('profileImage').src = data.profileImage;
-            document.getElementById('profileImage').style.display = 'block';
-            document.getElementById('profileEmoji').style.display = 'none';
+        if (elUsername) elUsername.textContent = data.username;
+        if (elDiscriminator) {
+            // Fake Discriminator like Discord
+            const uidSuffix = currentUser.uid.substring(0, 4).toUpperCase();
+            elDiscriminator.textContent = `#${uidSuffix} • ${data.role || 'User'}`;
         }
+        if (elAvatar && data.profileImage) elAvatar.src = data.profileImage;
 
         userMultiplier = data.multiplier || 1;
-        if (userMultiplier > 1) {
-            document.getElementById('activeMultiplier').style.display = 'block';
-            document.getElementById('multiplierValue').textContent = `x${userMultiplier}`;
-        }
+
+        // Trigger global member refresh
+        loadMemberSidebar();
     });
 }
 
-// Login/Register
-let isRegisterMode = false;
+// SIMULATED MEMBER LIST
+async function loadMemberSidebar() {
+    const container = document.getElementById('memberListContainer');
+    if (!container) return;
 
-document.getElementById('loginToggle').addEventListener('click', () => {
-    isRegisterMode = !isRegisterMode;
-    if (isRegisterMode) {
-        document.getElementById('loginTitle').textContent = '📝 Kayıt Ol';
-        document.getElementById('loginButton').textContent = 'Kayıt Ol';
-        document.getElementById('loginToggle').textContent = 'Hesabın var mı? Giriş yap';
-        document.getElementById('loginUsername').style.display = 'block';
-    } else {
-        document.getElementById('loginTitle').textContent = '🎮 Giriş Yap';
-        document.getElementById('loginButton').textContent = 'Giriş Yap';
-        document.getElementById('loginToggle').textContent = 'Hesabın yok mu? Kayıt ol';
-        document.getElementById('loginUsername').style.display = 'none';
-    }
-});
+    const q = query(collection(db, 'users'), orderBy('score', 'desc'), limit(15));
+    const snap = await getDocs(q);
 
-document.getElementById('loginButton').addEventListener('click', async () => {
+    container.innerHTML = '';
+    let onlineCount = 0;
+
+    snap.forEach(d => {
+        const u = d.data();
+        const role = u.role || 'user';
+        onlineCount++;
+
+        const div = document.createElement('div');
+        div.className = `member-item ${role === 'KURUCU' ? 'founder-glow' : ''}`;
+        div.innerHTML = `
+            <div class="avatar-wrapper">
+                <img src="${u.profileImage || 'https://via.placeholder.com/32'}" alt="">
+                <div class="status-indicator online"></div>
+            </div>
+            <div class="member-info">
+                <span class="name ${role === 'KURUCU' ? 'founder-color' : ''}">${u.username}</span>
+                <span class="activity">${u.multiplier > 1 ? `x${u.multiplier} Boost!` : 'Takılıyor...'}</span>
+            </div>
+        `;
+        div.onclick = () => alert("Profil: " + u.username);
+        container.appendChild(div);
+    });
+
+    const countEl = document.getElementById('onlineCountRaw');
+    if (countEl) countEl.textContent = onlineCount;
+}
+
+// ========================================
+// LOGIN / REGISTER LOGIC
+// ========================================
+// Switch Forms
+document.getElementById('toRegister').onclick = () => {
+    document.getElementById('login-form').classList.remove('active');
+    document.getElementById('register-form').classList.add('active');
+};
+document.getElementById('toLogin').onclick = () => {
+    document.getElementById('register-form').classList.remove('active');
+    document.getElementById('login-form').classList.add('active');
+};
+
+// Handle Login
+document.getElementById('loginButton').onclick = async () => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    const username = document.getElementById('loginUsername').value;
-    const errorEl = document.getElementById('loginError');
 
-    if (!email || !password) {
-        errorEl.textContent = 'Lütfen tüm alanları doldurun';
-        return;
-    }
-
-    if (password.length < 6) {
-        errorEl.textContent = 'Şifre en az 6 karakter olmalı';
-        return;
-    }
+    if (!email || !password) return alert("Lütfen bilgileri girin.");
 
     try {
-        if (isRegisterMode) {
-            if (!username) {
-                errorEl.textContent = 'Kullanıcı adı gerekli';
-                return;
-            }
-            await createUserWithEmailAndPassword(auth, email, password);
-        } else {
-            await signInWithEmailAndPassword(auth, email, password);
-        }
-        errorEl.textContent = '';
-    } catch (error) {
-        errorEl.textContent = error.message;
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+        alert("Giriş Hatası: " + e.message);
     }
-});
+};
+
+// Handle Register
+document.getElementById('registerButton').onclick = async () => {
+    const user = document.getElementById('regUsername').value;
+    const email = document.getElementById('regEmail').value;
+    const pass = document.getElementById('regPassword').value;
+
+    if (!user || !email || !pass) return alert("Hepsini doldur!");
+    if (pass.length < 6) return alert("Şifre en az 6 hane olmalı.");
+
+    try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        // Create Initial Doc immediately
+        await setDoc(doc(db, 'users', cred.user.uid), {
+            username: user,
+            email: email,
+            score: 100,
+            role: 'user',
+            createdAt: serverTimestamp(),
+            profileImage: 'https://via.placeholder.com/150',
+            multiplier: 1
+        });
+    } catch (e) {
+        alert("Kayıt Hatası: " + e.message);
+    }
+};
 
 // ========================================
 // PRESENCE SYSTEM (Online/Offline)
@@ -1471,116 +1529,357 @@ function showBoxResult(message, type) {
 }
 
 // ========================================
-// SIMPLE GAMES (Coin, RPS, Wheel)
+// CHAT SYSTEM (GLOBAL STANDARD)
 // ========================================
 
-// Coin Flip
-document.getElementById('coinFlipCard').addEventListener('click', () => {
-    document.getElementById('coinFlipModal').style.display = 'flex';
+document.getElementById('globalChatSend').onclick = sendMessage;
+document.getElementById('globalChatInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
 });
 
-document.querySelectorAll('#coinFlipModal .choice-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const choice = btn.dataset.choice;
-        const betAmount = parseInt(document.getElementById('coinBetAmount').value);
+// Tab Switching
+document.getElementById('tabGlobal').onclick = () => {
+    document.getElementById('tabGlobal').classList.add('active');
+    document.getElementById('tabDm').classList.remove('active');
+    document.getElementById('viewGlobal').classList.remove('hidden');
+    document.getElementById('viewDm').classList.add('hidden');
+};
 
-        if (betAmount < 10) {
-            showGameResult('coinResult', 'Minimum bahis 10!', 'lose');
-            return;
-        }
+document.getElementById('tabDm').onclick = () => {
+    document.getElementById('tabDm').classList.add('active');
+    document.getElementById('tabGlobal').classList.remove('active');
+    document.getElementById('viewDm').classList.remove('hidden');
+    document.getElementById('viewGlobal').classList.add('hidden');
+    loadDmUsers();
+};
 
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const currentScore = userSnap.data().score;
+async function sendMessage() {
+    const input = document.getElementById('globalChatInput');
+    const text = input.value.trim();
+    if (!text) return;
 
-        if (currentScore < betAmount) {
-            showGameResult('coinResult', 'Yetersiz bakiye!', 'lose');
-            return;
-        }
+    if (currentUser.muted) return alert("Susturuldunuz.");
 
-        const result = Math.random() < 0.5 ? 'heads' : 'tails';
-        const won = result === choice;
+    await addDoc(collection(db, 'chat'), {
+        userId: currentUser.uid,
+        username: currentUser.displayName || document.getElementById('sidebarUsername').textContent,
+        message: text, // Standardized key
+        timestamp: serverTimestamp(),
+        role: document.getElementById('sidebarRole').textContent
+    });
 
-        if (won) {
-            const winAmount = Math.floor(betAmount * 1.8 * userMultiplier);
-            await updateDoc(userRef, {
-                score: increment(winAmount - betAmount)
-            });
-            showGameResult('coinResult', `🎉 Kazandın! +${winAmount - betAmount} Puan`, 'win');
-        } else {
-            await updateDoc(userRef, {
-                score: increment(-betAmount)
-            });
-            showGameResult('coinResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
-        }
+    input.value = '';
+}
+
+function loadChat() {
+    const chatRef = query(collection(db, 'chat'), orderBy('timestamp', 'asc'), limit(50));
+
+    // Prevent memory leaks
+    if (chatUnsubscribe) chatUnsubscribe();
+
+    chatUnsubscribe = onSnapshot(chatRef, (snapshot) => {
+        const chatEl = document.getElementById('globalMessages');
+        chatEl.innerHTML = '<div class="system-msg">Nexus Network\'e hoş geldiniz.</div>';
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            appendChatMessage(data);
+        });
+        chatEl.scrollTop = chatEl.scrollHeight;
+    });
+}
+
+function appendChatMessage(data) {
+    const chatEl = document.getElementById('globalMessages');
+    const msgDiv = document.createElement('div');
+    const role = data.role || 'user';
+    const isSpecial = role === 'admin' || role === 'founder' || role === 'KURUCU';
+
+    msgDiv.className = `msg-bubble ${isSpecial ? 'admin' : ''}`;
+    if (role === 'KURUCU' || role === 'founder') msgDiv.classList.add('founder');
+
+    // Fix undefined bug: Check both keys
+    const textContent = data.message || data.text || '...';
+
+    msgDiv.innerHTML = `
+        <div class="msg-header">
+            <span class="msg-user ${isSpecial ? 'founder' : ''}">${data.username}</span>
+            <span class="msg-time">${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString() : ''}</span>
+        </div>
+        <div>${textContent}</div>
+    `;
+    chatEl.appendChild(msgDiv);
+}
+
+// ========================================
+// DM SYSTEM
+// ========================================
+async function loadDmUsers() {
+    const listEl = document.getElementById('dmUserList');
+    listEl.innerHTML = '<div class="loading-spinner"></div>';
+
+    // In a real app we'd query distinct conversations. 
+    // For simplicity, listing all users (except self)
+    const usersSnap = await getDocs(query(collection(db, 'users'), limit(20)));
+
+    listEl.innerHTML = '';
+    usersSnap.forEach(docSnap => {
+        if (docSnap.id === currentUser.uid) return;
+        const u = docSnap.data();
+
+        const div = document.createElement('div');
+        div.className = 'dm-user-row';
+        div.innerHTML = `
+            <img src="${u.profileImage || 'https://via.placeholder.com/40'}" class="mini-avatar">
+            <span>${u.username}</span>
+        `;
+        div.onclick = () => openDm(docSnap.id, u.username);
+        listEl.appendChild(div);
+    });
+}
+
+async function openDm(targetUid, username) {
+    currentDmRecipient = targetUid;
+    document.getElementById('dmUserList').classList.add('hidden');
+    document.getElementById('dmConversation').classList.remove('hidden');
+    document.getElementById('currentDmUser').textContent = username;
+
+    loadDmMessages(targetUid);
+}
+
+document.getElementById('backToDmList').onclick = () => {
+    document.getElementById('dmConversation').classList.add('hidden');
+    document.getElementById('dmUserList').classList.remove('hidden');
+    currentDmRecipient = null;
+};
+
+document.getElementById('dmSend').onclick = sendDm;
+async function sendDm() {
+    if (!currentDmRecipient) return;
+    const input = document.getElementById('dmInput');
+    const txt = input.value.trim();
+    if (!txt) return;
+
+    const chatId = [currentUser.uid, currentDmRecipient].sort().join('_');
+    await addDoc(collection(db, 'dm', chatId, 'messages'), {
+        senderId: currentUser.uid,
+        message: txt,
+        timestamp: serverTimestamp()
+    });
+    input.value = '';
+}
+
+async function loadDmMessages(targetUid) {
+    const chatId = [currentUser.uid, targetUid].sort().join('_');
+    const q = query(collection(db, 'dm', chatId, 'messages'), orderBy('timestamp', 'asc'));
+
+    onSnapshot(q, (snap) => {
+        const area = document.getElementById('dmMessagesArea');
+        area.innerHTML = '';
+        snap.forEach(d => {
+            const val = d.data();
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+            bubble.style.alignSelf = val.senderId === currentUser.uid ? 'flex-end' : 'flex-start';
+            bubble.style.background = val.senderId === currentUser.uid ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)';
+            bubble.textContent = val.message;
+            area.appendChild(bubble);
+        });
+        area.scrollTop = area.scrollHeight;
+    });
+}
+
+
+// ========================================
+// GAME TRIGGER SYSTEM (NEW DISCORD-GRADE)
+// ========================================
+document.querySelectorAll('.game-trigger').forEach(item => {
+    item.addEventListener('click', () => {
+        // Visual Active State
+        document.querySelectorAll('.channel-item').forEach(c => c.classList.remove('active'));
+        item.classList.add('active');
+
+        const gameType = item.dataset.game;
+        launchGame(gameType);
     });
 });
 
-// Rock Paper Scissors
-document.getElementById('rpsCard').addEventListener('click', () => {
-    document.getElementById('rpsModal').style.display = 'flex';
+document.querySelector('.close-game-btn').addEventListener('click', () => {
+    document.getElementById('game-overlay').classList.add('hidden');
+    // Stop any running animations if needed
 });
 
-document.querySelectorAll('#rpsModal .choice-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const choice = btn.dataset.choice;
-        const betAmount = parseInt(document.getElementById('rpsBetAmount').value);
+function launchGame(type) {
+    const overlay = document.getElementById('game-overlay');
+    const stage = document.getElementById('game-stage');
+    overlay.classList.remove('hidden');
 
-        if (betAmount < 10) {
-            showGameResult('rpsResult', 'Minimum bahis 10!', 'lose');
-            return;
-        }
+    stage.innerHTML = '';
 
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const currentScore = userSnap.data().score;
+    if (type === 'wheel') {
+        stage.innerHTML = `
+            <div class="glass-morphism-3 text-center" style="max-width:400px; margin:auto;">
+                <h2 style="color:white; margin-bottom:20px;">🎡 Şans Çarkı</h2>
+                <canvas id="wheelCanvas" width="300" height="300"></canvas>
+                <div class="mt-4" style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+                    <input type="number" id="wheelBetAmount" value="100" class="input-discord" style="width:100px; background:#111; color:white; padding:10px; border:none; border-radius:4px;">
+                    <button id="spinBtn" class="btn-discord" style="width:auto; padding:0 30px;">ÇEVİR</button>
+                </div>
+                <div id="wheelResult" class="mt-4 font-bold" style="margin-top:20px; height:20px;"></div>
+            </div>
+        `;
+        drawWheel();
+        // Dynamic Binding
+        document.getElementById('spinBtn').onclick = handleSpin;
+    }
+    else if (type === 'coin') {
+        stage.innerHTML = `
+             <div class="glass-morphism-3 text-center" style="max-width:400px; margin:auto;">
+                <h2 style="color:white; margin-bottom:20px;">🪙 Yazı Tura</h2>
+                <div class="flex gap-4 mt-4" style="display:flex; gap:20px; justify-content:center; margin-bottom:20px;">
+                    <button class="btn-discord" onclick="window.playCoin('heads')" style="background:#eab308">YAZI</button>
+                    <button class="btn-discord" onclick="window.playCoin('tails')" style="background:#a855f7">TURA</button>
+                </div>
+                <input type="number" id="coinBet" value="50" class="input-discord" style="width:100px; background:#111; color:white; padding:10px; border:none; border-radius:4px; text-align:center;">
+                <div id="coinRes" class="mt-4 text-xl" style="margin-top:20px; font-weight:bold;">Seçimini yap!</div>
+            </div>
+        `;
+    }
+    else if (type === 'rps') {
+        stage.innerHTML = `
+            <div class="glass-morphism-3 text-center" style="max-width:400px; margin:auto;">
+                <h2 style="color:white; margin-bottom:20px;">✊ Taş Kağıt Makas</h2>
+                <div class="flex gap-4 mt-4" style="display:flex; gap:20px; justify-content:center; font-size:40px; margin-bottom:20px;">
+                    <div style="cursor:pointer;" onclick="window.playRps('rock')">🪨</div>
+                    <div style="cursor:pointer;" onclick="window.playRps('paper')">📄</div>
+                    <div style="cursor:pointer;" onclick="window.playRps('scissors')">✂️</div>
+                </div>
+                <input type="number" id="rpsBetAmount" value="50" class="input-discord mt-4" style="width:100px; background:#111; color:white; padding:10px; border:none; border-radius:4px; text-align:center;">
+                <div id="rpsResult" class="mt-4 text-xl" style="margin-top:20px; font-weight:bold;">Hamleni yap!</div>
+            </div>
+        `;
+    }
+    else if (type === 'chess') {
+        stage.innerHTML = `
+            <div class="glass-morphism-3 text-center" style="max-width:600px; margin:auto;">
+                <h2 style="color:white; margin-bottom:20px;">♟️ Satranç Pro</h2>
+                <div id="chessBoard" class="chess-board" style="margin:auto;"></div>
+                <div id="chessControls" style="margin-top:20px;">
+                    <input type="number" id="chessBetAmount" value="100" class="input-discord" style="width:100px; padding:5px;">
+                    <select id="chessDifficulty" style="padding:5px; background:#333; color:white; border:none;">
+                        <option value="medium">Orta</option>
+                        <option value="hard">Zor</option>
+                    </select>
+                    <button id="chessStartBtn" class="btn-discord" style="width:auto; padding:5px 20px;">BAŞLA</button>
+                    <div id="chessResult" style="margin-top:10px;"></div>
+                </div>
+            </div>
+        `;
+        // Re-bind Chess
+        document.getElementById('chessStartBtn').onclick = startChessGame;
+    }
+}
 
-        if (currentScore < betAmount) {
-            showGameResult('rpsResult', 'Yetersiz bakiye!', 'lose');
-            return;
-        }
+// Logic implementations mapped to global window functions for simple HTML injection
+window.playCoin = async (choice) => {
+    const bet = parseInt(document.getElementById('coinBet').value);
+    const resEl = document.getElementById('coinRes');
 
-        const choices = ['rock', 'paper', 'scissors'];
-        const botChoice = choices[Math.floor(Math.random() * 3)];
+    // Balance Check
+    const userRef = doc(db, 'users', currentUser.uid);
+    const snap = await getDoc(userRef);
+    if (snap.data().score < bet) return resEl.textContent = "Yetersiz Bakiye!";
 
-        const wins = {
-            rock: 'scissors',
-            paper: 'rock',
-            scissors: 'paper'
-        };
+    const win = Math.random() > 0.5 ? 'heads' : 'tails';
+    if (win === choice) {
+        const winAmount = bet; // Simple 1x logic for now
+        resEl.textContent = "KAZANDIN!";
+        resEl.style.color = "#22c55e";
+        await updateDoc(userRef, { score: increment(bet) });
+    } else {
+        resEl.textContent = "KAYBETTİN...";
+        resEl.style.color = "#ef4444";
+        await updateDoc(userRef, { score: increment(-bet) });
+    }
+};
 
-        let result = 'draw';
-        if (wins[choice] === botChoice) result = 'win';
-        else if (wins[botChoice] === choice) result = 'lose';
+window.playRps = async (choice) => {
+    const bet = parseInt(document.getElementById('rpsBetAmount').value);
+    const resEl = document.getElementById('rpsResult');
 
-        if (result === 'win') {
-            const winAmount = Math.floor(betAmount * 1.9 * userMultiplier);
-            await updateDoc(userRef, {
-                score: increment(winAmount - betAmount)
-            });
-            showGameResult('rpsResult', `🎉 Kazandın! +${winAmount - betAmount} Puan`, 'win');
-        } else if (result === 'lose') {
-            await updateDoc(userRef, {
-                score: increment(-betAmount)
-            });
-            showGameResult('rpsResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
-        } else {
-            showGameResult('rpsResult', `🤝 Berabere! Bahis iade edildi`, 'win');
-        }
-    });
-});
+    // Balance Check
+    const userRef = doc(db, 'users', currentUser.uid);
+    const snap = await getDoc(userRef);
+    if (snap.data().score < bet) return resEl.textContent = "Yetersiz Bakiye!";
 
-// Spin Wheel
-document.getElementById('spinWheelCard').addEventListener('click', () => {
-    document.getElementById('spinWheelModal').style.display = 'flex';
-    drawWheel();
-});
+    const choices = ['rock', 'paper', 'scissors'];
+    const bot = choices[Math.floor(Math.random() * 3)];
+
+    let result = 'draw';
+    if ((choice === 'rock' && bot === 'scissors') || (choice === 'paper' && bot === 'rock') || (choice === 'scissors' && bot === 'paper')) result = 'win';
+    else if (choice !== bot) result = 'lose';
+
+    if (result === 'win') {
+        resEl.textContent = `Kazandın! Bot: ${bot}`;
+        resEl.style.color = "#22c55e";
+        await updateDoc(userRef, { score: increment(bet) });
+    } else if (result === 'lose') {
+        resEl.textContent = `Kaybettin... Bot: ${bot}`;
+        resEl.style.color = "#ef4444";
+        await updateDoc(userRef, { score: increment(-bet) });
+    } else {
+        resEl.textContent = `Berabere. Bot: ${bot}`;
+        resEl.style.color = "#eab308";
+    }
+};
+
+window.handleSpin = async () => {
+    const betAmount = parseInt(document.getElementById('wheelBetAmount').value);
+    const btn = document.getElementById('spinBtn');
+    const resultEl = document.getElementById('wheelResult');
+
+    if (betAmount < 10) return resultEl.textContent = 'Min 10!';
+
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.data().score < betAmount) return resultEl.textContent = 'Yetersiz Bakiye!';
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    const canvas = document.getElementById('wheelCanvas');
+    // Simple mock result for dynamic logic
+    const multipliers = [0.5, 1, 1.5, 2, 3, 0, 1.2, 5];
+    const result = multipliers[Math.floor(Math.random() * multipliers.length)];
+
+    await updateDoc(userRef, { score: increment(-betAmount) });
+
+    // Quick spin simulation
+    let rot = 0;
+    const interval = setInterval(() => {
+        rot += 20;
+        canvas.style.transform = `rotate(${rot}deg)`;
+    }, 16);
+
+    setTimeout(async () => {
+        clearInterval(interval);
+        const win = Math.floor(betAmount * result);
+        if (win > 0) await updateDoc(userRef, { score: increment(win) });
+
+        resultEl.textContent = `Sonuç: x${result} (${win} Puan)`;
+        btn.disabled = false;
+        btn.textContent = 'ÇEVİR';
+    }, 2000);
+};
+
+// Start Chess Bridge
+// [Deleted legacy duplicates of playCoin and startChessGame]
 
 function drawWheel() {
     const canvas = document.getElementById('wheelCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Önce temizle ve dönüşü sıfırla
+    // Reset
     canvas.style.transform = 'rotate(0deg)';
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1613,67 +1912,7 @@ function drawWheel() {
     }
 }
 
-document.getElementById('spinBtn').addEventListener('click', async () => {
-    const betAmount = parseInt(document.getElementById('wheelBetAmount').value);
-
-    if (betAmount < 10) {
-        showGameResult('wheelResult', 'Minimum bahis 10!', 'lose');
-        return;
-    }
-
-    const userRef = doc(db, 'users', currentUser.uid);
-    const userSnap = await getDoc(userRef);
-    const currentScore = userSnap.data().score;
-
-    if (currentScore < betAmount) {
-        showGameResult('wheelResult', 'Yetersiz bakiye!', 'lose');
-        return;
-    }
-
-    const btn = document.getElementById('spinBtn');
-    btn.disabled = true;
-    btn.textContent = 'Çevriliyor...';
-
-    const canvas = document.getElementById('wheelCanvas');
-    const multipliers = [0.5, 1, 1.5, 2, 3, 0, 1.2, 5];
-    const result = multipliers[Math.floor(Math.random() * multipliers.length)];
-
-    // Bahsi önce düş
-    await updateDoc(userRef, {
-        score: increment(-betAmount)
-    });
-
-    // Spin animation
-    let rotation = 0;
-    const spinTime = 3000;
-    const startTime = Date.now();
-
-    const spin = setInterval(async () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / spinTime, 1);
-
-        rotation = progress * 360 * 5;
-        canvas.style.transform = `rotate(${rotation}deg)`;
-
-        if (progress >= 1) {
-            clearInterval(spin);
-
-            const winAmount = Math.floor(betAmount * result * userMultiplier);
-
-            if (result > 0) {
-                await updateDoc(userRef, {
-                    score: increment(winAmount)
-                });
-                showGameResult('wheelResult', `🎉 x${result}! +${winAmount} Puan`, 'win');
-            } else {
-                showGameResult('wheelResult', `😢 Kaybettin! -${betAmount} Puan`, 'lose');
-            }
-
-            btn.disabled = false;
-            btn.textContent = 'ÇEVİR!';
-        }
-    }, 16);
-});
+// [Legacy spinBtn listener removed - handled by handleSpin]
 
 function showGameResult(elementId, message, type) {
     const resultEl = document.getElementById(elementId);
