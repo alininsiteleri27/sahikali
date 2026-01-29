@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Pro Oyun Platformu - VS Mod & 2048</title>
+    <title>Satranç Oyun Platformu - Pro Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -47,10 +47,10 @@
                         <span>✏️</span> Profili Düzenle
                     </div>
                     <div class="dropdown-divider"></div>
-                    <div class="dropdown-item admin-only founder-only" id="adminPanelBtn" style="display: none;">
-                        <span>👑</span> Admin Paneli
+                    <div class="dropdown-item admin-only" id="adminPanelBtn" style="display: none;">
+                        <span>👨‍💼</span> Admin Paneli
                     </div>
-                    <div class="dropdown-divider admin-only founder-only" style="display: none;"></div>
+                    <div class="dropdown-divider admin-only" style="display: none;"></div>
                     <div class="dropdown-item" id="themeToggleItem">
                         <span>🌓</span>
                         <div class="theme-toggle">
@@ -86,13 +86,6 @@
                 <div class="section-title">🎮 Oyunlar</div>
 
                 <div class="games-grid">
-                    <div class="game-card" id="game2048Card">
-                        <div class="game-icon">🔢</div>
-                        <div class="game-title">2048</div>
-                        <div class="game-desc">Sayıları birleştir, 2048'e ulaş!</div>
-                        <div class="game-play-btn">Oyna</div>
-                    </div>
-
                     <div class="game-card" id="spinWheelCard">
                         <div class="game-icon">🎡</div>
                         <div class="game-title">Çarkıfelek</div>
@@ -103,7 +96,7 @@
                     <div class="game-card" id="chessCard">
                         <div class="game-icon">♟️</div>
                         <div class="game-title">Satranç</div>
-                        <div class="game-desc">Gelişmiş botla satranç oyna!</div>
+                        <div class="game-desc">Strateji oyunu oyna, kazanç kat!</div>
                         <div class="game-play-btn">Oyna</div>
                     </div>
 
@@ -122,8 +115,8 @@
                     </div>
                 </div>
 
-                <!-- VS Section -->
-                <div class="section-title section-title--vs">⚔️ VS Modu – Gerçek Oyunculara Karşı</div>
+                <!-- VS Section (new) -->
+                <div class="section-title section-title--vs">⚔️ VS Modu – Oyuncuya Karşı</div>
                 <div class="games-grid games-grid--vs">
                     <div class="game-card game-card--vs" id="vsCoinCard">
                         <div class="game-icon">🪙</div>
@@ -143,17 +136,11 @@
                         <div class="game-desc">Gerçek rakiplerle satranç!</div>
                         <div class="game-play-btn">VS Oyna</div>
                     </div>
-                    <div class="game-card game-card--vs" id="vs2048Card">
-                        <div class="game-icon">🔢</div>
-                        <div class="game-title">2048 VS</div>
-                        <div class="game-desc">Kim daha hızlı 2048 yapacak?</div>
-                        <div class="game-play-btn">VS Oyna</div>
-                    </div>
                 </div>
 
                 <div class="ad-section" id="adSection">
                     <div class="ad-title">📺 Reklam İzle & Puan Kazan</div>
-                    <button class="ad-button" id="watchAdBtn">+20 Puan Kazan</button>
+                    <button class="ad-button" id="watchAdBtn">+50 Puan Kazan</button>
                     <div class="ad-cooldown" id="adCooldown" style="display: none;">
                         Sonraki reklam: <span id="adTimer">0</span>
                     </div>
@@ -212,7 +199,7 @@
         </div>
     </div>
 
-    <!-- Game loading overlay -->
+    <!-- Game loading overlay (new) -->
     <div class="game-loading-overlay" id="gameLoadingOverlay" style="display: none;" aria-hidden="true">
         <div class="game-loading-spinner"></div>
         <div class="game-loading-text">Yükleniyor...</div>
@@ -222,16 +209,15 @@
     <div class="game-modal" id="adminModal" style="display: none;" role="dialog" aria-labelledby="adminModalTitle">
         <div class="modal-content admin-modal-content">
             <div class="modal-header">
-                <h2 id="adminModalTitle">👑 Admin & Kurucu Paneli</h2>
+                <h2 id="adminModalTitle">👨‍💼 Admin Paneli</h2>
                 <span class="modal-close" data-modal="adminModal">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="admin-tabs">
                     <button class="admin-tab-btn active" data-tab="users">👥 Kullanıcılar</button>
                     <button class="admin-tab-btn" data-tab="presence">📊 Aktiflik</button>
-                    <button class="admin-tab-btn admin-only founder-only" data-tab="dashboard" style="display: none;">📋 Dashboard</button>
-                    <button class="admin-tab-btn admin-only founder-only" data-tab="analytics" style="display: none;">📈 Analitik</button>
-                    <button class="admin-tab-btn founder-only" data-tab="founder" style="display: none;">🔱 Kurucu</button>
+                    <button class="admin-tab-btn admin-only" data-tab="dashboard" style="display: none;">📋 Dashboard</button>
+                    <button class="admin-tab-btn admin-only" data-tab="analytics" style="display: none;">📈 Analitik</button>
                 </div>
 
                 <div class="admin-tab-content active" id="adminUsersTab">
@@ -263,7 +249,7 @@
                     </div>
                 </div>
 
-                <!-- Admin Dashboard tab -->
+                <!-- Admin Dashboard tab (new) -->
                 <div class="admin-tab-content" id="adminDashboardTab">
                     <div class="admin-feature-toggles">
                         <h3>Özellik Anahtarları</h3>
@@ -271,22 +257,17 @@
                     </div>
                 </div>
 
-                <!-- Admin Analytics tab -->
+                <!-- Admin Analytics tab (new) -->
                 <div class="admin-tab-content" id="adminAnalyticsTab">
                     <div class="analytics-stats" id="adminAnalyticsStats">
                         <div class="loading">Analitik yükleniyor...</div>
                     </div>
                 </div>
-
-                <!-- Founder Tools tab -->
-                <div class="admin-tab-content" id="adminFounderTab">
-                    <!-- Founder tools will be loaded dynamically -->
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Admin Action Modal with Founder Options -->
+    <!-- Admin Action Modal -->
     <div class="game-modal" id="adminActionModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -303,9 +284,6 @@
                     <button class="admin-action-btn mute-btn" id="muteUserBtn">🔇 Sustur</button>
                     <button class="admin-action-btn unmute-btn" id="unmuteUserBtn" style="display: none;">🔊 Susturmayı Kaldır</button>
                     <button class="admin-action-btn reset-btn" id="resetPasswordBtn">🔑 Şifre Sıfırla</button>
-                    <button class="admin-action-btn founder-btn" id="promoteToAdminBtn" style="display: none;">⬆️ Admin Yap</button>
-                    <button class="admin-action-btn founder-btn" id="demoteFromAdminBtn" style="display: none;">⬇️ Admin'den Al</button>
-                    <button class="admin-action-btn founder-btn" id="godModeBtn" style="display: none;">👑 God Mode</button>
                 </div>
                 <div id="muteOptions" style="display: none;">
                     <label>Susturma Süresi:</label>
@@ -397,42 +375,42 @@
                     <div class="market-item" data-box="bronze">
                         <div class="box-icon">📦</div>
                         <div class="box-name">Bronz Kutu</div>
-                        <div class="box-rewards">• 30-130 Puan<br>• %5 x2 Katlayıcı</div>
-                        <div class="box-price">💎 100</div>
+                        <div class="box-rewards">• 50-200 Puan<br>• %10 x2 Katlayıcı</div>
+                        <div class="box-price">💎 50</div>
                         <button class="buy-box-btn" data-box="bronze">Satın Al</button>
                     </div>
                     <div class="market-item" data-box="silver">
                         <div class="box-icon">🎁</div>
                         <div class="box-name">Gümüş Kutu</div>
-                        <div class="box-rewards">• 100-300 Puan<br>• %12 x2<br>• %3 x5</div>
-                        <div class="box-price">💎 300</div>
+                        <div class="box-rewards">• 200-500 Puan<br>• %20 x2<br>• %5 x5</div>
+                        <div class="box-price">💎 150</div>
                         <button class="buy-box-btn" data-box="silver">Satın Al</button>
                     </div>
                     <div class="market-item gold-box" data-box="gold">
                         <div class="box-icon">✨</div>
                         <div class="box-name">Altın Kutu</div>
-                        <div class="box-rewards">• 300-900 Puan<br>• %12 x2<br>• %6 x5<br>• %2 x10</div>
-                        <div class="box-price">💎 800</div>
+                        <div class="box-rewards">• 500-1500 Puan<br>• %30 x2<br>• %15 x5<br>• %5 x10</div>
+                        <div class="box-price">💎 400</div>
                         <button class="buy-box-btn" data-box="gold">Satın Al</button>
                     </div>
                     <div class="market-item epic-box" data-box="epic">
                         <div class="box-icon">💜</div>
                         <div class="box-name">Epic Kutu</div>
-                        <div class="box-rewards">• 200-500 Puan<br>• %13 x2<br>• %8 x5<br>• %4 x10</div>
-                        <div class="box-price">💎 500</div>
+                        <div class="box-rewards">• 300-800 Puan<br>• %25 x2<br>• %10 x5<br>• Nadir ödüller</div>
+                        <div class="box-price">💎 250</div>
                         <button class="buy-box-btn" data-box="epic">Satın Al</button>
                     </div>
                     <div class="market-item legendary-box" data-box="legendary">
                         <div class="box-icon">🌈</div>
                         <div class="box-name">Legendary Kutu</div>
-                        <div class="box-rewards">• 500-1300 Puan<br>• %15 x2<br>• %7 x5<br>• %3 x10</div>
-                        <div class="box-price">💎 1200</div>
+                        <div class="box-rewards">• 800-2000 Puan<br>• %40 x2<br>• %20 x5<br>• %8 x10</div>
+                        <div class="box-price">💎 600</div>
                         <button class="buy-box-btn" data-box="legendary">Satın Al</button>
                     </div>
                     <div class="market-item daily-box" data-box="daily">
                         <div class="box-icon">📅</div>
                         <div class="box-name">Günlük Kutu</div>
-                        <div class="box-rewards">• Ücretsiz<br>• 30-180 Puan<br>• %3 x2</div>
+                        <div class="box-rewards">• Ücretsiz<br>• 50-300 Puan<br>• %5 x2</div>
                         <div class="box-price">Ücretsiz</div>
                         <button class="buy-box-btn buy-box-btn--daily" data-box="daily" id="dailyBoxBtn">Aç</button>
                     </div>
@@ -449,7 +427,7 @@
         </div>
     </div>
 
-    <!-- Box opening animation modal -->
+    <!-- Box opening animation modal (new) -->
     <div class="game-modal box-open-modal" id="boxOpenModal" style="display: none;">
         <div class="modal-content box-open-content">
             <div class="box-open-animation" id="boxOpenAnimation">
@@ -460,32 +438,7 @@
         </div>
     </div>
 
-    <!-- 2048 Game Modal -->
-    <div class="game-modal" id="game2048Modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🔢 2048 Oyunu</h2>
-                <span class="modal-close" data-modal="game2048Modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="game-2048-info">
-                    <div class="game-2048-score" id="game2048Score">Puan: 0</div>
-                    <div class="game-2048-instructions">
-                        <strong>Kontroller:</strong> Ok tuşları veya WASD<br>
-                        <strong>Hedef:</strong> 2048 kutusunu oluştur!
-                    </div>
-                </div>
-                <div class="game-2048-board" id="game2048Board">
-                    <!-- 2048 board will be generated here -->
-                </div>
-                <div class="game-2048-controls">
-                    <button class="game-2048-reset" onclick="game2048?.reset()">🔄 Yeniden Başlat</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Coin Flip Modal -->
+    <!-- Game Modals -->
     <div class="game-modal" id="coinFlipModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -512,7 +465,6 @@
         </div>
     </div>
 
-    <!-- RPS Modal -->
     <div class="game-modal" id="rpsModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -539,7 +491,6 @@
         </div>
     </div>
 
-    <!-- Spin Wheel Modal -->
     <div class="game-modal" id="spinWheelModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -564,7 +515,6 @@
         </div>
     </div>
 
-    <!-- Chess Modal -->
     <div class="game-modal" id="chessModal" style="display: none;">
         <div class="modal-content chess-modal-content">
             <div class="modal-header">
@@ -596,7 +546,7 @@
         </div>
     </div>
 
-    <!-- VS Lobby Modal -->
+    <!-- VS Lobby Modal (new) -->
     <div class="game-modal" id="vsLobbyModal" style="display: none;">
         <div class="modal-content vs-lobby-content">
             <div class="modal-header">
@@ -609,34 +559,84 @@
                     <button class="vs-tab-btn" data-vs-tab="rank">Sıralama</button>
                     <button class="vs-tab-btn" data-vs-tab="history">Maç Geçmişi</button>
                 </div>
-                
                 <div class="vs-lobby-find" id="vsLobbyFind">
                     <div class="bet-input-container">
                         <label>Bahis Miktarı (Min: 10)</label>
                         <input type="number" id="vsBetAmount" min="10" value="50" class="bet-input">
                     </div>
                     <button class="vs-find-btn" id="vsFindBtn">🔍 Eşleşme Ara</button>
-                    
-                    <div class="vs-lobby-users-section">
-                        <h4>🟢 Online Kullanıcılar</h4>
-                        <div class="vs-lobby-users" id="vsLobbyUsers"></div>
-                    </div>
-                    
-                    <div class="vs-lobby-chat" id="vsLobbyChat">
-                        <div class="vs-lobby-messages" id="vsLobbyMessages"></div>
-                        <div class="vs-lobby-input-wrap">
-                            <input type="text" id="vsLobbyInput" placeholder="Lobi mesajı..." maxlength="150">
-                            <button id="vsLobbySend">Gönder</button>
+                    <div class="vs-lobby-info">
+                        <div class="vs-lobby-messages" id="vsLobbyMessages">
+                            <div class="chat-welcome">VS lobisine hoş geldin! Rakip bulmak için eşleşmeye başla.</div>
                         </div>
                     </div>
                 </div>
-                
                 <div class="vs-lobby-rank" id="vsLobbyRank" style="display: none;">
                     <div class="vs-rank-list" id="vsRankList"></div>
                 </div>
-                
                 <div class="vs-lobby-history" id="vsLobbyHistory" style="display: none;">
                     <div class="vs-history-list" id="vsHistoryList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VS Coin Game Modal (new) -->
+    <div class="game-modal" id="vsCoinGameModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🪙 Yazı Tura VS</h2>
+                <span class="modal-close" data-modal="vsCoinGameModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="vs-game-info">
+                    <div class="vs-game-opponent">Rakip: <span id="vsCoinOpponentName">-</span></div>
+                    <div class="vs-game-bet">Bahis: <span id="vsCoinBetAmount">0</span> 💎</div>
+                    <div class="vs-game-status" id="vsCoinGameStatus">Oyun hazırlanıyor...</div>
+                </div>
+                
+                <div class="vs-game-choices">
+                    <button class="choice-btn vs-choice-btn" id="vsCoinChoiceHeads" data-choice="heads">Yazı 📄</button>
+                    <button class="choice-btn vs-choice-btn" id="vsCoinChoiceTails" data-choice="tails">Tura 🪙</button>
+                </div>
+                
+                <div class="vs-game-result">
+                    <div class="game-result" id="vsCoinResult"></div>
+                </div>
+                
+                <div class="vs-game-timer">
+                    <div class="timer-text">Karar verme süresi: <span id="vsCoinTimer">30</span>s</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VS RPS Game Modal (new) -->
+    <div class="game-modal" id="vsRpsGameModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✊ Taş-Kağıt-Makas VS</h2>
+                <span class="modal-close" data-modal="vsRpsGameModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="vs-game-info">
+                    <div class="vs-game-opponent">Rakip: <span id="vsRpsOpponentName">-</span></div>
+                    <div class="vs-game-bet">Bahis: <span id="vsRpsBetAmount">0</span> 💎</div>
+                    <div class="vs-game-status" id="vsRpsGameStatus">Oyun hazırlanıyor...</div>
+                </div>
+                
+                <div class="vs-game-choices">
+                    <button class="choice-btn vs-choice-btn" id="vsRpsChoiceRock" data-choice="rock">🪨 Taş</button>
+                    <button class="choice-btn vs-choice-btn" id="vsRpsChoicePaper" data-choice="paper">📄 Kağıt</button>
+                    <button class="choice-btn vs-choice-btn" id="vsRpsChoiceScissors" data-choice="scissors">✂️ Makas</button>
+                </div>
+                
+                <div class="vs-game-result">
+                    <div class="game-result" id="vsRpsResult"></div>
+                </div>
+                
+                <div class="vs-game-timer">
+                    <div class="timer-text">Karar verme süresi: <span id="vsRpsTimer">30</span>s</div>
                 </div>
             </div>
         </div>
