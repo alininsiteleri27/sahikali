@@ -123,7 +123,7 @@ async function initializeUser(user) {
             score: 100,
             createdAt: serverTimestamp(),
             role: 'user',
-            profileImage: 'https://via.placeholder.com/150',
+            profileImage: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect width="150" height="150" fill="%23444"/%3E%3C/svg%3E',
             multiplier: 1,
             banned: false,
             muted: false,
@@ -422,7 +422,7 @@ async function loadMemberSidebar() {
         div.className = `member-item ${role === 'KURUCU' ? 'founder-glow' : ''}`;
         div.innerHTML = `
             <div class="avatar-wrapper">
-                <img src="${u.profileImage || 'https://via.placeholder.com/32'}" alt="">
+                <img src="${u.profileImage || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="32" height="32"%3E%3Crect width="32" height="32" fill="%237289da"/%3E%3C/svg%3E'}" alt="">
                 <div class="status-indicator online"></div>
             </div>
             <div class="member-info">
@@ -956,8 +956,8 @@ function openMultiplayerModal(gameId) {
         // Update Player Info
         document.getElementById('mpHostName').textContent = data.hostName;
         document.getElementById('mpGuestName').textContent = data.guestName || 'Bekleniyor...';
-        document.getElementById('mpHostAvatar').src = data.hostAvatar || 'https://via.placeholder.com/80';
-        document.getElementById('mpGuestAvatar').src = data.guestAvatar || 'https://via.placeholder.com/80';
+        document.getElementById('mpHostAvatar').src = data.hostAvatar || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="80" height="80" fill="%23333"/%3E%3C/svg%3E';
+        document.getElementById('mpGuestAvatar').src = data.guestAvatar || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="80" height="80" fill="%23333"/%3E%3C/svg%3E';
 
         // STATUS HANDLER
         if (data.status === 'waiting') {
@@ -1571,23 +1571,7 @@ async function sendMessage() {
     input.value = '';
 }
 
-function loadChat() {
-    const chatRef = query(collection(db, 'chat'), orderBy('timestamp', 'asc'), limit(50));
 
-    // Prevent memory leaks
-    if (chatUnsubscribe) chatUnsubscribe();
-
-    chatUnsubscribe = onSnapshot(chatRef, (snapshot) => {
-        const chatEl = document.getElementById('globalMessages');
-        chatEl.innerHTML = '<div class="system-msg">Nexus Network\'e hoş geldiniz.</div>';
-
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            appendChatMessage(data);
-        });
-        chatEl.scrollTop = chatEl.scrollHeight;
-    });
-}
 
 function appendChatMessage(data) {
     const chatEl = document.getElementById('globalMessages');
@@ -1630,7 +1614,7 @@ async function loadDmUsers() {
         const div = document.createElement('div');
         div.className = 'dm-user-row';
         div.innerHTML = `
-            <img src="${u.profileImage || 'https://via.placeholder.com/40'}" class="mini-avatar">
+            <img src="${u.profileImage || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Crect width="40" height="40" fill="%23444"/%3E%3C/svg%3E'}" class="mini-avatar">
             <span>${u.username}</span>
         `;
         div.onclick = () => openDm(docSnap.id, u.username);
