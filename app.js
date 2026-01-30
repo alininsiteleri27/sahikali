@@ -211,13 +211,13 @@ const UI = {
             return;
         }
 
-        // Desktop'ta collapse/expand
+        // Desktop'ta tamamen gizle/göster
         this.sidebarCollapsed = !this.sidebarCollapsed;
 
         if (this.sidebarCollapsed) {
             sidebar.classList.add('collapsed');
             document.body.classList.add('sidebar-collapsed');
-            if (toggleBtn) toggleBtn.className = 'ri-menu-unfold-line';
+            if (toggleBtn) toggleBtn.className = 'ri-menu-line';
         } else {
             sidebar.classList.remove('collapsed');
             document.body.classList.remove('sidebar-collapsed');
