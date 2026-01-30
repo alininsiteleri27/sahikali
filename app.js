@@ -258,6 +258,16 @@ const UI = {
         }
     },
 
+    closeSidebar() {
+        const sidebar = DOMHelper.get('app-sidebar');
+        if (!sidebar) return;
+
+        // Mobilde sidebar'ı kapat
+        if (window.innerWidth <= 768) {
+            sidebar.classList.remove('mobile-active');
+        }
+    },
+
     toggleFloatingChat() {
         const chatWindow = DOMHelper.get('floating-chat-window');
         if (!chatWindow) return;
@@ -381,6 +391,9 @@ const Router = {
         };
         DOMHelper.setText('page-title-text', titles[viewId] || 'SAHIKALI');
 
+        // Close sidebar on mobile
+        UI.closeSidebar();
+
         // Load founder stats if navigating to founder page
         const profile = Store.get('profile');
         if (viewId === 'founder' && profile && profile.role === 'founder') {
@@ -434,17 +447,38 @@ const Chat = {
             minute: '2-digit'
         }) : '';
 
-        div.innerHTML = `
-            <img src="${msg.avatar || 'https://ui-avatars.com/api/?name=User&background=666&color=fff'}" 
-                 class="msg-avatar" alt="${msg.name}">
-            <div class="msg-content">
-                <div class="msg-header">
-                    <span class="msg-user">${this.escapeHTML(msg.name)}</span>
-                    <span class="msg-time">${time}</span>
+        // Check if message is a game invite
+        if (msg.type === 'invite' && msg.game === 'hockey') {
+            div.innerHTML = `
+                <img src="${msg.avatar}" class="msg-avatar" alt="${msg.name}">
+                <div class="msg-content">
+                    <div class="msg-header">
+                        <span class="msg-user">${this.escapeHTML(msg.name)}</span>
+                        <span class="msg-time">${time}</span>
+                    </div>
+                    <div class="invite-card">
+                        <span class="invite-title">🏑 HAVA HOKEYİ</span>
+                        <span class="invite-vs">VS</span>
+                        <button class="btn-game-join" onclick="Game.joinGame('${msg.gameId}')">
+                            KABUL ET
+                        </button>
+                    </div>
                 </div>
-                <div class="msg-text">${this.escapeHTML(msg.msg)}</div>
-            </div>
-        `;
+            `;
+        } else {
+            // Normal message
+            div.innerHTML = `
+                <img src="${msg.avatar || 'https://ui-avatars.com/api/?name=User&background=666&color=fff'}" 
+                     class="msg-avatar" alt="${msg.name}">
+                <div class="msg-content">
+                    <div class="msg-header">
+                        <span class="msg-user">${this.escapeHTML(msg.name)}</span>
+                        <span class="msg-time">${time}</span>
+                    </div>
+                    <div class="msg-text">${this.escapeHTML(msg.msg)}</div>
+                </div>
+            `;
+        }
         container.appendChild(div);
     },
 
@@ -462,7 +496,8 @@ const Chat = {
             name: p.username,
             msg: text,
             avatar: p.avatar,
-            ts: serverTimestamp()
+            ts: serverTimestamp(),
+            type: 'text'
         });
 
         // Update message count
@@ -1313,6 +1348,465 @@ const Founder = {
 };
 
 // ============================================================================
+//    AIR HOCKEY GAME
+// ============================================================================
+
+const Game = {
+    canvas: null,
+    ctx: null,
+    gameId: null,
+    role: null, // 'host' or 'client'
+    playerId: null,
+    running: false,
+    width: 400,
+    height: 600,
+    // Physics State
+    state: {
+        puck: { x: 200, y: 300, vx: 0, vy: 0, r: 15 },
+        p1: { x: 200, y: 550, r: 25, score: 0 },
+        p2: { x: 200, y: 50, r: 25, score: 0 },
+        status: 'waiting' // waiting, countdown, playing, finished
+    },
+    // Local input
+    input: { x: 0, y: 0 },
+    lastUpdate: 0,
+    wsRef: null,
+
+    init() {
+        this.canvas = DOMHelper.get('hockey-canvas');
+        this.ctx = this.canvas.getContext('2d');
+
+        // Input Listeners
+        if (this.canvas) {
+            this.canvas.addEventListener('mousemove', (e) => this.handleInput(e));
+            this.canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Prevent scroll while playing
+                this.handleInput(e);
+            }, { passive: false });
+        }
+
+        // Game Loop
+        this.loop = this.loop.bind(this);
+    },
+
+    async sendInvite() {
+        const p = Store.get('profile');
+        if (!p) {
+            alert('Önce giriş yapmalısın!');
+            return;
+        }
+
+        try {
+            // Create game room
+            const newGameRef = push(ref(db, 'games'));
+            this.gameId = newGameRef.key;
+
+            await set(newGameRef, {
+                host: p.uid,
+                hostName: p.username,
+                status: 'waiting',
+                created: serverTimestamp(),
+                state: this.state
+            });
+
+            // Send invite to chat
+            await push(ref(db, 'chats/global'), {
+                uid: p.uid,
+                name: p.username,
+                avatar: p.avatar,
+                ts: serverTimestamp(),
+                type: 'invite',
+                game: 'hockey',
+                gameId: this.gameId,
+                msg: 'Bir hava hokeyi maçı başlattı!'
+            });
+
+            // Join as host
+            this.prepareGame(this.gameId, 'host');
+
+        } catch (error) {
+            console.error('Oyun oluşturma hatası:', error);
+            alert('Hata oluştu!');
+        }
+    },
+
+    async joinGame(gameId) {
+        const p = Store.get('profile');
+        if (!p) {
+            alert('Önce giriş yapmalısın!');
+            return;
+        }
+
+        try {
+            const gameRef = ref(db, `games/${gameId}`);
+            const snap = await get(gameRef);
+
+            if (!snap.exists()) {
+                alert('Oyun bulunamadı!');
+                return;
+            }
+
+            const gameData = snap.val();
+            if (gameData.status !== 'waiting') {
+                alert('Bu oyun çoktan başladı veya bitti!');
+                return;
+            }
+
+            // Cannot play against yourself
+            if (gameData.host === p.uid) {
+                // Re-join as host if accidentally closed
+                this.prepareGame(gameId, 'host');
+                return;
+            }
+
+            // Update game to add client
+            await update(gameRef, {
+                client: p.uid,
+                clientName: p.username,
+                status: 'countdown',
+                startTime: Date.now() + 3000 // Start after 3s
+            });
+
+            this.prepareGame(gameId, 'client');
+
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
+    prepareGame(gameId, role) {
+        this.gameId = gameId;
+        this.role = role;
+        this.running = true;
+        this.playerId = Store.get('profile').uid;
+
+        // Reset state
+        this.state = {
+            puck: { x: 200, y: 300, vx: 0, vy: 0, r: 15 },
+            p1: { x: 200, y: 550, r: 25, score: 0 },
+            p2: { x: 200, y: 50, r: 25, score: 0 },
+            status: 'waiting'
+        };
+
+        // Open Modal
+        UI.openModal('hockey-modal');
+
+        // Initialize canvas context if not done
+        if (!this.ctx) this.init();
+
+        // Start Listening
+        this.sync();
+
+        // Start Loop
+        requestAnimationFrame(this.loop);
+    },
+
+    sync() {
+        if (!this.gameId) return;
+
+        const gameRef = ref(db, `games/${this.gameId}`);
+
+        onValue(gameRef, (snap) => {
+            const data = snap.val();
+            if (!data) return;
+
+            // Sync names
+            DOMHelper.setText('game-p1-name', data.hostName);
+            DOMHelper.setText('game-p2-name', data.clientName || 'Bekleniyor...');
+
+            // Sync State
+            if (data.state) {
+                // Determine which parts to sync based on role
+                // Client syncs everything from host except their own paddle
+                if (this.role === 'client') {
+                    this.state.puck = data.state.puck;
+                    this.state.p1 = data.state.p1;
+                    // Dont overwrite local p2 input immediately to avoid jitter, 
+                    // process physics on host
+                    this.state.p1.score = data.state.p1.score;
+                    this.state.p2.score = data.state.p2.score;
+                    this.state.status = data.state.status;
+                } else {
+                    // Host syncs Client paddle
+                    if (data.state.p2) {
+                        this.state.p2.x = data.state.p2.x;
+                        this.state.p2.y = data.state.p2.y;
+                    }
+                }
+
+                // Update UI based on status
+                this.updateUI(data.status);
+            }
+        });
+    },
+
+    updateUI(status) {
+        DOMHelper.setText('game-p1-score', this.state.p1.score);
+        DOMHelper.setText('game-p2-score', this.state.p2.score);
+
+        const overlay = DOMHelper.get('game-overlay');
+        const countdown = DOMHelper.get('game-countdown');
+        const statusText = DOMHelper.get('game-status-text');
+
+        if (status === 'waiting') {
+            overlay.classList.remove('hidden');
+            countdown.textContent = 'BEKLENİYOR';
+            statusText.textContent = 'BEKLENİYOR...';
+        } else if (status === 'countdown') {
+            overlay.classList.remove('hidden');
+            statusText.textContent = 'HAZIRLAN!';
+
+            // Simple countdown animation simulation
+            let count = 3;
+            // Need interval? No, let's just use CSS anim or js timeout
+            // This runs on every sync tick, so be careful not to restart anim
+            const prev = countdown.textContent;
+            if (prev === 'BEKLENİYOR') {
+                this.runCountdownAnim();
+            }
+
+        } else if (status === 'playing') {
+            overlay.classList.add('hidden');
+            statusText.textContent = 'OYNANIYOR';
+            DOMHelper.get('game-rematch-btn').classList.add('hidden');
+        } else if (status === 'finished') {
+            overlay.classList.remove('hidden');
+            const winner = this.state.p1.score >= 3 ? 'OYUNCU 1' : 'OYUNCU 2';
+            countdown.textContent = `${winner} KAZANDI!`;
+            statusText.textContent = 'OYUN BİTTİ';
+            DOMHelper.get('game-rematch-btn').classList.remove('hidden');
+        }
+    },
+
+    runCountdownAnim() {
+        const countdown = DOMHelper.get('game-countdown');
+        let count = 3;
+        countdown.textContent = count;
+
+        const int = setInterval(() => {
+            count--;
+            if (count <= 0) {
+                clearInterval(int);
+                countdown.textContent = 'GO!';
+                if (this.role === 'host') {
+                    update(ref(db, `games/${this.gameId}/state`), { status: 'playing' });
+                }
+            } else {
+                countdown.textContent = count;
+            }
+        }, 1000);
+    },
+
+    handleInput(e) {
+        if (!this.running || !this.ctx) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        let x, y;
+
+        if (e.touches && e.touches.length > 0) {
+            x = e.touches[0].clientX - rect.left;
+            y = e.touches[0].clientY - rect.top;
+        } else {
+            x = e.clientX - rect.left;
+            y = e.clientY - rect.top;
+        }
+
+        // Scale coords
+        x = x * (this.width / rect.width);
+        y = y * (this.height / rect.height);
+
+        // Limit paddle movement to half
+        if (this.role === 'host') {
+            // Bottom half
+            if (y < this.height / 2 + this.state.p1.r) y = this.height / 2 + this.state.p1.r;
+            if (y > this.height - this.state.p1.r) y = this.height - this.state.p1.r;
+            this.state.p1.x = x;
+            this.state.p1.y = y;
+        } else {
+            // Top half - MIRRORED FOR CLIENT?
+            // Actually, for simplicity, P2 plays from Top on same canvas coords.
+            // But usually P2 wants to play from bottom too.
+            // Let's keep it simple: P2 plays on TOP half.
+            if (y > this.height / 2 - this.state.p2.r) y = this.height / 2 - this.state.p2.r;
+            if (y < this.state.p2.r) y = this.state.p2.r;
+            this.state.p2.x = x;
+            this.state.p2.y = y;
+        }
+
+        // Send input to firebase
+        this.sendInput();
+    },
+
+    async sendInput() {
+        if (!this.gameId) return;
+        // Optimization: Throttle this in prod
+        // Here we rely on fast firebase writes
+        if (this.role === 'host') {
+            update(ref(db, `games/${this.gameId}/state/p1`), { x: this.state.p1.x, y: this.state.p1.y });
+        } else {
+            update(ref(db, `games/${this.gameId}/state/p2`), { x: this.state.p2.x, y: this.state.p2.y });
+        }
+    },
+
+    loop() {
+        if (!this.running) return;
+
+        this.update();
+        this.draw();
+
+        requestAnimationFrame(this.loop);
+    },
+
+    update() {
+        // Host calculates physics
+        if (this.role === 'host') {
+            const { puck, p1, p2, status } = this.state;
+
+            if (status !== 'playing') return;
+
+            // Puck Movement
+            puck.x += puck.vx;
+            puck.y += puck.vy;
+
+            // Friction
+            puck.vx *= 0.99;
+            puck.vy *= 0.99;
+
+            // Wall Collisions
+            if (puck.x - puck.r < 0 || puck.x + puck.r > this.width) {
+                puck.vx = -puck.vx;
+                puck.x = Math.max(puck.r, Math.min(this.width - puck.r, puck.x));
+            }
+            if (puck.y - puck.r < 0 || puck.y + puck.r > this.height) {
+                // Goal Check
+                if (puck.x > this.width / 3 && puck.x < (this.width / 3) * 2) {
+                    this.goal(puck.y < 0 ? 'p1' : 'p2'); // Top goal = P1 scores
+                    return;
+                }
+                puck.vy = -puck.vy;
+                puck.y = Math.max(puck.r, Math.min(this.height - puck.r, puck.y));
+            }
+
+            // Paddle Collisions
+            this.checkPaddleCollision(p1, puck);
+            this.checkPaddleCollision(p2, puck);
+
+            // Sync Puck state to Firebase (every frame is too much, doing it anyway for smooth local dev)
+            // In Cloud: update(ref, {state: this.state})
+            // Using throttling inside sendInput or separate loop is better
+            // For now, we update puck only on host loop end
+            update(ref(db, `games/${this.gameId}/state/puck`), this.state.puck);
+        }
+    },
+
+    checkPaddleCollision(paddle, puck) {
+        const dx = puck.x - paddle.x;
+        const dy = puck.y - paddle.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const minDist = paddle.r + puck.r;
+
+        if (dist < minDist) {
+            const angle = Math.atan2(dy, dx);
+            const force = 15; // Bounce force
+            puck.vx = Math.cos(angle) * force;
+            puck.vy = Math.sin(angle) * force;
+
+            // Push puck out
+            const pushOut = minDist - dist + 1;
+            puck.x += Math.cos(angle) * pushOut;
+            puck.y += Math.sin(angle) * pushOut;
+        }
+    },
+
+    goal(scorer) {
+        if (scorer === 'p1') this.state.p1.score++;
+        else this.state.p2.score++;
+
+        // Reset Puck
+        this.state.puck.x = this.width / 2;
+        this.state.puck.y = this.height / 2;
+        this.state.puck.vx = 0;
+        this.state.puck.vy = 0;
+
+        // Check Winner
+        if (this.state.p1.score >= 3 || this.state.p2.score >= 3) {
+            this.state.status = 'finished';
+        }
+
+        // Sync Score & Status
+        update(ref(db, `games/${this.gameId}/state`), {
+            p1: this.state.p1,
+            p2: this.state.p2,
+            puck: this.state.puck,
+            status: this.state.status
+        });
+    },
+
+    draw() {
+        const ctx = this.ctx;
+        if (!ctx) return;
+
+        // Clear
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(0, 0, this.width, this.height);
+
+        // Draw Field
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(0, this.height / 2);
+        ctx.lineTo(this.width, this.height / 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(this.width / 2, this.height / 2, 50, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Draw Goals
+        ctx.fillStyle = '#111';
+        ctx.fillRect(this.width / 3, 0, this.width / 3, 10);
+        ctx.fillRect(this.width / 3, this.height - 10, this.width / 3, 10);
+
+        // Draw Players
+        this.drawCircle(this.state.p1.x, this.state.p1.y, this.state.p1.r, '#00c6ff');
+        this.drawCircle(this.state.p2.x, this.state.p2.y, this.state.p2.r, '#ae00ff');
+
+        // Draw Puck
+        this.drawCircle(this.state.puck.x, this.state.puck.y, this.state.puck.r, '#fff');
+    },
+
+    drawCircle(x, y, r, color) {
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, r, 0, Math.PI * 2);
+        this.ctx.fillStyle = color;
+        this.ctx.fill();
+        this.ctx.shadowBlur = 15;
+        this.ctx.shadowColor = color;
+        this.ctx.stroke();
+        this.ctx.shadowBlur = 0;
+    },
+
+    quitGame() {
+        this.running = false;
+        UI.closeModal('hockey-modal');
+        if (this.gameId) {
+            // Optional: Mark game as abandoned
+            // update(ref(db, `games/${this.gameId}`), { status: 'finished' });
+        }
+    },
+
+    rematch() {
+        // Reset Logic
+        if (this.role === 'host') {
+            this.state.p1.score = 0;
+            this.state.p2.score = 0;
+            this.state.status = 'countdown';
+            update(ref(db, `games/${this.gameId}/state`), this.state);
+        }
+    }
+};
+
+// ============================================================================
 //    INITIALIZATION
 // ============================================================================
 
@@ -1323,7 +1817,8 @@ window.app = {
     chat: Chat,
     profile: Profile,
     settings: Settings,
-    founder: Founder
+    founder: Founder,
+    game: Game
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1373,6 +1868,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+
     // Close modal with ESC key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1381,8 +1877,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activeModal) {
                 UI.closeModal(activeModal.id);
             }
+
+            // Also close sidebar on mobile if open
+            const sidebar = DOMHelper.get('app-sidebar');
+            if (sidebar && sidebar.classList.contains('mobile-active')) {
+                UI.closeSidebar();
+            }
         }
     });
+
+    // Close sidebar when clicking on backdrop (mobile)
+    const sidebar = DOMHelper.get('app-sidebar');
+    if (sidebar) {
+        sidebar.addEventListener('click', (e) => {
+            // Only close if clicking on the backdrop (::before pseudo-element area)
+            if (e.target === sidebar && sidebar.classList.contains('mobile-active')) {
+                UI.closeSidebar();
+            }
+        });
+    }
 
     console.log('%c🚀 SAHIKALI', 'font-size: 24px; font-weight: bold; color: #00c6ff;');
     console.log('%cModern Community Platform', 'font-size: 14px; color: #ae00ff;');
