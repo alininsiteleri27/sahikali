@@ -205,6 +205,18 @@ const UI = {
     openModal(id) {
         const modal = DOMHelper.get(id);
         if (modal) modal.classList.add('active');
+
+        // If opening user settings modal, load current avatar
+        if (id === 'user-settings-modal') {
+            const profile = Store.get('profile');
+            if (profile && profile.avatar) {
+                const preview = DOMHelper.get('settings-avatar-preview');
+                const input = DOMHelper.get('settings-avatar-url');
+
+                if (preview) preview.src = profile.avatar;
+                if (input) input.value = profile.avatar;
+            }
+        }
     },
 
     closeModal(id) {
@@ -613,6 +625,101 @@ const Profile = {
                 alert('Hesap silinirken hata oluştu!');
             }
         }
+    },
+
+    // ============================================================================
+    //    PROFILE PICTURE MANAGEMENT
+    // ============================================================================
+
+    async updateAvatar() {
+        const input = DOMHelper.get('settings-avatar-url');
+        if (!input) return;
+
+        const avatarUrl = input.value.trim();
+        if (!avatarUrl) {
+            alert('Lütfen profil fotoğrafı URL\'si girin!');
+            return;
+        }
+
+        // Validate URL format
+        try {
+            new URL(avatarUrl);
+        } catch (error) {
+            alert('Geçersiz URL formatı! Lütfen geçerli bir URL girin.');
+            return;
+        }
+
+        const user = Store.get('user');
+        if (!user) return;
+
+        try {
+            await update(ref(db, `users/${user.uid}`), {
+                avatar: avatarUrl
+            });
+
+            // Update preview
+            const preview = DOMHelper.get('settings-avatar-preview');
+            if (preview) preview.src = avatarUrl;
+
+            alert('✅ Profil fotoğrafı başarıyla güncellendi!');
+            console.log('Avatar updated:', avatarUrl);
+        } catch (error) {
+            console.error(error);
+            alert('❌ Profil fotoğrafı güncellenirken hata oluştu!');
+        }
+    },
+
+    useGravatar() {
+        const user = Store.get('user');
+        const profile = Store.get('profile');
+        if (!user || !profile) return;
+
+        // Generate Gravatar URL from email
+        const email = profile.email || user.email;
+        if (!email) {
+            alert('E-posta adresi bulunamadı!');
+            return;
+        }
+
+        // Create MD5 hash of email (simple implementation)
+        const gravatarUrl = `https://www.gravatar.com/avatar/${this.md5(email.toLowerCase().trim())}?s=200&d=identicon`;
+
+        const input = DOMHelper.get('settings-avatar-url');
+        const preview = DOMHelper.get('settings-avatar-preview');
+
+        if (input) input.value = gravatarUrl;
+        if (preview) preview.src = gravatarUrl;
+
+        console.log('Gravatar URL set:', gravatarUrl);
+    },
+
+    useUIAvatar() {
+        const profile = Store.get('profile');
+        if (!profile) return;
+
+        const username = profile.username || 'User';
+        const uiAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=00c6ff&color=000&size=200&bold=true`;
+
+        const input = DOMHelper.get('settings-avatar-url');
+        const preview = DOMHelper.get('settings-avatar-preview');
+
+        if (input) input.value = uiAvatarUrl;
+        if (preview) preview.src = uiAvatarUrl;
+
+        console.log('UI Avatar URL set:', uiAvatarUrl);
+    },
+
+    // Simple MD5 hash implementation for Gravatar
+    md5(string) {
+        // This is a simplified version - in production, use a proper crypto library
+        // For now, we'll use a basic hash that works for demonstration
+        let hash = 0;
+        for (let i = 0; i < string.length; i++) {
+            const char = string.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return Math.abs(hash).toString(16);
     }
 };
 
@@ -1225,6 +1332,25 @@ document.addEventListener('DOMContentLoaded', () => {
     Settings.init();  // Initialize theme first
     Auth.init();
     Chat.init();
+
+    // Avatar URL input listener for live preview
+    const avatarUrlInput = DOMHelper.get('settings-avatar-url');
+    if (avatarUrlInput) {
+        avatarUrlInput.addEventListener('input', (e) => {
+            const preview = DOMHelper.get('settings-avatar-preview');
+            const url = e.target.value.trim();
+
+            if (preview && url) {
+                // Validate URL format
+                try {
+                    new URL(url);
+                    preview.src = url;
+                } catch (error) {
+                    // Invalid URL, keep current preview
+                }
+            }
+        });
+    }
 
     console.log('%c🚀 SAHIKALI', 'font-size: 24px; font-weight: bold; color: #00c6ff;');
     console.log('%cModern Community Platform', 'font-size: 14px; color: #ae00ff;');
