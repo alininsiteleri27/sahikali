@@ -2657,90 +2657,7 @@ body.modal-open {
 }
 
 /* ============================================================================
-   ONLINE USERS LIST (Founder Panel)
-   ============================================================================ */
-
-.online-users-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.online-users-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.online-users-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.online-users-list::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.online-users-list::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
-}
-
-.online-user-item {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    padding: 0.875rem;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: 0.625rem;
-    transition: all 0.2s;
-}
-
-.online-user-item:hover {
-    background: var(--bg-hover);
-    border-color: var(--primary);
-}
-
-.online-user-avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    border: 2px solid var(--success);
-    flex-shrink: 0;
-    object-fit: cover;
-}
-
-.online-user-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.online-user-name {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-    margin-bottom: 0.125rem;
-}
-
-.online-user-email {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.online-indicator {
-    width: 10px;
-    height: 10px;
-    background: var(--success);
-    border-radius: 50%;
-    flex-shrink: 0;
-    animation: pulse 2s infinite;
-}
-
-/* ============================================================================
-   RESPONSIVE DESIGN - MEMBERS & ONLINE USERS
+   RESPONSIVE DESIGN - MEMBERS
    ============================================================================ */
 
 @media (max-width: 768px) {
@@ -2771,18 +2688,6 @@ body.modal-open {
     .member-stat-item {
         flex: 1;
         min-width: 90px;
-    }
-
-    .online-user-item {
-        flex-wrap: wrap;
-    }
-
-    .online-user-info {
-        flex-basis: 100%;
-        order: 3;
-        margin-top: 0.5rem;
-        padding-top: 0.5rem;
-        border-top: 1px solid var(--border-color);
     }
 }
 
