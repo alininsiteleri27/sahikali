@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log("DOM yüklendi, uygulama başlatılıyor...");
 
     // İlk başlatma işlemleri
-    initializeApp();
+    initializeAppUI();
     setupEventListeners();
 
     // Auth state listener
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // Uygulamayı başlat
-function initializeApp() {
+function initializeAppUI() {
     console.log("Uygulama başlatılıyor...");
 
     // Temayı kontrol et
