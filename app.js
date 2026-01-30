@@ -2927,6 +2927,143 @@ const Chess = {
 };
 
 // ============================================================================
+//    NOTIFICATIONS MODULE
+// ============================================================================
+
+const Notifications = {
+    list: [],
+    unreadCount: 0,
+    isOpen: false,
+
+    init() {
+        this.listenAnnouncements();
+
+        // Listen for auth changes to get user specific warnings
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                this.listenUserWarnings(user.uid);
+            } else {
+                // Clear user warnings on logout
+                this.list = this.list.filter(l => l.category !== 'warning');
+                this.updateBadge();
+                this.render();
+            }
+        });
+    },
+
+    listenAnnouncements() {
+        const q = query(ref(db, 'announcements'), limitToLast(20));
+        onValue(q, (snap) => {
+            const data = snap.val();
+            if (!data) return;
+
+            const announcements = Object.entries(data).map(([id, val]) => ({
+                id,
+                ...val,
+                category: 'announcement',
+                icon: val.type === 'danger' ? 'ri-error-warning-line'
+                    : val.type === 'warning' ? 'ri-alert-line'
+                        : val.type === 'success' ? 'ri-checkbox-circle-line'
+                            : 'ri-information-line'
+            }));
+
+            this.mergeNotifications(announcements);
+        });
+    },
+
+    listenUserWarnings(uid) {
+        const q = query(ref(db, `warnings/${uid}`), limitToLast(20));
+        onValue(q, (snap) => {
+            const data = snap.val();
+            if (!data) return;
+
+            const warnings = Object.entries(data).map(([id, val]) => ({
+                id,
+                ...val,
+                category: 'warning',
+                type: 'danger',
+                title: '⚠️ Özel Uyarı',
+                icon: 'ri-alarm-warning-line'
+            }));
+
+            this.mergeNotifications(warnings);
+        });
+    },
+
+    mergeNotifications(newItems) {
+        newItems.forEach(item => {
+            const exists = this.list.find(x => x.id === item.id);
+            if (!exists) {
+                this.list.push({ ...item });
+            }
+        });
+
+        // Sort by timestamp descending
+        this.list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        this.updateBadge();
+        this.render();
+    },
+
+    updateBadge() {
+        const lastReadTime = localStorage.getItem('last_notif_read_time') || 0;
+        this.unreadCount = this.list.filter(n => (n.timestamp || 0) > lastReadTime).length;
+
+        const badge = DOMHelper.get('notif-badge');
+        if (badge) {
+            badge.textContent = this.unreadCount;
+            if (this.unreadCount > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        }
+    },
+
+    render() {
+        const container = DOMHelper.get('notification-list');
+        if (!container) return;
+
+        if (this.list.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center p-4">Bildirim yok.</p>';
+            return;
+        }
+
+        const lastReadTime = localStorage.getItem('last_notif_read_time') || 0;
+
+        container.innerHTML = this.list.map(notif => {
+            const isUnread = (notif.timestamp || 0) > lastReadTime;
+            const time = notif.timestamp ? new Date(notif.timestamp).toLocaleDateString('tr-TR') : '';
+            const iconClass = notif.type || 'info';
+
+            return `
+                <div class="notification-item ${isUnread ? 'unread' : ''}">
+                    <div class="notification-icon ${iconClass}">
+                        <i class="${notif.icon}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notif-title">${notif.title}</div>
+                        <div class="notif-message">${notif.message}</div>
+                        <div class="notif-time">${time}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    toggleDropdown() {
+        const dropdown = DOMHelper.get('notification-dropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('active');
+        }
+    },
+
+    markAllRead() {
+        const now = Date.now();
+        localStorage.setItem('last_notif_read_time', now);
+        this.updateBadge();
+        this.render();
+    }
+};
+
+// ============================================================================
 //    INITIALIZATION
 // ============================================================================
 
@@ -2940,7 +3077,8 @@ window.app = {
     founder: Founder,
     members: Members,
     game: Game,
-    chess: Chess
+    chess: Chess,
+    notifications: Notifications // Added Notifications
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -2958,6 +3096,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Auth.init();
     Chat.init();
     Game.init();
+    Notifications.init(); // Initialize Notifications
 
     // Avatar URL input listener for live preview
     const avatarUrlInput = DOMHelper.get('settings-avatar-url');
