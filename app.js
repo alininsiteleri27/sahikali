@@ -131,18 +131,27 @@ const Auth = {
     },
 
     async createProfile(user, username) {
+        // Check if this is the first user (founder)
+        const usersSnapshot = await get(ref(db, 'users'));
+        const isFirstUser = !usersSnapshot.exists();
+
         const profile = {
             uid: user.uid,
             username: username,
             email: user.email,
-            role: 'member',
+            role: isFirstUser ? 'founder' : 'member',
             level: 1,
             avatar: `https://ui-avatars.com/api/?name=${username}&background=00c6ff&color=000`,
             messageCount: 0,
+            points: 0,
             created: serverTimestamp(),
             lastLogin: serverTimestamp()
         };
         await set(ref(db, `users/${user.uid}`), profile);
+
+        if (isFirstUser) {
+            console.log('🛡️ İlk kullanıcı Founder olarak oluşturuldu!');
+        }
     },
 
     loadProfile(uid) {
@@ -249,11 +258,27 @@ const UI = {
         const sbAvatar = DOMHelper.get('sb-avatar');
         if (sbAvatar) sbAvatar.src = p.avatar;
 
+        // Show/Hide Founder Panel
+        const founderLink = document.querySelector('.founder-only');
+        if (founderLink) {
+            if (p.role === 'founder') {
+                founderLink.style.display = 'flex';
+            } else {
+                founderLink.style.display = 'none';
+            }
+        }
+
         // Profile page
         DOMHelper.setText('profile-username', p.username);
         DOMHelper.setText('profile-email', p.email);
         DOMHelper.setText('profile-level', `LVL ${p.level}`);
-        DOMHelper.setText('profile-role', p.role === 'admin' ? 'Admin' : 'Üye');
+
+        // Update role display
+        let roleText = 'Üye';
+        if (p.role === 'founder') roleText = 'Founder';
+        else if (p.role === 'admin') roleText = 'Admin';
+
+        DOMHelper.setText('profile-role', roleText);
         DOMHelper.setText('profile-messages', p.messageCount || 0);
 
         const profileAvatar = DOMHelper.get('profile-avatar');
@@ -267,7 +292,7 @@ const UI = {
         // Account info
         DOMHelper.setText('profile-uid', p.uid || '-');
         DOMHelper.setText('profile-email-info', p.email || '-');
-        DOMHelper.setText('profile-role-info', p.role === 'admin' ? 'Admin' : 'Üye');
+        DOMHelper.setText('profile-role-info', roleText);
 
         if (p.lastLogin) {
             const lastLogin = new Date(p.lastLogin);
@@ -276,6 +301,12 @@ const UI = {
 
         // Stats
         this.loadStats();
+
+        // Load founder stats if on founder page
+        if (p.role === 'founder' && Store.get('activeView') === 'founder') {
+            Founder.loadStats();
+            Founder.loadComplaints();
+        }
     },
 
     async loadStats() {
@@ -322,9 +353,19 @@ const Router = {
         // Update title
         const titles = {
             'dashboard': 'ANA SAYFA',
-            'profile': 'PROFİLİM'
+            'profile': 'PROFİLİM',
+            'founder': 'FOUNDER PANELİ'
         };
         DOMHelper.setText('page-title-text', titles[viewId] || 'SAHIKALI');
+
+        // Load founder stats if navigating to founder page
+        const profile = Store.get('profile');
+        if (viewId === 'founder' && profile && profile.role === 'founder') {
+            setTimeout(() => {
+                Founder.loadStats();
+                Founder.loadComplaints();
+            }, 100);
+        }
     }
 };
 
@@ -669,6 +710,491 @@ const Settings = {
 };
 
 // ============================================================================
+//    FOUNDER PANEL
+// ============================================================================
+
+const Founder = {
+    // Helper: Get user by email or UID
+    async getUserByIdentifier(identifier) {
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
+
+        if (!snapshot.exists()) return null;
+
+        const users = snapshot.val();
+
+        // Check if it's a direct UID
+        if (users[identifier]) {
+            return { uid: identifier, ...users[identifier] };
+        }
+
+        // Search by email
+        for (const [uid, userData] of Object.entries(users)) {
+            if (userData.email === identifier) {
+                return { uid, ...userData };
+            }
+        }
+
+        return null;
+    },
+
+    // 1. Make Admin
+    async makeAdmin() {
+        const identifier = DOMHelper.get('founder-user-id')?.value.trim();
+        if (!identifier) {
+            alert('Lütfen kullanıcı email veya ID girin!');
+            return;
+        }
+
+        try {
+            const user = await this.getUserByIdentifier(identifier);
+            if (!user) {
+                alert('Kullanıcı bulunamadı!');
+                return;
+            }
+
+            await update(ref(db, `users/${user.uid}`), { role: 'admin' });
+            alert(`✅ ${user.username} artık Admin!`);
+            DOMHelper.get('founder-user-id').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 2. Remove Admin
+    async removeAdmin() {
+        const identifier = DOMHelper.get('founder-user-id')?.value.trim();
+        if (!identifier) {
+            alert('Lütfen kullanıcı email veya ID girin!');
+            return;
+        }
+
+        try {
+            const user = await this.getUserByIdentifier(identifier);
+            if (!user) {
+                alert('Kullanıcı bulunamadı!');
+                return;
+            }
+
+            await update(ref(db, `users/${user.uid}`), { role: 'member' });
+            alert(`✅ ${user.username} artık normal üye!`);
+            DOMHelper.get('founder-user-id').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 3. Ban User
+    async banUser() {
+        const identifier = DOMHelper.get('founder-user-id')?.value.trim();
+        if (!identifier) {
+            alert('Lütfen kullanıcı email veya ID girin!');
+            return;
+        }
+
+        const reason = prompt('Ban nedeni:');
+        if (!reason) return;
+
+        try {
+            const user = await this.getUserByIdentifier(identifier);
+            if (!user) {
+                alert('Kullanıcı bulunamadı!');
+                return;
+            }
+
+            await update(ref(db, `users/${user.uid}`), {
+                banned: true,
+                banReason: reason,
+                bannedAt: serverTimestamp()
+            });
+
+            alert(`✅ ${user.username} banlandı!`);
+            DOMHelper.get('founder-user-id').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 4. Kick User (Force Logout)
+    async kickUser() {
+        const identifier = DOMHelper.get('founder-user-id')?.value.trim();
+        if (!identifier) {
+            alert('Lütfen kullanıcı email veya ID girin!');
+            return;
+        }
+
+        try {
+            const user = await this.getUserByIdentifier(identifier);
+            if (!user) {
+                alert('Kullanıcı bulunamadı!');
+                return;
+            }
+
+            // Remove from online status
+            await set(ref(db, `status/${user.uid}`), null);
+
+            alert(`✅ ${user.username} oturumu kapatıldı!`);
+            DOMHelper.get('founder-user-id').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 5. Delete User
+    async deleteUser() {
+        const identifier = DOMHelper.get('founder-user-id')?.value.trim();
+        if (!identifier) {
+            alert('Lütfen kullanıcı email veya ID girin!');
+            return;
+        }
+
+        const confirm = window.confirm('Bu kullanıcıyı kalıcı olarak silmek istediğinizden emin misiniz?');
+        if (!confirm) return;
+
+        try {
+            const user = await this.getUserByIdentifier(identifier);
+            if (!user) {
+                alert('Kullanıcı bulunamadı!');
+                return;
+            }
+
+            // Delete user data
+            await set(ref(db, `users/${user.uid}`), null);
+            await set(ref(db, `status/${user.uid}`), null);
+
+            alert(`✅ ${user.username} silindi!`);
+            DOMHelper.get('founder-user-id').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 6. Add Points
+    async addPoints() {
+        const identifier = DOMHelper.get('founder-points-user')?.value.trim();
+        const amount = parseInt(DOMHelper.get('founder-points-amount')?.value);
+
+        if (!identifier || !amount) {
+            alert('Lütfen tüm alanları doldurun!');
+            return;
+        }
+
+        try {
+            const user = await this.getUserByIdentifier(identifier);
+            if (!user) {
+                alert('Kullanıcı bulunamadı!');
+                return;
+            }
+
+            const currentPoints = user.points || 0;
+            await update(ref(db, `users/${user.uid}`), {
+                points: currentPoints + amount
+            });
+
+            alert(`✅ ${user.username} kullanıcısına ${amount} puan eklendi!`);
+            DOMHelper.get('founder-points-user').value = '';
+            DOMHelper.get('founder-points-amount').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 7. Remove Points
+    async removePoints() {
+        const identifier = DOMHelper.get('founder-points-user')?.value.trim();
+        const amount = parseInt(DOMHelper.get('founder-points-amount')?.value);
+
+        if (!identifier || !amount) {
+            alert('Lütfen tüm alanları doldurun!');
+            return;
+        }
+
+        try {
+            const user = await this.getUserByIdentifier(identifier);
+            if (!user) {
+                alert('Kullanıcı bulunamadı!');
+                return;
+            }
+
+            const currentPoints = user.points || 0;
+            await update(ref(db, `users/${user.uid}`), {
+                points: Math.max(0, currentPoints - amount)
+            });
+
+            alert(`✅ ${user.username} kullanıcısından ${amount} puan kaldırıldı!`);
+            DOMHelper.get('founder-points-user').value = '';
+            DOMHelper.get('founder-points-amount').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 8. Disable Chat
+    async disableChat() {
+        try {
+            await set(ref(db, 'settings/chatEnabled'), false);
+            alert('✅ Global chat kapatıldı!');
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 9. Enable Chat
+    async enableChat() {
+        try {
+            await set(ref(db, 'settings/chatEnabled'), true);
+            alert('✅ Global chat açıldı!');
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 10. Clear Chat
+    async clearChat() {
+        const confirm = window.confirm('Tüm mesajları silmek istediğinizden emin misiniz?');
+        if (!confirm) return;
+
+        try {
+            await set(ref(db, 'chats/global'), null);
+            alert('✅ Tüm mesajlar silindi!');
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 11. Delete Message
+    async deleteMessage() {
+        const messageId = DOMHelper.get('founder-message-id')?.value.trim();
+        if (!messageId) {
+            alert('Lütfen mesaj ID girin!');
+            return;
+        }
+
+        try {
+            await set(ref(db, `chats/global/${messageId}`), null);
+            alert('✅ Mesaj silindi!');
+            DOMHelper.get('founder-message-id').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 12. Send Announcement
+    async sendAnnouncement() {
+        const title = DOMHelper.get('founder-announcement-title')?.value.trim();
+        const message = DOMHelper.get('founder-announcement-message')?.value.trim();
+        const type = DOMHelper.get('founder-announcement-type')?.value;
+
+        if (!title || !message) {
+            alert('Lütfen tüm alanları doldurun!');
+            return;
+        }
+
+        try {
+            await push(ref(db, 'announcements'), {
+                title,
+                message,
+                type,
+                timestamp: serverTimestamp(),
+                active: true
+            });
+
+            alert('✅ Duyuru yayınlandı!');
+            DOMHelper.get('founder-announcement-title').value = '';
+            DOMHelper.get('founder-announcement-message').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 13. Send Warning (DM)
+    async sendWarning() {
+        const identifier = DOMHelper.get('founder-dm-user')?.value.trim();
+        const message = DOMHelper.get('founder-dm-message')?.value.trim();
+
+        if (!identifier || !message) {
+            alert('Lütfen tüm alanları doldurun!');
+            return;
+        }
+
+        try {
+            const user = await this.getUserByIdentifier(identifier);
+            if (!user) {
+                alert('Kullanıcı bulunamadı!');
+                return;
+            }
+
+            await push(ref(db, `warnings/${user.uid}`), {
+                message,
+                from: 'Founder',
+                timestamp: serverTimestamp(),
+                read: false
+            });
+
+            alert(`✅ ${user.username} kullanıcısına uyarı gönderildi!`);
+            DOMHelper.get('founder-dm-user').value = '';
+            DOMHelper.get('founder-dm-message').value = '';
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 14. Enable Maintenance
+    async enableMaintenance() {
+        const message = DOMHelper.get('founder-maintenance-message')?.value.trim();
+        if (!message) {
+            alert('Lütfen bakım mesajı girin!');
+            return;
+        }
+
+        try {
+            await set(ref(db, 'settings/maintenance'), {
+                enabled: true,
+                message,
+                startedAt: serverTimestamp()
+            });
+
+            alert('✅ Bakım modu açıldı!');
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 15. Disable Maintenance
+    async disableMaintenance() {
+        try {
+            await set(ref(db, 'settings/maintenance'), {
+                enabled: false
+            });
+
+            alert('✅ Bakım modu kapatıldı!');
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 16. Load Complaints
+    async loadComplaints() {
+        try {
+            const complaintsRef = ref(db, 'complaints');
+            const snapshot = await get(complaintsRef);
+
+            const container = DOMHelper.get('complaints-list');
+            if (!container) return;
+
+            if (!snapshot.exists()) {
+                container.innerHTML = '<p class="text-muted">Henüz şikayet yok.</p>';
+                return;
+            }
+
+            const complaints = [];
+            snapshot.forEach(child => {
+                complaints.push({ id: child.key, ...child.val() });
+            });
+
+            // Sort by timestamp (newest first)
+            complaints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            container.innerHTML = complaints.map(c => `
+                <div class="complaint-item">
+                    <div class="complaint-header">
+                        <span class="complaint-type">${c.typeLabel || c.type}</span>
+                        <span class="complaint-time">${c.timestamp ? new Date(c.timestamp).toLocaleString('tr-TR') : ''}</span>
+                    </div>
+                    <div class="complaint-from">
+                        👤 ${c.from?.username || 'Anonim'} (${c.from?.email || 'N/A'})
+                    </div>
+                    <div class="complaint-message">${c.message}</div>
+                    <div class="complaint-actions">
+                        <button class="btn btn-success btn-sm" onclick="app.founder.resolveComplaint('${c.id}')">
+                            <i class="ri-check-line"></i> Çözüldü
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="app.founder.deleteComplaint('${c.id}')">
+                            <i class="ri-delete-bin-line"></i> Sil
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (error) {
+            console.error(error);
+            alert('❌ Şikayetler yüklenirken hata oluştu!');
+        }
+    },
+
+    // 17. Resolve Complaint
+    async resolveComplaint(id) {
+        try {
+            await update(ref(db, `complaints/${id}`), {
+                status: 'resolved',
+                resolvedAt: serverTimestamp()
+            });
+            alert('✅ Şikayet çözüldü olarak işaretlendi!');
+            this.loadComplaints();
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // 18. Delete Complaint
+    async deleteComplaint(id) {
+        const confirm = window.confirm('Bu şikayeti silmek istediğinizden emin misiniz?');
+        if (!confirm) return;
+
+        try {
+            await set(ref(db, `complaints/${id}`), null);
+            alert('✅ Şikayet silindi!');
+            this.loadComplaints();
+        } catch (error) {
+            console.error(error);
+            alert('❌ Hata oluştu!');
+        }
+    },
+
+    // Load Stats
+    async loadStats() {
+        try {
+            // Total users
+            const usersSnap = await get(ref(db, 'users'));
+            if (usersSnap.exists()) {
+                const users = usersSnap.val();
+                const totalUsers = Object.keys(users).length;
+                const admins = Object.values(users).filter(u => u.role === 'admin').length;
+                const banned = Object.values(users).filter(u => u.banned).length;
+
+                DOMHelper.setText('founder-total-users', totalUsers);
+                DOMHelper.setText('founder-total-admins', admins);
+                DOMHelper.setText('founder-banned-users', banned);
+            }
+
+            // Total messages
+            const messagesSnap = await get(ref(db, 'chats/global'));
+            if (messagesSnap.exists()) {
+                DOMHelper.setText('founder-total-messages', Object.keys(messagesSnap.val()).length);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+};
+
+// ============================================================================
 //    INITIALIZATION
 // ============================================================================
 
@@ -678,7 +1204,8 @@ window.app = {
     router: Router,
     chat: Chat,
     profile: Profile,
-    settings: Settings
+    settings: Settings,
+    founder: Founder
 };
 
 document.addEventListener('DOMContentLoaded', () => {
