@@ -1170,27 +1170,27 @@ class ChatSystem {
     }
 
     // Sohbet odasının var olduğundan emin ol
-    async ensureChatRoomExists(roomId, roomName, roomIcon) {
+    async ensureChatRoomExists(roomId, roomName) {
         try {
-            const roomRef = doc(db, 'chatRooms', roomId);
+            const roomRef = doc(db, 'chats', roomId);
             const roomDoc = await getDoc(roomRef);
 
             if (!roomDoc.exists()) {
-                await setDoc(roomRef, {
-                    id: roomId,
-                    name: roomName,
-                    icon: roomIcon,
-                    createdAt: serverTimestamp(),
-                    createdBy: 'system',
-                    isPublic: true,
-                    memberCount: 0,
-                    lastActivity: serverTimestamp()
-                });
-
-                console.log(`Sohbet odası oluşturuldu: ${roomName}`);
+                console.log(`Sohbet odası oluşturuluyor: ${roomId}`);
+                try {
+                    await setDoc(roomRef, {
+                        name: roomName,
+                        createdAt: serverTimestamp(),
+                        createdBy: 'system',
+                        type: 'public'
+                    });
+                    console.log(`Sohbet odası başarıyla oluşturuldu: ${roomId}`);
+                } catch (permError) {
+                    console.warn(`Sohbet odası oluşturulamadı (${roomId}): Yetki yetersiz veya zaten mevcut.`);
+                }
             }
         } catch (error) {
-            console.error(`Sohbet odası oluşturma hatası (${roomId}):`, error);
+            console.warn("Sohbet odası kontrol hatası:", error);
         }
     }
 
@@ -3139,8 +3139,7 @@ class LeaderboardSystem {
                     leaderboardQuery = query(
                         collection(db, 'users'),
                         orderBy('coins', 'desc'),
-                        limit(this.pageSize),
-                        startAt(startAt)
+                        limit(50)
                     );
                     break;
 
@@ -3148,8 +3147,7 @@ class LeaderboardSystem {
                     leaderboardQuery = query(
                         collection(db, 'users'),
                         orderBy('wins', 'desc'),
-                        limit(this.pageSize),
-                        startAt(startAt)
+                        limit(50)
                     );
                     break;
 
@@ -3157,8 +3155,7 @@ class LeaderboardSystem {
                     leaderboardQuery = query(
                         collection(db, 'users'),
                         orderBy('streak', 'desc'),
-                        limit(this.pageSize),
-                        startAt(startAt)
+                        limit(50)
                     );
                     break;
 
@@ -3169,8 +3166,7 @@ class LeaderboardSystem {
                     leaderboardQuery = query(
                         collection(db, 'leaderboard'),
                         orderBy('totalScore', 'desc'),
-                        limit(this.pageSize),
-                        startAt(startAt)
+                        limit(50)
                     );
                     break;
             }
