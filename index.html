@@ -68,6 +68,9 @@
     <aside class="app-sidebar" id="app-sidebar">
         <div class="sidebar-header">
             <h1 class="sidebar-logo">SAHIKALI</h1>
+            <button class="sidebar-close-btn" onclick="app.ui.closeSidebar()">
+                <i class="ri-close-line"></i>
+            </button>
         </div>
 
         <nav class="sidebar-nav">
@@ -156,10 +159,7 @@
                 </div>
                 <div class="stat-card">
                     <i class="ri-user-add-line stat-icon"></i>
-                    <div class="stat-value" id="online-users">0</div>
-                    <div class="stat-label">Çevrimiçi</div>
-                </div>
-            </div>
+                    <a
         </section>
 
         <!-- FOUNDER PANEL VIEW -->
@@ -448,12 +448,46 @@
             <!-- Messages will be inserted here -->
         </div>
         <form class="floating-chat-input-form" id="floating-chat-form">
+            <button type="button" class="btn btn-accent btn-sm" onclick="app.game.sendInvite()" title="Hokey Oyna">
+                <i class="ri-gamepad-line"></i>
+            </button>
             <input type="text" id="floating-chat-input" class="chat-input" placeholder="Mesaj yaz..." maxlength="500"
                 autocomplete="off">
             <button type="submit" class="btn btn-primary btn-sm">
                 <i class="ri-send-plane-fill"></i>
             </button>
         </form>
+    </div>
+
+    <!-- HOCKEY GAME MODAL -->
+    <div class="modal-overlay" id="hockey-modal">
+        <div class="game-container">
+            <div class="game-header">
+                <div class="player-score p1">
+                    <span id="game-p1-name">Oyuncu 1</span>
+                    <span class="score" id="game-p1-score">0</span>
+                </div>
+                <div class="game-timer" id="game-status-text">BEKLENİYOR...</div>
+                <div class="player-score p2">
+                    <span class="score" id="game-p2-score">0</span>
+                    <span id="game-p2-name">Oyuncu 2</span>
+                </div>
+                <button class="modal-close" onclick="app.game.quitGame()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="hockey-canvas" width="400" height="600"></canvas>
+                <div id="game-overlay" class="game-overlay">
+                    <div class="countdown" id="game-countdown">3</div>
+                    <button class="btn btn-primary hidden" id="game-rematch-btn" onclick="app.game.rematch()">Tekrar
+                        Oyna</button>
+                </div>
+            </div>
+            <div class="game-controls-hint">
+                <i class="ri-drag-move-line"></i> Diski parmağınla veya mouse ile sürükle!
+            </div>
+        </div>
     </div>
 
     <!-- AUTH MODAL -->
