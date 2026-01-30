@@ -1,839 +1,934 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="dark-mode">
 <!-- 
-    NEXUS PLATFORM V2.0
-    ARCHITECT: ANTIGRAVITY (AI AGENT)
-    TARGET: ULTRA PREMIUM EXPERIMENTAL UI
-    
-    This document structure is designed for maximum scalability, 
-    SEO performance, and "Cyber-Futuristic" aesthetic.
+====================================================================================================
+   SAHIKALI PLATFORM - MAIN INTERFACE DOCUMENT (V4.2.0)
+   CODENAME: PROJECT_TITAN_CORE
+   ARCHITECT: ANTIGRAVITY (AI)
+   DATE: 2026-01-30
+   
+   DESCRIPTION:
+   This is the primary entry point for the Sahikali web application. 
+   It serves as a Single Page Application (SPA) container, holding all 
+   potential view states, modals, and game interfaces in the DOM, 
+   ready to be activated by the JavaScript controller.
+
+   STRUCTURE:
+   1. HEAD & META CONFIGURATION
+   2. SVG ICON SYSTEM (INLINE DEFINITIONS)
+   3. BACKGROUND LAYERS (CANVAS & VIDEO)
+   4. SIDEBAR NAVIGATION (DESKTOP)
+   5. MOBILE NAVIGATION (BOTTOM BAR)
+   6. TOP HEADER & STATUS BAR
+   7. MAIN CONTENT VIEWPORT (DYNAMIC SECTIONS)
+      7.1. DASHBOARD VIEW
+      7.2. GAMES HUB VIEW
+      7.3. MARKETPLACE VIEW
+      7.4. INVENTORY VIEW
+      7.5. CHAT ROOM VIEW
+      7.6. LEADERBOARD VIEW
+      7.7. PROFILE VIEW
+      7.8. SETTINGS VIEW
+      7.9. ADMIN CONSOLE VIEW
+   8. MODAL WINDOWS & OVERLAYS
+   9. TEMPLATES & ASSETS
+   10. SCRIPTS & INITIALIZATION
+==================================================================================================== 
 -->
 
 <head>
+    <!-- CHARACTER ENCODING & VIEWPORT -->
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="theme-color" content="#020202">
 
-    <!-- METADATA S.E.O. -->
-    <title>NEXUS | The Next Gen Social Gaming Meta-Platform</title>
+    <!-- SEO & METADATA -->
+    <title>SAHIKALI | Ultimate Social Gaming Platform</title>
     <meta name="description"
-        content="Join NEXUS, the ultimate real-time gaming and chat community. Experience next-level UI, ranked gameplay, and a thriving economy.">
-    <meta name="keywords"
-        content="gaming, chat, futuristic, neon, dark mode, social, prizes, ranking, admin, founder, nexus">
-    <meta name="author" content="NEXUS CORPO">
-    <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        content="Sahikali: The next-generation social gaming platform featuring real-time multiplayer games, vibrant community chat, and a neon-soaked cyberpunk aesthetic. Join the revolution.">
+    <meta name="keywords" content="gaming, social, chat, crypto, neon, cyberpunk, multiplayer, casino, rpg, strategy">
+    <meta name="author" content="Sahikali Dev Team">
 
-    <!-- FONTS -->
+    <!-- EXTERNAL RESOURCES (FONTS & ICONS) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Inter for UI readability, Orbitron for futuristic headers, Rajdhani for technical data -->
+    <!-- Orbitron (Headings), Rajdhani (UI/Numbers), Inter (Body) -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <!-- ICONS (REMIX + INLINE SVG) -->
+    <!-- REMIX ICONS (FALLBACK) -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-    <!-- CORE CSS -->
+    <!-- CSS LINKING -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- INLINE STYLES FOR CRITICAL RENDERING PATH (PRELOADER) -->
-    <style>
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            overflow: hidden;
-            height: 100%;
-        }
+    <!-- FAVICON CONFIG -->
+    <link rel="icon" type="image/png"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=">
 
-        #critical-loader {
+    <!-- INLINE STYLES FOR CRITICAL LOADING STATE -->
+    <style>
+        #loader-overlay {
             position: fixed;
             inset: 0;
-            z-index: 10000;
             background: #000;
+            z-index: 99999;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
+            transition: opacity 0.5s ease;
         }
 
-        .crit-spinner {
+        .loader-spinner {
             width: 50px;
             height: 50px;
-            border: 3px solid rgba(0, 242, 255, 0.2);
-            border-top-color: #00f2ff;
+            border: 3px solid rgba(0, 198, 255, 0.3);
+            border-top: 3px solid #00c6ff;
             border-radius: 50%;
-            animation: critSpin 1s linear infinite;
-        }
-
-        @keyframes critSpin {
-            to {
-                transform: rotate(360deg);
-            }
+            animation: spin 1s linear infinite;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- ==================================================================================== -->
-    <!-- SVG SPRITE SYSTEM (FOR PERFORMANCE & STYLING CONTROL)                               -->
-    <!-- ==================================================================================== -->
+    <!-- 
+    ================================================================================
+       SECTION 1: CRITICAL LOADER
+       Visible immediately upon load, hidden after JS init.
+    ================================================================================ 
+    -->
+    <div id="loader-overlay">
+        <div class="flex-col items-center gap-4">
+            <div class="loader-spinner"></div>
+            <div class="text-sm font-mono text-gradient uppercase tracking-widest">LOADING SYSTEM...</div>
+        </div>
+    </div>
+
+    <!-- 
+    ================================================================================
+       SECTION 2: SVG SPRITE SYSTEM (INLINE DEF)
+       Defines reusable icons to reduce HTTP requests.
+    ================================================================================ 
+    -->
     <svg style="display: none;">
-        <symbol id="icon-nexus-logo" viewBox="0 0 100 100">
-            <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" fill="none" stroke="currentColor" stroke-width="5" />
-            <path d="M50 20 L50 80 M20 35 L80 65 M80 35 L20 65" stroke="currentColor" stroke-width="3" />
-            <circle cx="50" cy="50" r="10" fill="currentColor" />
-        </symbol>
+        <defs>
+            <!-- LOGO ICON -->
+            <symbol id="icon-logo" viewBox="0 0 100 100">
+                <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" fill="none" stroke="currentColor"
+                    stroke-width="5" />
+                <circle cx="50" cy="50" r="15" fill="currentColor" />
+            </symbol>
 
-        <symbol id="icon-chip" viewBox="0 0 24 24">
-            <path
-                d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm6 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 2a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"
-                fill="currentColor" />
-        </symbol>
+            <!-- DASHBOARD ICON -->
+            <symbol id="icon-dashboard" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" stroke="currentColor" fill="none" stroke-width="2" />
+                <rect x="14" y="3" width="7" height="7" stroke="currentColor" fill="none" stroke-width="2" />
+                <rect x="14" y="14" width="7" height="7" stroke="currentColor" fill="none" stroke-width="2" />
+                <rect x="3" y="14" width="7" height="7" stroke="currentColor" fill="none" stroke-width="2" />
+            </symbol>
 
-        <symbol id="icon-rank-admin" viewBox="0 0 24 24">
-            <path d="M12 2l9 4v6c0 5.5-3.8 10.7-9 12-5.2-1.3-9-6.5-9-12V6l9-4z" fill="none" stroke="currentColor"
-                stroke-width="2" />
-            <path d="M12 6l-4 4h3v4h2v-4h3l-4-4z" fill="currentColor" />
-        </symbol>
+            <!-- GAMEPAD ICON -->
+            <symbol id="icon-gamepad" viewBox="0 0 24 24">
+                <path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z" fill="none"
+                    stroke="currentColor" stroke-width="2" />
+                <path d="M6 12h4m-2-2v4m10-2h4m-2-2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </symbol>
 
-        <symbol id="icon-rank-founder" viewBox="0 0 24 24">
-            <path
-                d="M2 20h20v-2H2v2zm2-3h2v-2H4v2zm4 0h2v-2H8v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zM12 2L2 7l10 5 10-5-10-5zm0 9l2-1 2 1-2 1-2-1z"
-                fill="currentColor" />
-        </symbol>
+            <!-- CHAT ICON -->
+            <symbol id="icon-chat" viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none"
+                    stroke="currentColor" stroke-width="2" />
+            </symbol>
+
+            <!-- MARKET ICON -->
+            <symbol id="icon-market" viewBox="0 0 24 24">
+                <path
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.29 2.29a1 1 0 0 0 .7 1.71h12M10 21a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
+                    fill="none" stroke="currentColor" stroke-width="2" />
+            </symbol>
+
+            <!-- COIN ICON -->
+            <symbol id="icon-coin" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+                <path d="M12 8v8m-3-4h6" stroke="currentColor" stroke-width="2" />
+            </symbol>
+        </defs>
     </svg>
 
-    <!-- ==================================================================================== -->
-    <!-- CRITICAL PRELOADER                                                                  -->
-    <!-- ==================================================================================== -->
-    <div id="critical-loader">
-        <div class="crit-spinner"></div>
-        <div
-            style="margin-top:20px; font-family:'Orbitron'; font-size:12px; letter-spacing:4px; color:#00f2ff; opacity:0.8;">
-            INITIALIZING NEXUS PROTOCOL...</div>
+    <!-- 
+    ================================================================================
+       SECTION 3: BACKGROUND LAYERS
+    ================================================================================ 
+    -->
+    <div id="universe-bg">
+        <div id="starfield"></div>
+        <canvas id="particle-canvas"></canvas>
+        <div class="scanline-overlay"></div>
     </div>
 
-    <!-- ==================================================================================== -->
-    <!-- DYNAMIC BACKGROUNDS                                                                 -->
-    <!-- ==================================================================================== -->
-    <div id="immersive-bg">
-        <!-- Canvas for particle network -->
-        <canvas id="bg-canvas"></canvas>
-        <!-- Overlay mesh gradient -->
-        <div class="bg-mesh-overlay"></div>
-        <!-- Vingette effect -->
-        <div class="bg-vignette"></div>
-        <!-- Scanline effect (CRT style) -->
-        <div class="bg-scanlines"></div>
-    </div>
-
-    <!-- ==================================================================================== -->
-    <!-- SYSTEM NOTIFICATIONS (TOASTS)                                                       -->
-    <!-- ==================================================================================== -->
-    <div id="toast-layer">
-        <!-- Toasts injected via JS -->
-    </div>
-
-    <!-- ==================================================================================== -->
-    <!-- MODAL COMPOSITOR (LOGIN, SETTINGS, GAME DETAILS)                                    -->
-    <!-- ==================================================================================== -->
-    <div id="modal-layer" class="hidden">
-
-        <!-- AUTH MODAL -->
-        <div id="modal-auth" class="modal-wrapper hidden">
-            <div class="modal-backdrop"></div>
-            <div class="modal-card glass-panel neon-border-pulse">
-                <div class="auth-visual-side">
-                    <div class="hologram-effect">
-                        <svg class="w-24 h-24 text-primary">
-                            <use href="#icon-nexus-logo"></use>
-                        </svg>
-                    </div>
-                    <h2>WELCOME TO NEXUS</h2>
-                    <p>Experience the future of social gaming.</p>
-                </div>
-                <div class="auth-form-side">
-                    <div class="auth-tabs">
-                        <button class="tab-btn active" data-target="form-login">LOGIN</button>
-                        <button class="tab-btn" data-target="form-register">REGISTER</button>
-                    </div>
-
-                    <!-- LOGIN FORM -->
-                    <form id="form-login" class="auth-form active">
-                        <div class="form-group">
-                            <label>Email Access Key</label>
-                            <div class="input-wrapper">
-                                <i class="ri-mail-line"></i>
-                                <input type="email" id="login-email" placeholder="agent@nexus.net" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Security Phrase</label>
-                            <div class="input-wrapper">
-                                <i class="ri-lock-password-line"></i>
-                                <input type="password" id="login-pass" placeholder="••••••••" required>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <a href="#" class="forgot-link">Recover Key?</a>
-                            <button type="submit" class="btn btn-primary btn-glitch">
-                                <span class="btn-text">INITIALIZE LINK</span>
-                                <span class="btn-decor">>></span>
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- REGISTER FORM -->
-                    <form id="form-register" class="auth-form hidden">
-                        <div class="form-group">
-                            <label>Codename</label>
-                            <div class="input-wrapper">
-                                <i class="ri-user-3-line"></i>
-                                <input type="text" id="reg-user" placeholder="Enter Alias" maxlength="15" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Email Channel</label>
-                            <div class="input-wrapper">
-                                <i class="ri-mail-line"></i>
-                                <input type="email" id="reg-email" placeholder="Valid Comms ID" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Secret Phrase</label>
-                            <div class="input-wrapper">
-                                <i class="ri-shield-keyhole-line"></i>
-                                <input type="password" id="reg-pass" placeholder="Min 6 Chars" required minlength="6">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-secondary btn-full">
-                            <span class="btn-text">CREATE IDENTITY</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
+    <!-- 
+    ================================================================================
+       SECTION 4: SIDEBAR NAVIGATION (LEFT)
+    ================================================================================ 
+    -->
+    <aside class="app-sidebar" id="sidebar">
+        <!-- BRAND -->
+        <div class="sidebar-brand">
+            <svg class="w-8 h-8 text-primary mr-3" viewBox="0 0 100 100">
+                <use href="#icon-logo" />
+            </svg>
+            <span class="brand-logo text-gradient">SAHIKALI</span>
         </div>
 
-        <!-- SETTINGS MODAL (COMPLEX) -->
-        <div id="modal-settings" class="modal-wrapper hidden">
-            <div class="modal-backdrop" onclick="app.ui.closeModal('modal-settings')"></div>
-            <div class="modal-card wide glass-panel">
-                <div class="modal-header">
-                    <h3>SYSTEM CONFIGURATION</h3>
-                    <button class="close-btn" onclick="app.ui.closeModal('modal-settings')"><i
-                            class="ri-close-line"></i></button>
-                </div>
-                <div class="modal-body settings-layout">
-                    <div class="settings-sidebar">
-                        <button class="set-tab active" onclick="app.ui.setTab('set-general')"><i
-                                class="ri-toggle-line"></i> General</button>
-                        <button class="set-tab" onclick="app.ui.setTab('set-profile')"><i
-                                class="ri-user-settings-line"></i> Profile</button>
-                        <button class="set-tab" onclick="app.ui.setTab('set-audio')"><i class="ri-volume-up-line"></i>
-                            Audio</button>
-                        <button class="set-tab" onclick="app.ui.setTab('set-privacy')"><i
-                                class="ri-shield-user-line"></i> Privacy</button>
-                    </div>
-                    <div class="settings-content">
-                        <!-- GEN -->
-                        <div id="set-general" class="set-view active">
-                            <div class="setting-item">
-                                <div class="set-info">
-                                    <h4>Neon Intensity</h4>
-                                    <p>Adjust the brightness of UI elements.</p>
-                                </div>
-                                <input type="range" min="0" max="100" value="80" class="slider-neon">
-                            </div>
-                            <div class="setting-item">
-                                <div class="set-info">
-                                    <h4>Reduced Motion</h4>
-                                    <p>Disable heavy animations for performance.</p>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="flag-motion">
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <!-- PROFILE -->
-                        <div id="set-profile" class="set-view">
-                            <div class="avatar-edit-area">
-                                <img src="" id="set-avatar-prev" class="big-avatar">
-                                <button class="btn btn-sm btn-outline">Change Avatar</button>
-                            </div>
-                            <div class="input-section">
-                                <label>Bio Signature</label>
-                                <textarea id="set-bio" rows="3" placeholder="Tell the network about you..."></textarea>
-                            </div>
-                        </div>
-                        <!-- AUDIO UI MOCK -->
-                        <div id="set-audio" class="set-view">
-                            <div class="setting-item">
-                                <h4>Master Volume</h4>
-                                <input type="range" class="nexus-slider">
-                            </div>
-                            <div class="setting-item">
-                                <h4>SFX Enabled</h4>
-                                <label class="toggle-switch checked"><input type="checkbox" checked><span
-                                        class="slider"></span></label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-ghost" onclick="app.ui.closeModal('modal-settings')">CANCEL</button>
-                    <button class="btn btn-primary" onclick="app.settings.save()">APPLY CHANGES</button>
-                </div>
-            </div>
-        </div>
+        <!-- NAVIGATION MENU -->
+        <nav class="sidebar-nav custom-scroll">
+            <div class="nav-section-label">PLATFORM</div>
 
-    </div>
-
-    <!-- ==================================================================================== -->
-    <!-- MAIN INTERFACE LAYOUT                                                               -->
-    <!-- ==================================================================================== -->
-    <div id="nexus-core" class="hidden">
-
-        <!-- SIDEBAR (DESKTOP) -->
-        <aside class="sidebar-desktop glass-panel-left">
-            <div class="sidebar-header">
-                <div class="brand-logo">N</div>
-            </div>
-            <nav class="sidebar-nav">
-                <button class="nav-item active" data-view="view-home" onclick="app.router.go('home')">
-                    <i class="ri-dashboard-3-line"></i> <span class="nav-label">COMMAND</span>
-                </button>
-                <button class="nav-item" data-view="view-games" onclick="app.router.go('games')">
-                    <i class="ri-gamepad-line"></i> <span class="nav-label">ARCADE</span>
-                </button>
-                <button class="nav-item" data-view="view-chat" onclick="app.router.go('chat')">
-                    <i class="ri-message-3-line"></i> <span class="nav-label">COMMS</span>
-                </button>
-                <button class="nav-item" data-view="view-market" onclick="app.router.go('market')">
-                    <i class="ri-shopping-cart-2-line"></i> <span class="nav-label">MARKET</span>
-                </button>
-                <button class="nav-item" data-view="view-community" onclick="app.router.go('community')">
-                    <i class="ri-team-line"></i> <span class="nav-label">SQUAD</span>
-                </button>
-            </nav>
-            <div class="sidebar-footer">
-                <button class="nav-item" onclick="app.router.go('settings')">
-                    <i class="ri-settings-4-line"></i>
-                </button>
-                <button class="nav-item danger" onclick="app.auth.logout()">
-                    <i class="ri-shut-down-line"></i>
-                </button>
-            </div>
-        </aside>
-
-        <!-- HEADER (MOBILE & DESKTOP INFO) -->
-        <header class="top-bar glass-panel-top">
-            <div class="mobile-menu-btn" onclick="app.ui.toggleMobileNav()">
-                <i class="ri-menu-4-line"></i>
-            </div>
-
-            <div class="top-title">
-                <h1 id="page-title">COMMAND CENTER</h1>
-                <div class="breadcrumbs">SYSTEM // <span id="bread-sub">HOME</span></div>
-            </div>
-
-            <div class="user-status-area">
-                <div class="currency-display" onclick="app.router.go('market')">
-                    <span class="curr-icon">₮</span>
-                    <span class="curr-val" id="my-points">0</span>
-                    <div class="curr-add">+</div>
-                </div>
-
-                <div class="user-mini-profile" onclick="app.router.go('profile')">
-                    <div class="xp-ring-container">
-                        <svg class="xp-ring" viewBox="0 0 40 40">
-                            <circle cx="20" cy="20" r="18" class="ring-bg"></circle>
-                            <circle cx="20" cy="20" r="18" class="ring-val" id="header-xp-ring"></circle>
-                        </svg>
-                        <img src="" id="header-avatar" class="avatar-sm">
-                    </div>
-                    <div class="user-details-text">
-                        <div class="u-name" id="header-username">AGENT</div>
-                        <div class="u-role role-member" id="header-role">INITIATE</div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- VIEWPORT (Dynamic Content Area) -->
-        <main id="viewport">
-
-            <!-- VIEW: HOME DASHBOARD -->
-            <section id="view-home" class="view-panel active">
-                <div class="dashboard-grid">
-                    <!-- HERO STATS -->
-                    <div class="dash-card hero-welcome glass-panel">
-                        <div class="hero-content">
-                            <h2 class="glitch-text" data-text="WELCOME BACK">WELCOME BACK</h2>
-                            <p class="hero-sub">The network is live. <span class="text-neon"
-                                    id="online-counter">124</span> active nodes connected.</p>
-                            <div class="daily-progress">
-                                <div class="dp-info">
-                                    <span>Daily Challenge</span>
-                                    <span>3/5 Complete</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="fill" style="width:60%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="hero-action">
-                            <button class="btn btn-primary btn-lg" onclick="app.game.quickPlay()">QUICK PLAY</button>
-                        </div>
-                    </div>
-
-                    <!-- FEATURED GAMES ROW -->
-                    <div class="dash-card featured-games glass-panel">
-                        <div class="card-head">
-                            <h3>TRENDING PROTOCOLS</h3>
-                            <a onclick="app.router.go('games')">VIEW ALL</a>
-                        </div>
-                        <div class="game-scroll-row">
-                            <!-- GAME ITEM 1 -->
-                            <div class="game-poster" onclick="app.game.launch('mines')">
-                                <div class="poster-art mine-art">
-                                    <i class="ri-bomb-line"></i>
-                                </div>
-                                <div class="poster-info">
-                                    <h4>MINESWEEP</h4>
-                                    <span class="tag hot">HOT</span>
-                                </div>
-                            </div>
-                            <!-- GAME ITEM 2 -->
-                            <div class="game-poster" onclick="app.game.launch('slots')">
-                                <div class="poster-art slot-art">
-                                    <i class="ri-money-dollar-circle-line"></i>
-                                </div>
-                                <div class="poster-info">
-                                    <h4>CYBER SLOTS</h4>
-                                    <span class="tag new">NEW</span>
-                                </div>
-                            </div>
-                            <!-- GAME ITEM 3 -->
-                            <div class="game-poster" onclick="app.game.launch('rps')">
-                                <div class="poster-art rps-art">
-                                    <i class="ri-scissors-cut-line"></i>
-                                </div>
-                                <div class="poster-info">
-                                    <h4>R.P.S. DUEL</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- LEADERBOARD WIDGET -->
-                    <div class="dash-card leaderboard-widget glass-panel">
-                        <div class="card-head">
-                            <h3>TOP OPERATORS</h3>
-                            <select class="mini-select">
-                                <option>Today</option>
-                                <option>All Time</option>
-                            </select>
-                        </div>
-                        <div class="lb-list" id="home-lb-list">
-                            <!-- Injected Items -->
-                            <div class="lb-item">
-                                <div class="lb-rank rank-1">1</div>
-                                <div class="lb-user">
-                                    <img src="https://ui-avatars.com/api/?name=X&background=00f2ff&color=000"
-                                        class="avt-xs">
-                                    <span>Neo_X</span>
-                                </div>
-                                <div class="lb-score">99,420</div>
-                            </div>
-                            <div class="lb-item">
-                                <div class="lb-rank rank-2">2</div>
-                                <div class="lb-user">
-                                    <img src="https://ui-avatars.com/api/?name=A&background=7000ff&color=fff"
-                                        class="avt-xs">
-                                    <span>Alita_99</span>
-                                </div>
-                                <div class="lb-score">84,100</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MINI CHAT -->
-                    <div class="dash-card mini-chat glass-panel">
-                        <div class="card-head">
-                            <h3>COMMS PREVIEW</h3>
-                            <div class="live-dot"></div>
-                        </div>
-                        <div class="mini-chat-log" id="mini-chat-log">
-                            <!-- Chat items -->
-                        </div>
-                        <div class="mini-input">
-                            <input type="text" placeholder="Broadcast..." id="mini-chat-input">
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-            <!-- VIEW: GAMES ARCADE -->
-            <section id="view-games" class="view-panel">
-                <div class="arcade-container">
-                    <div class="arcade-filters">
-                        <button class="filter-btn active">ALL</button>
-                        <button class="filter-btn">STRATEGY</button>
-                        <button class="filter-btn">LUCK</button>
-                        <button class="filter-btn">PVP</button>
-                    </div>
-
-                    <div class="arcade-grid">
-                        <!-- MINES CARD (Detailed) -->
-                        <div class="game-tile glass-panel" onclick="app.game.launch('mines')">
-                            <div class="tile-media media-mines">
-                                <div class="tile-overlay">
-                                    <button class="btn-play-icon"><i class="ri-play-fill"></i></button>
-                                </div>
-                            </div>
-                            <div class="tile-details">
-                                <h3>MINES</h3>
-                                <div class="tile-meta">
-                                    <span class="meta-item"><i class="ri-user-3-line"></i> 42 Playing</span>
-                                    <span class="meta-item high-vol">High Volatility</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SLOTS CARD -->
-                        <div class="game-tile glass-panel" onclick="app.game.launch('slots')">
-                            <div class="tile-media media-slots">
-                                <div class="tile-overlay">
-                                    <button class="btn-play-icon"><i class="ri-play-fill"></i></button>
-                                </div>
-                            </div>
-                            <div class="tile-details">
-                                <h3>NEON SLOTS</h3>
-                                <div class="tile-meta">
-                                    <span class="meta-item"><i class="ri-user-3-line"></i> 112 Playing</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- RPS CARD -->
-                        <div class="game-tile glass-panel" onclick="app.game.launch('rps')">
-                            <div class="tile-media media-rps">
-                                <div class="tile-overlay">
-                                    <button class="btn-play-icon"><i class="ri-play-fill"></i></button>
-                                </div>
-                            </div>
-                            <div class="tile-details">
-                                <h3>RPS BATTLE</h3>
-                                <div class="tile-meta">
-                                    <span class="meta-item">PvP Enabled</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- COMING SOON CARD -->
-                        <div class="game-tile glass-panel disabled">
-                            <div class="tile-media media-soon">
-                                <div class="lock-icon"><i class="ri-lock-2-line"></i></div>
-                            </div>
-                            <div class="tile-details">
-                                <h3>CYBER POKER</h3>
-                                <div class="tile-meta">
-                                    <span class="meta-item">Coming Soon</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW: CHAT -->
-            <section id="view-chat" class="view-panel">
-                <div class="chat-interface glass-panel">
-
-                    <!-- CHANNELS / DM LIST -->
-                    <div class="chat-sidebar-inner">
-                        <div class="search-bar">
-                            <i class="ri-search-line"></i>
-                            <input type="text" placeholder="Search Agents...">
-                        </div>
-                        <div class="channel-list">
-                            <div class="list-header">CHANNELS</div>
-                            <div class="channel-item active" onclick="app.chat.setChannel('global')">
-                                <i class="ri-earth-line"></i> GLOBAL FREQUENCY <span class="badge-new">99+</span>
-                            </div>
-                            <div class="channel-item" onclick="app.chat.setChannel('announcements')">
-                                <i class="ri-megaphone-line"></i> SYSTEM ALERTS
-                            </div>
-
-                            <div class="list-header">DIRECT CONNECT</div>
-                            <div id="dm-list-container">
-                                <!-- DMs injected here -->
-                                <div class="dm-item">
-                                    <div class="dm-avatar online">
-                                        <img src="https://ui-avatars.com/api/?name=S&background=random" class="avt-xxs">
-                                    </div>
-                                    <div class="dm-info">
-                                        <span class="dm-name">Support_Bot</span>
-                                        <span class="dm-preview">How can I assist?</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MAIN CHAT AREA -->
-                    <div class="chat-main-area">
-                        <div class="chat-top-bar">
-                            <div class="active-channel-info">
-                                <i class="ri-earth-fill"></i>
-                                <span>GLOBAL FREQUENCY</span>
-                            </div>
-                            <div class="chat-tools">
-                                <button class="tool-btn" title="Search"><i class="ri-search-2-line"></i></button>
-                                <button class="tool-btn" title="Pinned"><i class="ri-pushpin-line"></i></button>
-                            </div>
-                        </div>
-
-                        <div class="chat-stream" id="main-chat-feed">
-                            <!-- Messages go here -->
-                            <div class="msg-divider"><span>TODAY</span></div>
-
-                            <!-- Example Msg -->
-                            <div class="chat-msg">
-                                <img src="https://ui-avatars.com/api/?name=Sys&background=000&color=fff"
-                                    class="msg-avt">
-                                <div class="msg-body">
-                                    <div class="msg-meta">
-                                        <span class="m-user role-admin">SYSTEM</span>
-                                        <span class="m-time">10:00</span>
-                                    </div>
-                                    <div class="msg-content">Welcome to Nexus v2.0. Behavior protocols are in effect.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="chat-input-area">
-                            <button class="attach-btn"><i class="ri-add-circle-line"></i></button>
-                            <div class="input-wrapper">
-                                <textarea id="chat-textarea" placeholder="Transmit message... (Enter to send)"
-                                    rows="1"></textarea>
-                                <button class="emoji-btn"><i class="ri-emotion-happy-line"></i></button>
-                            </div>
-                            <button class="send-btn" id="btn-chat-send"><i class="ri-send-plane-fill"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW: PROFILE AND ADMIN -->
-            <section id="view-profile" class="view-panel">
-                <div class="profile-layout">
-                    <!-- PROFILE HEADER CARD -->
-                    <div class="profile-header-card glass-panel">
-                        <div class="banner-img"></div>
-                        <div class="ph-content">
-                            <div class="ph-avatar-wrapper">
-                                <img src="" id="p-full-avatar" class="ph-avatar">
-                                <div class="role-badge" id="p-full-role">USER</div>
-                            </div>
-                            <div class="ph-text">
-                                <h2 id="p-full-name">LOADING...</h2>
-                                <p class="ph-motto" id="p-bio">No bio signature setup.</p>
-                                <div class="ph-stats-row">
-                                    <div class="ph-stat">
-                                        <b id="p-total-games">0</b>
-                                        <span>GAMES</span>
-                                    </div>
-                                    <div class="ph-stat">
-                                        <b id="p-total-wins">0</b>
-                                        <span>WINS</span>
-                                    </div>
-                                    <div class="ph-stat">
-                                        <b id="p-level">1</b>
-                                        <span>LEVEL</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="ph-actions">
-                                <button class="btn btn-primary" onclick="app.router.go('settings')">EDIT
-                                    PROFILE</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ADMIN DASHBOARD (CONDITIONAL) -->
-                    <div id="admin-dashboard-container" class="admin-wrapper hidden">
-                        <div class="admin-title">
-                            <i class="ri-shield-check-line"></i>
-                            <span>ADMINISTRATION CONSOLE</span>
-                        </div>
-                        <div class="admin-widgets">
-                            <!-- USER MANAGEMENT -->
-                            <div class="adm-widget glass-panel">
-                                <h4>USER OPS</h4>
-                                <div class="adm-controls">
-                                    <input type="text" id="adm-target-id" placeholder="User ID / Email">
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-warn"
-                                            onclick="app.admin.muteTarget()">MUTE</button>
-                                        <button class="btn btn-sm btn-danger"
-                                            onclick="app.admin.banTarget()">BAN</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- SYSTEM BROADCAST -->
-                            <div class="adm-widget glass-panel">
-                                <h4>GLOBAL BROADCAST</h4>
-                                <textarea id="adm-msg" rows="2" placeholder="System Announcement..."></textarea>
-                                <button class="btn btn-sm btn-primary btn-full"
-                                    onclick="app.admin.broadcast()">TRANSMIT</button>
-                            </div>
-
-                            <!-- FOUNDER CONTROLS -->
-                            <div class="adm-widget glass-panel founder-zone hidden" id="founder-panel">
-                                <h4><i class="ri-vip-crown-fill"></i> FOUNDER OVERRIDE</h4>
-                                <div class="founder-grid">
-                                    <button class="btn btn-xs btn-outline-danger" onclick="app.admin.nukeChat()">NUKE
-                                        CHAT</button>
-                                    <button class="btn btn-xs btn-success" onclick="app.admin.giveAllPoints()">AIRDROP
-                                        POINTS</button>
-                                    <button class="btn btn-xs btn-info"
-                                        onclick="app.admin.toggleMaintenance()">MAINTENANCE</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-        </main> <!-- END VIEWPORT -->
-
-        <!-- MOBILE BOTTOM NAV -->
-        <nav class="mobile-bottom-nav glass-panel">
-            <a onclick="app.router.go('home')" class="mob-item active">
-                <i class="ri-home-5-line"></i>
+            <a href="#" class="nav-link active" onclick="app.router.go('dashboard')" data-page="dashboard">
+                <svg class="w-6 h-6" viewBox="0 0 24 24">
+                    <use href="#icon-dashboard" />
+                </svg>
+                <span>KOMUTA MERKEZİ</span>
             </a>
-            <a onclick="app.router.go('games')" class="mob-item">
-                <i class="ri-gamepad-line"></i>
+
+            <a href="#" class="nav-link" onclick="app.router.go('games')" data-page="games">
+                <svg class="w-6 h-6" viewBox="0 0 24 24">
+                    <use href="#icon-gamepad" />
+                </svg>
+                <span>OYUN ARENASI</span>
             </a>
-            <div class="mob-fab-wrapper">
-                <button class="mob-fab" onclick="app.router.go('chat')">
-                    <i class="ri-chat-3-fill"></i>
-                </button>
-            </div>
-            <a onclick="app.router.go('market')" class="mob-item">
-                <i class="ri-shopping-bag-3-line"></i>
+
+            <a href="#" class="nav-link" onclick="app.router.go('chat')" data-page="chat">
+                <svg class="w-6 h-6" viewBox="0 0 24 24">
+                    <use href="#icon-chat" />
+                </svg>
+                <span>İLETİŞİM AĞI</span>
+                <span class="badge badge-danger ml-auto">CANLI</span>
             </a>
-            <a onclick="app.router.go('profile')" class="mob-item">
-                <i class="ri-user-3-line"></i>
+
+            <div class="nav-divider"></div>
+            <div class="nav-section-label">EKONOMİ</div>
+
+            <a href="#" class="nav-link" onclick="app.router.go('market')" data-page="market">
+                <svg class="w-6 h-6" viewBox="0 0 24 24">
+                    <use href="#icon-market" />
+                </svg>
+                <span>PAZAR YERİ</span>
+            </a>
+
+            <a href="#" class="nav-link" onclick="app.router.go('inventory')" data-page="inventory">
+                <i class="ri-archive-line text-lg"></i>
+                <span>ENVANTERİM</span>
+            </a>
+
+            <a href="#" class="nav-link" onclick="app.router.go('leaderboard')" data-page="leaderboard">
+                <i class="ri-trophy-line text-lg"></i>
+                <span>LİDER TABLOSU</span>
+            </a>
+
+            <div class="nav-divider"></div>
+            <div class="nav-section-label">SİSTEM</div>
+
+            <a href="#" class="nav-link" onclick="app.ui.openModal('settings-modal')">
+                <i class="ri-settings-4-line text-lg"></i>
+                <span>AYARLAR</span>
+            </a>
+
+            <a href="#" class="nav-link text-danger hidden" id="nav-admin" onclick="app.router.go('admin')">
+                <i class="ri-shield-keyhole-line text-lg"></i>
+                <span>YÖNETİCİ PANELİ</span>
             </a>
         </nav>
 
-    </div> <!-- END CORE -->
+        <!-- USER PROFILE MINIY -->
+        <div class="sidebar-user">
+            <div class="user-mini-card" onclick="app.router.go('profile')">
+                <img src="#" id="sb-avatar" class="user-avatar-sm" alt="User">
+                <div class="user-info-sm">
+                    <div class="user-name" id="sb-username">GUEST</div>
+                    <div class="user-level" id="sb-level">LVL 0</div>
+                </div>
+                <div class="ml-auto pointer text-danger" onclick="event.stopPropagation(); app.auth.logout()"
+                    title="Çıkış">
+                    <i class="ri-logout-box-r-line"></i>
+                </div>
+            </div>
+        </div>
+    </aside>
 
-    <!-- ==================================================================================== -->
-    <!-- GAME OVERLAY SYSTEM (FULLSCREEN)                                                    -->
-    <!-- ==================================================================================== -->
-    <div id="game-stage" class="game-stage-overlay hidden">
-        <div class="gs-header">
-            <div class="gs-title">
-                <i class="ri-gamepad-fill"></i>
-                <span id="gs-game-name">MINES</span>
+    <!-- 
+    ================================================================================
+       SECTION 5: TOP HEADER
+    ================================================================================ 
+    -->
+    <header class="app-header">
+        <div class="header-left flex items-center gap-4">
+            <div class="mobile-toggle block md:hidden" onclick="app.ui.toggleSidebar()">
+                <i class="ri-menu-2-line text-2xl"></i>
             </div>
-            <div class="gs-stats">
-                <span>BET: <b id="gs-bet-display">0</b></span>
-                <span>WIN: <b id="gs-win-display" class="text-neon">0</b></span>
+            <div class="page-title hidden md:block">
+                <h2 id="page-title-text">KOMUTA MERKEZİ</h2>
             </div>
-            <button class="gs-close" onclick="app.game.close()"><i class="ri-close-line"></i></button>
         </div>
 
-        <div class="gs-canvas-wrapper" id="gs-container">
-            <!-- GAME UIs INJECTED HERE -->
+        <div class="header-tools">
+            <!-- ONLINE COUNTER -->
+            <div class="flex items-center gap-2 text-sm font-mono text-primary">
+                <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+                <span id="online-counter">0</span> ONLİNE
+            </div>
 
-            <!-- MINES TEMPLATE -->
-            <div id="template-mines" class="game-template hidden">
-                <div class="mines-layout">
-                    <div class="mines-controls glass-panel">
-                        <div class="ctrl-row">
-                            <label>BET AMOUNT</label>
-                            <div class="bet-input-group">
-                                <button onclick="app.game.mines.adjBet(-10)">-</button>
-                                <input type="number" id="mines-bet-val" value="100">
-                                <button onclick="app.game.mines.adjBet(10)">+</button>
+            <!-- WALLET -->
+            <div class="currency-display pointer hover:bg-white/10 transition" onclick="app.router.go('market')">
+                <svg class="w-6 h-6 text-accent" viewBox="0 0 24 24">
+                    <use href="#icon-coin" />
+                </svg>
+                <span class="currency-val" id="header-balance">0</span>
+                <div
+                    class="w-6 h-6 rounded-full bg-accent text-black flex items-center justify-center font-bold text-xs">
+                    +</div>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="relative pointer w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+                onclick="app.ui.toggleNotif()">
+                <i class="ri-notification-3-line text-xl"></i>
+                <div class="absolute top-2 right-2 w-2 h-2 bg-danger rounded-full animate-ping hidden" id="notif-dot">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 
+    ================================================================================
+       SECTION 6: MAIN CONTENT VIEWPORT
+    ================================================================================ 
+    -->
+    <main class="app-main" id="main-container">
+
+        <!-- ################################################################### -->
+        <!-- VIEW 1: DASHBOARD (HOME) -->
+        <!-- ################################################################### -->
+        <section id="view-dashboard" class="view-section active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- HERO BANNER -->
+                <div
+                    class="lg:col-span-3 card relative overflow-hidden flex flex-col justify-center p-8 min-h-[300px] border-primary-500">
+                    <div class="absolute inset-0 z-0 bg-gradient-to-r from-primary-900/50 to-transparent"></div>
+                    <div class="relative z-10 z-base">
+                        <h3 class="text-gradient">HOŞ GELDİN, <span id="dash-username">AJAN</span></h3>
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 glitch-text" data-text="SAHIKALI SYSTEM">
+                            SAHIKALI SYSTEM</h1>
+                        <p class="max-w-2xl text-gray-300 text-lg mb-8">
+                            Yeni nesil oyun protokolü aktif. Günlük görevlerini tamamla,
+                            rakiplerini alt et ve sıralamada yüksel.
+                        </p>
+                        <div class="flex gap-4">
+                            <button class="btn btn-primary" onclick="app.router.go('games')">OYUNA BAŞLA</button>
+                            <button class="btn btn-ghost" onclick="app.router.go('market')">MARKETİ GEZ</button>
+                        </div>
+                    </div>
+                    <!-- Decorative particles -->
+                    <div class="absolute right-0 top-0 w-1/2 h-full opacity-30 pointer-events-none"
+                        style="background: radial-gradient(circle, var(--c-primary-500) 0%, transparent 70%); filter: blur(60px);">
+                    </div>
+                </div>
+
+                <!-- STATS CARDS -->
+                <div class="card flex items-center justify-between p-6 corner-accent">
+                    <div>
+                        <div class="text-sm text-gray-400 uppercase tracking-widest">TOPLAM KAZANÇ</div>
+                        <div class="text-3xl font-mono font-bold text-success" id="dash-wins">0</div>
+                    </div>
+                    <i class="ri-bar-chart-groupped-line text-4xl text-gray-700"></i>
+                </div>
+
+                <div class="card flex items-center justify-between p-6 corner-accent">
+                    <div>
+                        <div class="text-sm text-gray-400 uppercase tracking-widest">RANKING</div>
+                        <div class="text-3xl font-mono font-bold text-accent" id="dash-rank">#PENDING</div>
+                    </div>
+                    <i class="ri-trophy-line text-4xl text-gray-700"></i>
+                </div>
+
+                <div class="card flex items-center justify-between p-6 corner-accent">
+                    <div>
+                        <div class="text-sm text-gray-400 uppercase tracking-widest">OYUN GEÇMİŞİ</div>
+                        <div class="text-3xl font-mono font-bold text-info" id="dash-games">0</div>
+                    </div>
+                    <i class="ri-history-line text-4xl text-gray-700"></i>
+                </div>
+
+                <!-- FEATURED GAME -->
+                <div class="lg:col-span-2 card p-0 overflow-hidden group cursor-pointer"
+                    onclick="app.game.launch('mines')">
+                    <div class="relative h-64 bg-black">
+                        <img src="https://placehold.co/800x400/101010/00c6ff/png?text=MAYIN+TARLASI"
+                            class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition duration-500">
+                        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent p-6">
+                            <h3 class="text-white mb-1">MAYIN TARLASI (MINES)</h3>
+                            <div class="flex items-center gap-4 text-sm">
+                                <span class="bg-primary-900 text-primary-300 px-2 py-1 rounded">RTP %98</span>
+                                <span class="text-gray-300">Strateji Odaklı</span>
                             </div>
                         </div>
-                        <div class="ctrl-row">
-                            <label>MINES (1-24)</label>
-                            <input type="range" min="1" max="24" value="3" id="mines-count-range"
-                                oninput="document.getElementById('m-count-disp').innerText = this.value">
-                            <span id="m-count-disp" class="val-disp">3</span>
+                    </div>
+                </div>
+
+                <!-- NEWS/UPDATES -->
+                <div class="card p-6">
+                    <h4 class="border-b border-gray-700 pb-2 mb-4">SİSTEM GÜNLÜĞÜ</h4>
+                    <ul class="space-y-4 text-sm font-mono text-gray-400">
+                        <li class="flex gap-2">
+                            <span class="text-primary">[SİSTEM]</span>
+                            <span>v4.2.0 Güncellemesi yayında. Yeni fizik motoru aktif.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-danger">[ALERT]</span>
+                            <span>Haftalık turnuva kayıtları başladı.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-accent">[MARKET]</span>
+                            <span>Yeni 'Neon' koleksiyonu eklendi.</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ################################################################### -->
+        <!-- VIEW 2: GAMES HUB -->
+        <!-- ################################################################### -->
+        <section id="view-games" class="view-section">
+            <h2 class="mb-6 flex items-center gap-3">
+                <i class="ri-gamepad-fill text-primary"></i>
+                OYUN KÜTÜPHANESİ
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- GAME CARD: MINES -->
+                <div class="card p-0 overflow-hidden hover:border-primary-500 transition cursor-pointer"
+                    onclick="app.game.launch('mines')">
+                    <div class="h-40 bg-zinc-900 flex items-center justify-center relative">
+                        <i class="ri-grid-fill text-6xl text-gray-700"></i>
+                        <div class="absolute top-2 right-2 bg-success text-black text-xs font-bold px-2 py-1 rounded">
+                            POPÜLER</div>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="text-lg font-bold">MAYIN TARLASI</h4>
+                        <p class="text-xs text-gray-400">Mayınlardan kaç, elmasları topla, çarpanı katla.</p>
+                    </div>
+                </div>
+
+                <!-- GAME CARD: SLOTS -->
+                <div class="card p-0 overflow-hidden hover:border-accent-500 transition cursor-pointer"
+                    onclick="app.game.launch('slots')">
+                    <div class="h-40 bg-zinc-900 flex items-center justify-center relative">
+                        <i class="ri-copper-diamond-line text-6xl text-gray-700"></i>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="text-lg font-bold">NEON SLOTS</h4>
+                        <p class="text-xs text-gray-400">3 Makara, 5 Ödeme Çizgisi. Jackpot şansı!</p>
+                    </div>
+                </div>
+
+                <!-- GAME CARD: ROULETTE -->
+                <div class="card p-0 overflow-hidden hover:border-danger-500 transition cursor-pointer"
+                    onclick="app.game.launch('roulette')">
+                    <div class="h-40 bg-zinc-900 flex items-center justify-center relative">
+                        <i class="ri-focus-2-line text-6xl text-gray-700"></i>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="text-lg font-bold">CYBER RULET</h4>
+                        <p class="text-xs text-gray-400">Klasik Avrupa Ruleti. Kırmızı mı Siyah mı?</p>
+                    </div>
+                </div>
+
+                <!-- GAME CARD: CRASH -->
+                <div class="card p-0 overflow-hidden hover:border-info-500 transition cursor-pointer"
+                    onclick="app.game.launch('crash')">
+                    <div class="h-40 bg-zinc-900 flex items-center justify-center relative">
+                        <i class="ri-line-chart-line text-6xl text-gray-700"></i>
+                        <div class="absolute top-2 right-2 bg-warning text-black text-xs font-bold px-2 py-1 rounded">
+                            YENİ</div>
+                    </div>
+                    <div class="p-4">
+                        <h4 class="text-lg font-bold">CRASH (MOON)</h4>
+                        <p class="text-xs text-gray-400">Grafik çökmeden önce bahsini bozdur.</p>
+                    </div>
+                </div>
+
+                <!-- COMING SOON -->
+                <div class="card p-0 opacity-50 border-dashed border-gray-700">
+                    <div class="h-40 flex items-center justify-center">
+                        <i class="ri-lock-2-line text-4xl"></i>
+                    </div>
+                    <div class="p-4 text-center">
+                        <h4 class="text-sm">YAKINDA</h4>
+                        <p class="text-xs">BLACKJACK</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ################################################################### -->
+        <!-- VIEW 3: MARKETPLACE -->
+        <!-- ################################################################### -->
+        <section id="view-market" class="view-section">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2>PAZAR YERİ</h2>
+                    <p>Kazandığın puanları harca, nadir eşyalar topla.</p>
+                </div>
+                <div class="btn-group flex gap-2">
+                    <button class="btn btn-ghost active">TÜMÜ</button>
+                    <button class="btn btn-ghost">KOZMETİK</button>
+                    <button class="btn btn-ghost">BONUSLAR</button>
+                </div>
+            </div>
+
+            <div class="market-grid" id="market-container">
+                <!-- ITEMS WILL BE INJECTED HERE via JS -->
+                <!-- TEMPLATE ITEM (HIDDEN) -->
+                <div class="market-item template hidden">
+                    <div class="item-preview">🎁</div>
+                    <div class="item-details">
+                        <div class="flex justify-between items-start mb-2">
+                            <h5 class="text-md font-bold">ITEM NAME</h5>
+                            <span class="text-xs px-2 py-1 rounded border">RARE</span>
                         </div>
-                        <div class="ctrl-action">
-                            <button id="btn-mines-play" class="btn btn-primary btn-block btn-lg"
-                                onclick="app.game.mines.start()">START ROUND</button>
-                            <button id="btn-mines-cashout" class="btn btn-success btn-block btn-lg hidden"
-                                onclick="app.game.mines.cashout()">CASHOUT</button>
+                        <p class="text-xs text-gray-400 mb-4 h-8 overflow-hidden">Item description goes here.</p>
+                        <div class="flex justify-between items-center">
+                            <div class="text-lg font-mono font-bold text-accent">5000 P</div>
+                            <button class="btn-action-sm">AL</button>
                         </div>
                     </div>
-                    <div class="mines-board-container">
-                        <div class="mines-grid-visual" id="mines-grid">
-                            <!-- 5x5 Grid generated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ################################################################### -->
+        <!-- VIEW 4: CHAT ROOM -->
+        <!-- ################################################################### -->
+        <section id="view-chat" class="view-section h-[calc(100vh-140px)]">
+            <div class="chat-wrapper h-full">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-success"></div>
+                        <h4 class="m-0 text-lg">GLOBAL KANAL</h4>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn-icon bg-white/5" onclick="app.chat.clear()"><i
+                                class="ri-brush-line"></i></button>
+                    </div>
+                </div>
+
+                <!-- Message Area -->
+                <div id="chat-messages" class="chat-messages custom-scroll">
+                    <div class="text-center text-xs text-gray-500 py-4">
+                        --- SOHBET BAŞLANGICI ---
+                        <br>Lütfen saygı çerçevesinde konuşun.
+                    </div>
+                    <!-- Messages Injected Here -->
+                </div>
+
+                <!-- Input Area -->
+                <form class="chat-input" id="chat-form">
+                    <input type="text" id="chat-msg-input" class="input-field"
+                        placeholder="Mesajını yaz... (/help için komutlar)" autocomplete="off">
+                    <button type="submit" class="btn btn-primary"><i class="ri-send-plane-fill"></i></button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ################################################################### -->
+        <!-- VIEW 5: PROFILE PAGE -->
+        <!-- ################################################################### -->
+        <section id="view-profile" class="view-section">
+            <div class="card mb-6">
+                <div class="h-32 bg-gradient-to-r from-primary-900 to-secondary-900 rounded-t-lg relative">
+                    <div class="absolute -bottom-12 left-8">
+                        <img src="" id="pf-avatar"
+                            class="w-24 h-24 rounded-full border-4 border-black bg-black object-cover">
+                    </div>
+                </div>
+                <div class="pt-16 px-8 pb-8">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="m-0" id="pf-name">KULLANICI ADI</h2>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span
+                                    class="badge bg-primary-900 text-primary px-2 py-1 rounded text-xs font-bold border border-primary-700"
+                                    id="pf-role">MEMBER</span>
+                                <span class="text-gray-500 text-sm" id="pf-id">ID: 000000</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-400 uppercase">SEVİYE</div>
+                            <div class="text-4xl font-mono font-bold text-white flex items-center gap-2 justify-end">
+                                <span id="pf-lvl">1</span>
+                                <span class="text-sm text-gray-600 font-normal">/ 99</span>
+                            </div>
+                            <div class="w-48 h-2 bg-gray-800 rounded mt-2 ml-auto">
+                                <div class="h-full bg-primary-500 rounded" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                        <div class="bg-white/5 p-4 rounded text-center">
+                            <div class="text-xs text-gray-400">POKER YÜZÜ</div>
+                            <div class="text-xl font-bold">0</div>
+                        </div>
+                        <div class="bg-white/5 p-4 rounded text-center">
+                            <div class="text-xs text-gray-400">TOPLAM OYUN</div>
+                            <div class="text-xl font-bold" id="pf-stat-games">0</div>
+                        </div>
+                        <div class="bg-white/5 p-4 rounded text-center">
+                            <div class="text-xs text-gray-400">EN YÜKSEK KAZANÇ</div>
+                            <div class="text-xl font-bold text-accent" id="pf-stat-high">0</div>
+                        </div>
+                        <div class="bg-white/5 p-4 rounded text-center">
+                            <div class="text-xs text-gray-400">KATILIM</div>
+                            <div class="text-xl font-bold" id="pf-date">-</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- SLOTS TEMPLATE -->
-            <div id="template-slots" class="game-template hidden">
-                <div class="slots-machine glass-panel">
-                    <div class="slots-display">
-                        <div class="slot-reel" id="reel-1">
-                            <div class="reel-strip">🍒</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- INVENTORY -->
+                <div class="card p-6">
+                    <h4 class="mb-4">ENVANTER ÇANTASI</h4>
+                    <div class="grid grid-cols-4 gap-2" id="pf-inventory-grid">
+                        <div
+                            class="aspect-square bg-white/5 rounded border border-white/10 flex items-center justify-center text-gray-600 hover:bg-white/10 cursor-pointer transition">
+                            ?</div>
+                        <div
+                            class="aspect-square bg-white/5 rounded border border-white/10 flex items-center justify-center text-gray-600">
                         </div>
-                        <div class="slot-reel" id="reel-2">
-                            <div class="reel-strip">7️⃣</div>
+                        <div
+                            class="aspect-square bg-white/5 rounded border border-white/10 flex items-center justify-center text-gray-600">
                         </div>
-                        <div class="slot-reel" id="reel-3">
-                            <div class="reel-strip">💎</div>
+                        <div
+                            class="aspect-square bg-white/5 rounded border border-white/10 flex items-center justify-center text-gray-600">
                         </div>
                     </div>
-                    <div class="slot-controls">
-                        <input type="number" id="slots-bet" value="50">
-                        <button class="btn btn-primary btn-lg" onclick="app.game.slots.spin()">SPIN</button>
+                </div>
+
+                <!-- ACHIEVEMENTS -->
+                <div class="card p-6">
+                    <h4 class="mb-4">BAŞARIMLAR</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2 bg-white/5 rounded opacity-50">
+                            <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center grayscale">
+                                🏆</div>
+                            <div>
+                                <div class="font-bold text-sm">İLK KAN</div>
+                                <div class="text-xs text-gray-400">İlk oyununu kazan.</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 bg-white/5 rounded opacity-50">
+                            <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center grayscale">
+                                💰</div>
+                            <div>
+                                <div class="font-bold text-sm">MİLYONER</div>
+                                <div class="text-xs text-gray-400">Toplam 1.000.000 puana ulaş.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </section>
 
+        <!-- ################################################################### -->
+        <!-- VIEW 6: ADMIN CONSOLE -->
+        <!-- ################################################################### -->
+        <section id="view-admin" class="view-section">
+            <div class="admin-dashboard">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-danger m-0">ADMIN KONSOLU (ROOT)</h2>
+                    <button class="btn btn-danger btn-sm">SİSTEMİ KİLİTLE</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="p-4 bg-black/50 border border-danger rounded text-center">
+                        <div class="text-xs text-danger">AKTİF SESSION</div>
+                        <div class="text-2xl font-mono">1</div>
+                    </div>
+                    <div class="p-4 bg-black/50 border border-danger rounded text-center">
+                        <div class="text-xs text-danger">DB REQUESTS</div>
+                        <div class="text-2xl font-mono">42/s</div>
+                    </div>
+                    <div class="p-4 bg-black/50 border border-danger rounded text-center">
+                        <div class="text-xs text-danger">SERVER UPTIME</div>
+                        <div class="text-2xl font-mono">99.9%</div>
+                    </div>
+                </div>
+
+                <div class="bg-black/50 p-4 rounded mb-6">
+                    <h4 class="text-sm mb-2 text-danger">KULLANICI YÖNETİMİ</h4>
+                    <div class="flex gap-2">
+                        <input type="text" class="input-field h-10" placeholder="Kullanıcı ID veya Email">
+                        <button class="btn btn-danger">BAN</button>
+                        <button class="btn btn-ghost">MUTE</button>
+                        <button class="btn btn-success">GIFT CREDITS</button>
+                    </div>
+                </div>
+
+                <div class="bg-black/50 p-4 rounded">
+                    <h4 class="text-sm mb-2 text-danger">SİSTEM LOGLARI</h4>
+                    <div
+                        class="h-40 overflow-y-auto font-mono text-xs text-gray-400 p-2 border border-gray-800 bg-black">
+                        [SYSTEM] Init Sequence Started...<br>
+                        [AUTH] User connected via ID: 938492<br>
+                        [GAME] Mines game initialized<br>
+                        [SYSTEM] Performance Nominal.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 
+    ================================================================================
+       SECTION 8: MODALS & OVERLAYS
+    ================================================================================ 
+    -->
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>SİSTEM AYARLARI</h3>
+                <button class="text-xl" onclick="app.ui.closeModal('settings-modal')">&times;</button>
+            </div>
+            <div class="modal-body space-y-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-bold">SES EFEKTLERİ</div>
+                        <div class="text-xs text-gray-400">Arayüz ve oyun sesleri.</div>
+                    </div>
+                    <input type="checkbox" id="set-sfx" checked class="w-6 h-6">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-bold">MÜZİK</div>
+                        <div class="text-xs text-gray-400">Arka plan ambiyans müziği.</div>
+                    </div>
+                    <input type="checkbox" id="set-music" class="w-6 h-6">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-bold">DÜŞÜK PERFORMANS</div>
+                        <div class="text-xs text-gray-400">Parçacık efektlerini kapat.</div>
+                    </div>
+                    <input type="checkbox" id="set-low-perf" class="w-6 h-6">
+                </div>
+                <hr class="border-gray-800">
+                <div class="p-4 bg-red-900/20 border border-red-900 rounded">
+                    <h5 class="text-danger mb-2">HESAP İŞLEMLERİ</h5>
+                    <button class="btn btn-danger w-full mb-2" onclick="app.auth.logout()">OTURUMU KAPAT</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- SOUND ASSETS -->
-    <div id="sfx-engine" hidden>
-        <!-- In a real deployment, these would include proper formats -->
-        <audio id="sfx-ui-click" preload="auto"
-            src="https://assets.mixkit.co/sfx/preview/mixkit-modern-technology-select-3124.mp3"></audio>
-        <audio id="sfx-ui-hover" preload="auto"
-            src="https://assets.mixkit.co/sfx/preview/mixkit-simple-game-menu-pop-273.mp3"></audio>
-        <audio id="sfx-win" preload="auto"
-            src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
-        <audio id="sfx-loose" preload="auto"
-            src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
-        <audio id="sfx-msg-in" preload="auto"
-            src="https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3"></audio>
+    <!-- GAME OVERLAY CONTAINER (Universal Game Wrapper) -->
+    <div id="game-modal" class="modal-overlay backdrop-blur-xl">
+        <div
+            class="modal-content w-full max-w-5xl h-[90vh] flex flex-col border-accent-500 shadow-2xl shadow-accent-500/20">
+            <div class="modal-header bg-black/50 border-accent-900">
+                <div class="flex items-center gap-4">
+                    <span class="text-accent font-bold tracking-widest text-xl" id="gm-title">OYUN BAŞLIĞI</span>
+                    <span class="px-2 py-0.5 rounded bg-accent/20 text-accent text-xs border border-accent/50">CANLI
+                        BAHİS</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-[10px] text-gray-400">KAZANÇ</div>
+                        <div class="text-xl font-mono text-success font-bold" id="gm-win-amount">0</div>
+                    </div>
+                    <button class="text-2xl text-gray-500 hover:text-white transition"
+                        onclick="app.game.close()">&times;</button>
+                </div>
+            </div>
+
+            <div class="modal-body flex-1 bg-black/80 relative overflow-hidden flex flex-col items-center justify-center"
+                id="game-stage">
+                <!-- DYNAMIC GAME UI INJECTED HERE -->
+            </div>
+        </div>
     </div>
 
-    <!-- MAIN APP SCRIPT -->
-    <script type="module" src="app.js"></script>
+    <!-- AUTHENTICATION MODAL -->
+    <div id="auth-modal" class="modal-overlay z-[9999]">
+        <div class="modal-content max-w-sm text-center p-8 border-primary-500 glow-primary">
+            <div class="mb-6">
+                <svg class="w-16 h-16 text-primary mx-auto animate-pulse" viewBox="0 0 100 100">
+                    <use href="#icon-logo" />
+                </svg>
+            </div>
+            <h2 class="mb-2">SAHIKALI</h2>
+            <p class="text-sm text-gray-400 mb-8">Kimlik doğrulaması gerekli. Lütfen giriş yapın.</p>
 
+            <form id="form-login" class="space-y-4">
+                <div class="input-group">
+                    <input type="email" id="login-email" class="input-field" placeholder="E-Posta Adresi" required>
+                    <i class="ri-mail-line input-icon"></i>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="login-pass" class="input-field" placeholder="Şifre" required>
+                    <i class="ri-lock-2-line input-icon"></i>
+                </div>
+                <button type="submit" class="btn btn-primary w-full shadow-lg shadow-primary-500/30">Oturum Aç</button>
+            </form>
+            <div class="mt-4 text-xs text-gray-500">
+                Hesabınız yoksa otomatik oluşturulacaktır.
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+    ================================================================================
+       SECTION 9: TEMPLATES (Hidden)
+    ================================================================================ 
+    -->
+    <!-- TEMPLATE: MINES UI -->
+    <template id="tpl-mines">
+        <div class="mines-interface w-full h-full flex flex-col md:flex-row gap-4 p-4">
+            <div class="mines-controls w-full md:w-1/3 flex flex-col gap-4">
+                <div class="p-4 bg-white/5 rounded border border-white/10">
+                    <label class="text-xs text-gray-400 block mb-2">BAHİS MİKTARI</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="m-bet-inp"
+                            class="w-full bg-black border border-gray-700 p-2 rounded text-white font-mono text-center text-lg"
+                            value="100">
+                        <button class="btn btn-ghost px-2"
+                            onclick="document.getElementById('m-bet-inp').value*=2">2x</button>
+                        <button class="btn btn-ghost px-2"
+                            onclick="document.getElementById('m-bet-inp').value/=2">1/2</button>
+                    </div>
+                </div>
+                <div class="p-4 bg-white/5 rounded border border-white/10">
+                    <label class="text-xs text-gray-400 block mb-2">MAYIN SAYISI (1-24)</label>
+                    <input type="range" id="m-mines-rng" min="1" max="24" value="3" class="w-full mb-2"
+                        oninput="document.getElementById('m-mines-val').innerText=this.value">
+                    <div class="text-center font-bold text-danger text-xl" id="m-mines-val">3</div>
+                </div>
+                <button id="btn-m-play" class="btn btn-primary w-full py-4 text-xl mt-auto"
+                    onclick="app.game.mines.start()">BAŞLAT</button>
+                <button id="btn-m-cashout" class="btn btn-success w-full py-4 text-xl mt-auto hidden"
+                    onclick="app.game.mines.cashout()">KASAYI ÇEK</button>
+            </div>
+            <div
+                class="mines-grid-container w-full md:w-2/3 flex items-center justify-center bg-black/30 rounded-lg border border-white/5 relative">
+                <div class="absolute top-4 left-4 text-xs text-gray-500">FIELD_ID: #8392</div>
+                <div class="mines-grid" id="m-grid-target">
+                    <!-- Cells injected via JS -->
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: SLOTS UI -->
+    <template id="tpl-slots">
+        <div class="flex flex-col items-center justify-center h-full w-full gap-8">
+            <div class="slot-machine relative">
+                <div class="slot-display-window">
+                    <div class="slot-reel" id="reel-1">
+                        <div class="reel-strip" id="rs-1"></div>
+                    </div>
+                    <div class="slot-reel" id="reel-2">
+                        <div class="reel-strip" id="rs-2"></div>
+                    </div>
+                    <div class="slot-reel" id="reel-3">
+                        <div class="reel-strip" id="rs-3"></div>
+                    </div>
+                    <div class="winning-line" id="win-line"></div>
+                </div>
+                <div class="absolute -right-12 top-20 w-8 h-40 bg-gray-800 rounded-r-lg border-r-4 border-gray-600">
+                    <div id="slot-handle"
+                        class="w-8 h-8 rounded-full bg-red-600 absolute -top-10 left-0 border-4 border-red-800 shadow-lg cursor-pointer transition-all duration-300"
+                        onclick="app.game.slots.spin()"></div>
+                    <div class="w-2 h-40 bg-gray-500 mx-auto"></div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 bg-black/50 p-4 rounded-full border border-accent">
+                <div class="flex flex-col">
+                    <label class="text-[10px] text-gray-400 uppercase text-center">BAHİS</label>
+                    <input type="number" id="s-bet" value="50"
+                        class="bg-transparent text-center font-mono font-bold text-xl w-24 border-none text-white focus:outline-none">
+                </div>
+                <button
+                    class="btn btn-accent rounded-full px-8 py-4 font-black text-xl shadow-[0_0_20px_rgba(255,193,7,0.5)]"
+                    onclick="app.game.slots.spin()">ÇEVİR</button>
+            </div>
+            <div class="text-xs text-gray-500">
+                KOMBİNASYONLAR: 🍒🍒🍒 (10x) | 7️⃣7️⃣7️⃣ (50x) | 💎💎💎 (100x)
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: ROULETTE UI -->
+    <template id="tpl-roulette">
+        <div class="flex flex-col items-center justify-center p-4 w-full h-full overflow-y-auto">
+            <div
+                class="roulette-table flex-col lg:flex-row items-center justify-center transform scale-90 lg:scale-100">
+                <div class="roulette-wheel-container">
+                    <div class="roulette-wheel" id="r-wheel"></div>
+                    <div class="roulette-ball" id="r-ball"></div>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div class="roulette-board" id="r-board">
+                        <!-- Board Grid (0-36) -->
+                        <div class="bet-spot green row-span-5 flex items-center justify-center"
+                            onclick="app.game.roulette.bet('0')">0</div>
+                        <!-- COLS 1 -->
+                        <div class="bet-spot red" onclick="app.game.roulette.bet('3')">3</div>
+                        <div class="bet-spot black" onclick="app.game.roulette.bet('6')">6</div>
+                        <div class="bet-spot red" onclick="app.game.roulette.bet('9')">9</div>
+                        <div class="bet-spot red" onclick="app.game.roulette.bet('12')">12</div>
+                        <div class="bet-spot black" onclick="app.game.roulette.bet('15')">15</div>
+                        <div class="bet-spot red" onclick="app.game.roulette.bet('18')">18</div>
+                        <div class="bet-spot red" onclick="app.game.roulette.bet('21')">21</div>
+                        <div class="bet-spot black" onclick="app.game.roulette.bet('24')">24</div>
+                        <div class="bet-spot red" onclick="app.game.roulette.bet('27')">27</div>
+                        <div class="bet-spot red" onclick="app.game.roulette.bet('30')">30</div>
+                        <div class="bet-spot black" onclick="app.game.roulette.bet('33')">33</div>
+                        <div class="bet-spot red" onclick="app.game.roulette.bet('36')">36</div>
+                        <!-- ... more spots simplified for layout -->
+                        <div class="bet-spot col-span-4 border-t-4 border-white mt-2"
+                            onclick="app.game.roulette.bet('red')">RED</div>
+                        <div class="bet-spot col-span-4 border-t-4 border-white mt-2"
+                            onclick="app.game.roulette.bet('black')">BLACK</div>
+                    </div>
+                    <div class="flex gap-2 justify-center">
+                        <div class="chip chip-50 pointer" onclick="app.game.roulette.setChip(50)">50</div>
+                        <div class="chip chip-100 pointer" onclick="app.game.roulette.setChip(100)">100</div>
+                        <div class="chip chip-500 pointer" onclick="app.game.roulette.setChip(500)">500</div>
+                        <button class="btn btn-primary" onclick="app.game.roulette.spin()">BAŞLAT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 
+    ================================================================================
+       SECTION 10: SCRIPTS
+    ================================================================================ 
+    -->
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>
