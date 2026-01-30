@@ -3,7 +3,7 @@
    ============================================================================ */
 
 :root {
-    /* Colors */
+    /* Colors - Default Theme: Dark Cyber */
     --primary: #00c6ff;
     --primary-dark: #0099cc;
     --accent: #ae00ff;
@@ -32,6 +32,48 @@
     /* Fonts */
     --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-heading: 'Poppins', sans-serif;
+}
+
+/* THEME: Purple Dream */
+[data-theme="purple-dream"] {
+    --primary: #a855f7;
+    --primary-dark: #7c3aed;
+    --accent: #ec4899;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --bg-main: #0f0a1a;
+    --bg-surface: #1a1a2e;
+    --bg-card: #16213e;
+    --bg-hover: #1f2937;
+}
+
+/* THEME: Ocean Blue */
+[data-theme="ocean-blue"] {
+    --primary: #0ea5e9;
+    --primary-dark: #0284c7;
+    --accent: #06b6d4;
+    --success: #14b8a6;
+    --danger: #f43f5e;
+    --warning: #f59e0b;
+    --bg-main: #0a0f1a;
+    --bg-surface: #0f172a;
+    --bg-card: #1e293b;
+    --bg-hover: #334155;
+}
+
+/* THEME: Sunset Orange */
+[data-theme="sunset-orange"] {
+    --primary: #f97316;
+    --primary-dark: #ea580c;
+    --accent: #ef4444;
+    --success: #22c55e;
+    --danger: #dc2626;
+    --warning: #eab308;
+    --bg-main: #0f0a0a;
+    --bg-surface: #1c1917;
+    --bg-card: #292524;
+    --bg-hover: #44403c;
 }
 
 /* ============================================================================
@@ -1225,5 +1267,131 @@ body.sidebar-collapsed .app-main {
 
     .profile-actions .btn {
         width: 100%;
+    }
+}
+
+/* ============================================================================
+   THEME SELECTION
+   ============================================================================ */
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.theme-card {
+    position: relative;
+    background: var(--bg-surface);
+    border: 2px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.theme-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 198, 255, 0.2);
+}
+
+.theme-card.active {
+    border-color: var(--primary);
+    background: rgba(0, 198, 255, 0.1);
+}
+
+.theme-preview {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    height: 60px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.theme-color {
+    flex: 1;
+    transition: all 0.3s;
+}
+
+.theme-card:hover .theme-color {
+    transform: scale(1.05);
+}
+
+.theme-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.theme-check {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 1rem;
+}
+
+.theme-check.active {
+    display: flex;
+    animation: checkPop 0.3s ease;
+}
+
+@keyframes checkPop {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ============================================================================
+   FORM ENHANCEMENTS
+   ============================================================================ */
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 100px;
+    font-family: var(--font-main);
+}
+
+select.form-input {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a0a0b0' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+}
+
+small.text-muted {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+}
+
+/* ============================================================================
+   RESPONSIVE - THEME GRID
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .theme-grid {
+        grid-template-columns: 1fr;
     }
 }
