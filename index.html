@@ -450,168 +450,188 @@
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <!-- VIEW: CHAT ROOM (Global) -->
-                <section id="view-chat" class="view">
-                    <div class="chat-container glass-panel">
-                        <div class="chat-header">
-                            <div class="chat-info">
-                                <h3>#genel-sohbet</h3>
-                                <span class="online-count"><span id="chat-online-count">0</span> Çevrimiçi</span>
-                            </div>
-                            <div class="chat-actions">
-                                <button class="icon-btn" id="chat-settings-btn" title="Ayarlar">⚙️</button>
+                    <!-- Minesweeper (New Feature) -->
+                    <div class="game-card glass-panel card-hover" onclick="window.gameSystem.launch('mines')">
+                        <div class="game-img" style="background: linear-gradient(135deg, #FF512F, #DD2476);">
+                            <div class="game-overlay">
+                                <button class="btn btn-play">OYNA</button>
                             </div>
                         </div>
-                        <div class="chat-messages" id="global-chat-messages">
-                            <!-- Messages Injected Here -->
-                            <div class="system-message">Sohbet sunucusuna bağlanıldı. Hoş geldin!</div>
-                        </div>
-                        <div class="chat-input-area">
-                            <form id="global-chat-form">
-                                <input type="text" id="global-chat-input" placeholder="Mesajını yaz..."
-                                    autocomplete="off">
-                                <button type="submit" class="btn btn-primary send-btn">
-                                    <svg viewBox="0 0 24 24">
-                                        <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                                    </svg>
-                                </button>
-                            </form>
+                        <div class="game-info">
+                            <h4>Mayın Tarlası</h4>
+                            <p>Risk al, patlamadan kazan</p>
                         </div>
                     </div>
-                </section>
+            </div>
+            </section>
 
-                <!-- VIEW: MESSAGES (DM) -->
-                <section id="view-messages" class="view">
-                    <div class="dm-layout glass-panel">
-                        <div class="dm-sidebar">
-                            <div class="dm-search">
-                                <input type="text" placeholder="Kullanıcı Ara...">
-                            </div>
-                            <div class="dm-list" id="dm-users-list">
-                                <!-- User List Items -->
-                            </div>
+            <!-- VIEW: CHAT ROOM (Global) -->
+            <section id="view-chat" class="view">
+                <div class="chat-container glass-panel">
+                    <div class="chat-header">
+                        <div class="chat-info">
+                            <h3>#genel-sohbet</h3>
+                            <span class="online-count"><span id="chat-online-count">0</span> Çevrimiçi</span>
                         </div>
-                        <div class="dm-content empty" id="dm-active-chat">
-                            <div class="empty-placeholder">
-                                <div class="icon">💬</div>
-                                <p>Mesajlaşmak için bir sohbet seçin veya yeni birini bulun.</p>
+                        <div class="chat-actions">
+                            <button class="icon-btn" id="chat-settings-btn" title="Ayarlar">⚙️</button>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="global-chat-messages">
+                        <!-- Messages Injected Here -->
+                        <div class="system-message">Sohbet sunucusuna bağlanıldı. Hoş geldin!</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <form id="global-chat-form">
+                            <input type="text" id="global-chat-input" placeholder="Mesajını yaz..." autocomplete="off">
+                            <button type="submit" class="btn btn-primary send-btn">
+                                <svg viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: MESSAGES (DM) -->
+            <section id="view-messages" class="view">
+                <div class="dm-layout glass-panel">
+                    <div class="dm-sidebar">
+                        <div class="dm-search">
+                            <input type="text" placeholder="Kullanıcı Ara...">
+                        </div>
+                        <div class="dm-list" id="dm-users-list">
+                            <!-- User List Items -->
+                        </div>
+                    </div>
+                    <div class="dm-content empty" id="dm-active-chat">
+                        <div class="empty-placeholder">
+                            <div class="icon">💬</div>
+                            <p>Mesajlaşmak için bir sohbet seçin veya yeni birini bulun.</p>
+                        </div>
+                        <!-- Actual Chat Structure (Hidden Initially) -->
+                        <div class="dm-chat-interface hidden">
+                            <div class="dm-header">
+                                <div class="user-details">
+                                    <img src="" alt="" class="dm-avatar">
+                                    <h4 class="dm-username">Username</h4>
+                                </div>
+                                <button class="icon-btn close-chat-mobile mobile-only">✕</button>
                             </div>
-                            <!-- Actual Chat Structure (Hidden Initially) -->
-                            <div class="dm-chat-interface hidden">
-                                <div class="dm-header">
-                                    <div class="user-details">
-                                        <img src="" alt="" class="dm-avatar">
-                                        <h4 class="dm-username">Username</h4>
-                                    </div>
-                                    <button class="icon-btn close-chat-mobile mobile-only">✕</button>
-                                </div>
-                                <div class="dm-messages-area" id="dm-messages-area"></div>
-                                <div class="dm-input-area">
-                                    <form id="dm-form">
-                                        <input type="text" id="dm-input" placeholder="Özel mesaj..." autocomplete="off">
-                                        <button type="submit" class="btn btn-primary">➤</button>
-                                    </form>
-                                </div>
+                            <div class="dm-messages-area" id="dm-messages-area"></div>
+                            <div class="dm-input-area">
+                                <form id="dm-form">
+                                    <input type="text" id="dm-input" placeholder="Özel mesaj..." autocomplete="off">
+                                    <button type="submit" class="btn btn-primary">➤</button>
+                                </form>
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <!-- VIEW: ADMIN PANEL -->
-                <section id="view-admin" class="view">
-                    <div class="admin-dashboard">
-                        <div class="admin-header glass-panel">
-                            <h2>Yönetim Merkezi</h2>
-                            <div class="admin-controls">
-                                <span class="admin-badge">YETKİLİ</span>
-                            </div>
+            <!-- VIEW: ADMIN PANEL -->
+            <section id="view-admin" class="view">
+                <div class="admin-dashboard">
+                    <div class="admin-header glass-panel">
+                        <h2>Yönetim Merkezi</h2>
+                        <div class="admin-controls">
+                            <span class="admin-badge">YETKİLİ</span>
                         </div>
+                    </div>
 
-                        <div class="admin-grid">
-                            <div class="admin-card glass-panel">
-                                <h3>Üye Yönetimi & Ceza</h3>
-                                <div class="admin-form">
-                                    <input type="text" id="admin-target-user" placeholder="Kullanıcı ID veya E-posta">
-                                    <div class="action-buttons">
-                                        <button class="btn btn-danger btn-sm"
-                                            onclick="window.adminSystem.banUser()">BAN</button>
-                                        <button class="btn btn-warning btn-sm"
-                                            onclick="window.adminSystem.muteUser()">MUTE</button>
-                                        <button class="btn btn-info btn-sm"
-                                            onclick="window.adminSystem.kickUser()">KICK</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="admin-card glass-panel">
-                                <h3>Sistem Duyurusu</h3>
-                                <div class="admin-form">
-                                    <textarea id="admin-announce-text"
-                                        placeholder="Tüm kullanıcılara gidecek mesaj..."></textarea>
-                                    <button class="btn btn-primary btn-sm"
-                                        onclick="window.adminSystem.sendAnnouncement()">YAYINLA</button>
-                                </div>
-                            </div>
-
-                            <div class="admin-card glass-panel">
-                                <h3>Oyun Kontrolü</h3>
-                                <div class="switch-list">
-                                    <label class="switch-wrapper">
-                                        <span>Satranç</span>
-                                        <input type="checkbox" checked
-                                            onchange="window.adminSystem.toggleGame('chess', this.checked)">
-                                        <span class="slider"></span>
-                                    </label>
-                                    <label class="switch-wrapper">
-                                        <span>2048</span>
-                                        <input type="checkbox" checked
-                                            onchange="window.adminSystem.toggleGame('2048', this.checked)">
-                                        <span class="slider"></span>
-                                    </label>
+                    <div class="admin-grid">
+                        <div class="admin-card glass-panel">
+                            <h3>Üye Yönetimi & Ceza</h3>
+                            <div class="admin-form">
+                                <input type="text" id="admin-target-user" placeholder="Kullanıcı ID veya E-posta">
+                                <div class="action-buttons">
+                                    <button class="btn btn-danger btn-sm"
+                                        onclick="window.adminSystem.banUser()">BAN</button>
+                                    <button class="btn btn-warning btn-sm"
+                                        onclick="window.adminSystem.muteUser()">MUTE</button>
+                                    <button class="btn btn-info btn-sm"
+                                        onclick="window.adminSystem.kickUser()">KICK</button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </section>
 
-                <!-- VIEW: MARKETPLACE -->
-                <section id="view-market" class="view">
-                    <div class="market-header glass-panel">
-                        <h2>Eşya Mağazası</h2>
-                        <p>Puanlarınızla avatar çerçeveleri ve özel renkler alın.</p>
-                    </div>
-                    <div class="market-grid" id="market-items-grid">
-                        <!-- Items will be injected here -->
-                    </div>
-                </section>
+                        <div class="admin-card glass-panel">
+                            <h3>Sistem Duyurusu</h3>
+                            <div class="admin-form">
+                                <textarea id="admin-announce-text"
+                                    placeholder="Tüm kullanıcılara gidecek mesaj..."></textarea>
+                                <button class="btn btn-primary btn-sm"
+                                    onclick="window.adminSystem.sendAnnouncement()">YAYINLA</button>
+                            </div>
+                        </div>
 
-                <!-- VIEW: LEADERBOARD -->
-                <section id="view-leaderboard" class="view">
-                    <div class="leaderboard-container glass-panel">
-                        <h2>En İyiler</h2>
-                        <div class="leaderboard-table-wrapper">
-                            <table class="nexus-table">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Oyuncu</th>
-                                        <th>Kazanma</th>
-                                        <th>Puan</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="leaderboard-body">
-                                    <!-- Rows injected via JS -->
-                                </tbody>
-                            </table>
+                        <div class="admin-card glass-panel">
+                            <h3>Oyun Kontrolü</h3>
+                            <div class="switch-list">
+                                <label class="switch-wrapper">
+                                    <span>Satranç</span>
+                                    <input type="checkbox" checked
+                                        onchange="window.adminSystem.toggleGame('chess', this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                                <label class="switch-wrapper">
+                                    <span>2048</span>
+                                    <input type="checkbox" checked
+                                        onchange="window.adminSystem.toggleGame('2048', this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
                         </div>
                     </div>
-                </section>
 
-            </div> <!-- End Views Container -->
+                    <div class="admin-card glass-panel large-widget" style="grid-column: span 2;">
+                        <h3>Canlı Sistem Logları</h3>
+                        <div class="admin-logs-console" id="admin-logs">
+                            <div class="log-entry"><span class="log-time">[SYSTEM]</span> Admin paneli yüklendi...</div>
+                        </div>
+                    </div>
+                </div>
+    </div>
+    </section>
 
-        </main>
+    <!-- VIEW: MARKETPLACE -->
+    <section id="view-market" class="view">
+        <div class="market-header glass-panel">
+            <h2>Eşya Mağazası</h2>
+            <p>Puanlarınızla avatar çerçeveleri ve özel renkler alın.</p>
+        </div>
+        <div class="market-grid" id="market-items-grid">
+            <!-- Items will be injected here -->
+        </div>
+    </section>
+
+    <!-- VIEW: LEADERBOARD -->
+    <section id="view-leaderboard" class="view">
+        <div class="leaderboard-container glass-panel">
+            <h2>En İyiler</h2>
+            <div class="leaderboard-table-wrapper">
+                <table class="nexus-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Oyuncu</th>
+                            <th>Kazanma</th>
+                            <th>Puan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    </div> <!-- End Views Container -->
+
+    </main>
     </div>
 
     <!-- ========================================== -->
@@ -642,74 +662,177 @@
                         <div class="grid-cell"></div>
                         <div class="grid-cell"></div>
                         <div class="grid-cell"></div>
-                    </div>
-                    <div class="grid-row">
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
-                    </div>
-                    <div class="grid-row">
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
-                    </div>
-                    <div class="grid-row">
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
-                        <div class="grid-cell"></div>
+                        <div class="tile-container" id="tile-container"></div>
                     </div>
                 </div>
-                <div class="tile-container" id="tile-container"></div>
-            </div>
-        </div>
 
-        <div id="game-stage-wheel" class="game-stage hidden">
-            <div class="wheel-wrapper">
-                <canvas id="wheel-canvas" width="500" height="500"></canvas>
-                <div class="wheel-pointer">▼</div>
-                <button id="spin-btn" class="btn btn-gold btn-lg">ÇEVİR</button>
-            </div>
-        </div>
-
-        <div id="game-stage-rps" class="game-stage hidden">
-            <div class="rps-arena">
-                <div class="rps-hands">
-                    <div class="hand" id="rps-player-hand">✊</div>
-                    <div class="vs-text">VS</div>
-                    <div class="hand" id="rps-cpu-hand">✊</div>
+                <!-- WHEEL -->
+                <div id="game-stage-wheel" class="game-stage hidden">
+                    <div class="wheel-wrapper">
+                        <canvas id="wheel-canvas" width="500" height="500"></canvas>
+                        <div class="wheel-pointer">▼</div>
+                        <button id="spin-btn" class="btn btn-gold btn-lg">ÇEVİR</button>
+                    </div>
                 </div>
-                <div class="rps-controls">
-                    <button class="rps-btn" data-choice="rock">✊ TAŞ</button>
-                    <button class="rps-btn" data-choice="paper">✋ KAĞIT</button>
-                    <button class="rps-btn" data-choice="scissors">✌️ MAKAS</button>
+
+                <!-- RPS -->
+                <div id="game-stage-rps" class="game-stage hidden">
+                    <div class="rps-arena">
+                        <div class="rps-hands">
+                            <div class="hand" id="rps-player-hand">✊</div>
+                            <div class="vs-text">VS</div>
+                            <div class="hand" id="rps-cpu-hand">✊</div>
+                        </div>
+                        <div class="rps-controls">
+                            <button class="rps-btn" data-choice="rock">✊ TAŞ</button>
+                            <button class="rps-btn" data-choice="paper">✋ KAĞIT</button>
+                            <button class="rps-btn" data-choice="scissors">✌️ MAKAS</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COIN TOSS -->
+                <div id="game-stage-coin" class="game-stage hidden">
+                    <div class="coin-arena">
+                        <div id="coin">
+                            <div class="side-a"></div>
+                            <div class="side-b"></div>
+                        </div>
+                        <div class="coin-controls">
+                            <button class="btn btn-silver" onclick="window.gameSystem.flipCoin()">Parayı At</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MINESWEEPER -->
+                <div id="game-stage-mines" class="game-stage hidden">
+                    <div class="mines-container glass-panel">
+                        <div class="mines-header">
+                            <h2>MAYIN TARLASI</h2>
+                            <p>Risk: <span id="mines-risk-lvl">Yüksek</span> | Çarpan: <span
+                                    id="mines-multiplier">x1.00</span></p>
+                        </div>
+                        <div class="mines-interface">
+                            <div class="mines-sidebar">
+                                <div class="input-group-game">
+                                    <label>Bahis Miktarı</label>
+                                    <input type="number" id="mines-bet" class="game-input" value="100">
+                                </div>
+                                <div class="input-group-game">
+                                    <label>Mayın Sayısı (1-24)</label>
+                                    <input type="number" id="mines-count" class="game-input" value="3" max="24" min="1">
+                                </div>
+                                <button class="btn btn-success btn-block btn-lg"
+                                    onclick="window.gameSystem.instances.mines.startGame()">BAŞLAT</button>
+                                <button class="btn btn-warning btn-block btn-lg" id="mines-cashout-btn" disabled
+                                    onclick="window.gameSystem.instances.mines.cashOut()">NAKİT ÇEK</button>
+
+                                <div class="mines-history">
+                                    <h4>Son Oyunlar</h4>
+                                    <div class="history-list" id="mines-history-list"></div>
+                                </div>
+                            </div>
+                            <div class="mines-board-area">
+                                <div class="mines-grid" id="mines-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TETRIS STAGE -->
+                <div id="game-stage-tetris" class="game-stage hidden">
+                    <div class="tetris-wrapper">
+                        <div class="tetris-left-panel">
+                            <div class="tetris-hold glass-panel">
+                                <h3>HOLD</h3>
+                                <div id="tetris-hold-canvas"></div>
+                            </div>
+                            <div class="tetris-stats glass-panel">
+                                <div class="t-stat"><label>SKOR</label><span id="tetris-score">0</span></div>
+                                <div class="t-stat"><label>SEVİYE</label><span id="tetris-level">1</span></div>
+                                <div class="t-stat"><label>SATIR</label><span id="tetris-lines">0</span></div>
+                            </div>
+                        </div>
+
+                        <div class="tetris-main glass-panel">
+                            <div class="tetris-grid" id="tetris-grid"></div>
+                            <div class="tetris-overlay" id="tetris-msg-overlay">
+                                <h2 id="tetris-msg-title">HAZIR?</h2>
+                                <button class="btn btn-play"
+                                    onclick="window.gameSystem.instances.tetris.start()">BAŞLA</button>
+                            </div>
+                        </div>
+
+                        <div class="tetris-right-panel">
+                            <div class="tetris-next glass-panel">
+                                <h3>SIRADAKİ</h3>
+                                <div id="tetris-next-render"></div>
+                            </div>
+                            <div class="tetris-controls-info glass-panel">
+                                <h4>Kontroller</h4>
+                                <ul>
+                                    <li>⬅️ ➡️ : Hareket</li>
+                                    <li>⬆️ : Döndür</li>
+                                    <li>⬇️ : Hızlı İniş</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div id="game-stage-coin" class="game-stage hidden">
-            <div class="coin-arena">
-                <div id="coin" class="">
-                    <div class="side-a"></div>
-                    <div class="side-b"></div>
-                </div>
-                <div class="coin-controls">
-                    <button class="btn btn-silver" onclick="window.gameSystem.flipCoin()">Parayı At</button>
+            <!-- CLAN SYSTEM MODALS -->
+            <div id="clan-modal" class="custom-modal hidden">
+                <div class="modal-content glass-panel large-modal">
+                    <div class="modal-header">
+                        <h2>KLAN YÖNETİMİ</h2>
+                        <button class="close-modal" onclick="window.clanSystem.closeModal()">✕</button>
+                    </div>
+                    <div class="modal-body" id="clan-modal-body"></div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- ========================================== -->
-    <!-- JAVASCRIPT IMPORTS                         -->
-    <!-- ========================================== -->
-    <!-- SweetAlert2 for nice alerts -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <!-- GLOBAL MUSIC PLAYER -->
+            <div id="nexus-music-player" class="music-player glass-panel collapsed">
+                <div class="player-handle" onclick="window.musicSystem.toggle()">
+                    <span class="music-icon">🎵</span>
+                    <div class="track-info-mini">
+                        <span class="scrolling-text" id="music-track-name">Nexus Radio - Cyberpunk Mix 2077</span>
+                    </div>
+                    <button class="toggle-btn">▲</button>
+                </div>
+                <div class="player-expanded">
+                    <div class="visualizer">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    <div class="player-controls">
+                        <button class="ctrl-btn" onclick="window.musicSystem.prev()">⏮</button>
+                        <button class="ctrl-btn play-pause" onclick="window.musicSystem.playPause()"
+                            id="music-play-btn">▶</button>
+                        <button class="ctrl-btn" onclick="window.musicSystem.next()">⏭</button>
+                    </div>
+                    <div class="volume-slider">
+                        <input type="range" min="0" max="100" value="50"
+                            onchange="window.musicSystem.setVolume(this.value)">
+                    </div>
+                </div>
+            </div>
 
-    <!-- Main Application Logic -->
-    <script type="module" src="app.js"></script>
+            <!-- ========================================== -->
+            <!-- JAVASCRIPT IMPORTS                         -->
+            <!-- ========================================== -->
+            <!-- SweetAlert2 for nice alerts -->
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+            <!-- Main Application Logic -->
+            <script type="module" src="app.js"></script>
 
 </body>
 
