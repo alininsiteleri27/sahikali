@@ -204,7 +204,11 @@ const UI = {
 
     openModal(id) {
         const modal = DOMHelper.get(id);
-        if (modal) modal.classList.add('active');
+        if (modal) {
+            modal.classList.add('active');
+            // Prevent body scroll when modal is open
+            document.body.classList.add('modal-open');
+        }
 
         // If opening user settings modal, load current avatar
         if (id === 'user-settings-modal') {
@@ -221,7 +225,11 @@ const UI = {
 
     closeModal(id) {
         const modal = DOMHelper.get(id);
-        if (modal) modal.classList.remove('active');
+        if (modal) {
+            modal.classList.remove('active');
+            // Re-enable body scroll when modal is closed
+            document.body.classList.remove('modal-open');
+        }
     },
 
     toggleSidebar() {
@@ -1351,6 +1359,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Close modal when clicking outside (on overlay)
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            // Only close if clicking directly on overlay, not on modal content
+            if (e.target === overlay) {
+                const modalId = overlay.id;
+                if (modalId) {
+                    UI.closeModal(modalId);
+                }
+            }
+        });
+    });
+
+    // Close modal with ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            // Find and close any active modal
+            const activeModal = document.querySelector('.modal-overlay.active');
+            if (activeModal) {
+                UI.closeModal(activeModal.id);
+            }
+        }
+    });
 
     console.log('%c🚀 SAHIKALI', 'font-size: 24px; font-weight: bold; color: #00c6ff;');
     console.log('%cModern Community Platform', 'font-size: 14px; color: #ae00ff;');
