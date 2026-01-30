@@ -1611,7 +1611,20 @@ const Game = {
                 statusText.textContent = 'KAYBETTİN!';
             }
 
-            DOMHelper.get('game-rematch-btn').classList.remove('hidden');
+            // Only Host sees Rematch button
+            if (isHost) {
+                DOMHelper.get('game-rematch-btn').classList.remove('hidden');
+                DOMHelper.get('game-rematch-btn').textContent = 'Tekrar Oyna';
+            } else {
+                DOMHelper.get('game-rematch-btn').classList.add('hidden');
+                statusText.textContent += ' (Host Bekleniyor)';
+            }
+        } else if (status === 'aborted') {
+            overlay.classList.remove('hidden');
+            countdown.textContent = '❌';
+            countdown.className = 'countdown';
+            statusText.textContent = 'RAKİP AYRILDI';
+            DOMHelper.get('game-rematch-btn').classList.add('hidden');
         }
     },
 
@@ -1730,7 +1743,9 @@ const Game = {
             if (puck.y - puck.r < 0 || puck.y + puck.r > this.height) {
                 // Goal Check
                 if (puck.x > this.width / 3 && puck.x < (this.width / 3) * 2) {
-                    this.goal(puck.y < 0 ? 'p1' : 'p2'); // Top goal = P1 scores
+                    // Top goal (y < 0) = P2's goal = P1 SCORES
+                    // Bottom goal (y > height) = P1's goal = P2 SCORES
+                    this.goal(puck.y < this.height / 2 ? 'p1' : 'p2');
                     return;
                 }
                 puck.vy = -puck.vy;
@@ -1769,10 +1784,14 @@ const Game = {
     },
 
     goal(scorer) {
-        if (scorer === 'p1') this.state.p1.score++;
-        else this.state.p2.score++;
+        // Award point to scorer
+        if (scorer === 'p1') {
+            this.state.p1.score++;
+        } else {
+            this.state.p2.score++;
+        }
 
-        // Reset Puck
+        // Reset Puck to center
         this.state.puck.x = this.width / 2;
         this.state.puck.y = this.height / 2;
         this.state.puck.vx = 0;
@@ -1785,22 +1804,26 @@ const Game = {
             // Determine winner
             const winner = this.state.p1.score >= 3 ? 'p1' : 'p2';
             this.state.winner = winner;
-        }
 
-        // Sync Score & Status
-        update(ref(db, `games/${this.gameId}/state`), {
-            p1: this.state.p1,
-            p2: this.state.p2,
-            puck: this.state.puck,
-            status: this.state.status,
-            winner: this.state.winner
-        });
-
-        // Also update root status
-        if (this.state.status === 'finished') {
+            // Sync everything including root status
             update(ref(db, `games/${this.gameId}`), {
                 status: 'finished',
-                winner: this.state.winner
+                winner: winner
+            });
+
+            update(ref(db, `games/${this.gameId}/state`), {
+                p1: this.state.p1,
+                p2: this.state.p2,
+                puck: this.state.puck,
+                status: 'finished',
+                winner: winner
+            });
+        } else {
+            // Just sync scores and puck position
+            update(ref(db, `games/${this.gameId}/state`), {
+                p1: this.state.p1,
+                p2: this.state.p2,
+                puck: this.state.puck
             });
         }
     },
@@ -1916,20 +1939,29 @@ const Game = {
     quitGame() {
         this.running = false;
         UI.closeModal('hockey-modal');
-        if (this.gameId) {
-            // Optional: Mark game as abandoned
-            // update(ref(db, `games/${this.gameId}`), { status: 'finished' });
+
+        // If game is active, notify other player
+        if (this.gameId && this.state.status !== 'finished') {
+            update(ref(db, `games/${this.gameId}`), {
+                status: 'aborted'
+            });
         }
     },
 
     rematch() {
-        // Reset Logic
+        // Reset Logic - Only Host can restart
         if (this.role === 'host') {
             this.state.p1.score = 0;
             this.state.p2.score = 0;
             this.state.status = 'countdown';
             this.state.winner = null;
             update(ref(db, `games/${this.gameId}/state`), this.state);
+
+            // Also reset root status
+            update(ref(db, `games/${this.gameId}`), {
+                status: 'playing',
+                winner: null
+            });
         }
     },
 
