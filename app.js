@@ -187,6 +187,8 @@ const Auth = {
 // ============================================================================
 
 const UI = {
+    sidebarCollapsed: false,
+
     openModal(id) {
         const modal = DOMHelper.get(id);
         if (modal) modal.classList.add('active');
@@ -199,7 +201,28 @@ const UI = {
 
     toggleSidebar() {
         const sidebar = DOMHelper.get('app-sidebar');
-        if (sidebar) sidebar.classList.toggle('mobile-active');
+        const toggleBtn = document.querySelector('.sidebar-toggle i');
+
+        if (!sidebar) return;
+
+        // Mobil cihazlarda farklı davranış
+        if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('mobile-active');
+            return;
+        }
+
+        // Desktop'ta collapse/expand
+        this.sidebarCollapsed = !this.sidebarCollapsed;
+
+        if (this.sidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+            document.body.classList.add('sidebar-collapsed');
+            if (toggleBtn) toggleBtn.className = 'ri-menu-unfold-line';
+        } else {
+            sidebar.classList.remove('collapsed');
+            document.body.classList.remove('sidebar-collapsed');
+            if (toggleBtn) toggleBtn.className = 'ri-menu-fold-line';
+        }
     },
 
     updateDOM() {
