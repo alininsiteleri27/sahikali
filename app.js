@@ -14,13 +14,14 @@ import {
 
 const CONFIG = {
     FIREBASE: {
-        apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
-        authDomain: "ali23-cfd02.firebaseapp.com",
-        databaseURL: "https://ali23-cfd02-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "ali23-cfd02",
-        storageBucket: "ali23-cfd02.firebasestorage.app",
-        messagingSenderId: "759021285078",
-        appId: "1:759021285078:web:f7673f89125ff3dad66377"
+        apiKey: "AIzaSyCJhRPk_bsMT8TPDJIhNeScBmYTFubhdy8",
+        authDomain: "sahikali-eaf86.firebaseapp.com",
+        databaseURL: "https://sahikali-eaf86-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "sahikali-eaf86",
+        storageBucket: "sahikali-eaf86.firebasestorage.app",
+        messagingSenderId: "333730663577",
+        appId: "1:333730663577:web:d1678f63c2068668d3bc08",
+        measurementId: "G-RTHK8FT4BC"
     }
 };
 
@@ -155,11 +156,13 @@ const Auth = {
     },
 
     loadProfile(uid) {
+        console.log('📡 Profil yükleniyor...');
         onValue(ref(db, `users/${uid}`), (snap) => {
             const data = snap.val();
             if (data) {
                 Store.set('profile', { ...data, uid: uid });
                 UI.updateDOM();
+                console.log('✅ Profil yüklendi:', data.username);
             }
         });
 
