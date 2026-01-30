@@ -335,14 +335,22 @@ onAuthStateChanged(auth, async (user) => {
 
         await dataManager.fetchUserProfile(user.uid);
 
+        await dataManager.fetchUserProfile(user.uid);
+
         ui.hideLoader();
         ui.switchView('app-view');
         ui.showToast(`Tekrar hoş geldin, ${user.displayName || 'Gezgin'}!`, 'success');
+
+        // Start Chat
+        chatManager.startListening();
     } else {
         // User is signed out
         console.log("Auth: Signed Out");
         STATE.currentUser = null;
         STATE.userProfile = null;
+
+        // Stop Chat
+        if (window.app && window.app.chat) window.app.chat.stopListening();
 
         ui.hideLoader();
         ui.switchView('auth-view');
@@ -404,11 +412,18 @@ class ChatManager {
             document.getElementById('dm-active-view').classList.add('hidden');
             document.getElementById('dm-list').classList.remove('hidden');
             this.activeDMUser = null;
-            if (this.dmUnsub) this.dmUnsub(); // Stop listening to specific chat
+            if (this.dmUnsub) this.dmUnsub();
         });
+        // Initial listen removed to prevent permission error before login
+    }
 
-        // Start listening to global by default
+    startListening() {
         this.listenToGlobalChat();
+    }
+
+    stopListening() {
+        if (this.globalUnsub) this.globalUnsub();
+        if (this.dmUnsub) this.dmUnsub();
     }
 
     async sendMessage(type) {
