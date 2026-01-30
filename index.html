@@ -1,75 +1,28 @@
 <!DOCTYPE html>
 <html lang="tr" class="dark-mode">
-<!-- 
-====================================================================================================
-   SAHIKALI PLATFORM - MAIN INTERFACE DOCUMENT (V4.2.0)
-   CODENAME: PROJECT_TITAN_CORE
-   ARCHITECT: ANTIGRAVITY (AI)
-   DATE: 2026-01-30
-   
-   DESCRIPTION:
-   This is the primary entry point for the Sahikali web application. 
-   It serves as a Single Page Application (SPA) container, holding all 
-   potential view states, modals, and game interfaces in the DOM, 
-   ready to be activated by the JavaScript controller.
-
-   STRUCTURE:
-   1. HEAD & META CONFIGURATION
-   2. SVG ICON SYSTEM (INLINE DEFINITIONS)
-   3. BACKGROUND LAYERS (CANVAS & VIDEO)
-   4. SIDEBAR NAVIGATION (DESKTOP)
-   5. MOBILE NAVIGATION (BOTTOM BAR)
-   6. TOP HEADER & STATUS BAR
-   7. MAIN CONTENT VIEWPORT (DYNAMIC SECTIONS)
-      7.1. DASHBOARD VIEW
-      7.2. GAMES HUB VIEW
-      7.3. MARKETPLACE VIEW
-      7.4. INVENTORY VIEW
-      7.5. CHAT ROOM VIEW
-      7.6. LEADERBOARD VIEW
-      7.7. PROFILE VIEW
-      7.8. SETTINGS VIEW
-      7.9. ADMIN CONSOLE VIEW
-   8. MODAL WINDOWS & OVERLAYS
-   9. TEMPLATES & ASSETS
-   10. SCRIPTS & INITIALIZATION
-==================================================================================================== 
--->
 
 <head>
-    <!-- CHARACTER ENCODING & VIEWPORT -->
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="theme-color" content="#020202">
 
-    <!-- SEO & METADATA -->
-    <title>SAHIKALI | Ultimate Social Gaming Platform</title>
-    <meta name="description"
-        content="Sahikali: The next-generation social gaming platform featuring real-time multiplayer games, vibrant community chat, and a neon-soaked cyberpunk aesthetic. Join the revolution.">
-    <meta name="keywords" content="gaming, social, chat, crypto, neon, cyberpunk, multiplayer, casino, rpg, strategy">
-    <meta name="author" content="Sahikali Dev Team">
+    <title>SAHIKALI | Community Platform</title>
+    <meta name="description" content="Modern topluluk platformu - Sohbet et, arkadaş edin, eğlen!">
 
-    <!-- EXTERNAL RESOURCES (FONTS & ICONS) -->
+    <!-- FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Orbitron (Headings), Rajdhani (UI/Numbers), Inter (Body) -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
 
-    <!-- REMIX ICONS (FALLBACK) -->
+    <!-- ICONS -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-    <!-- CSS LINKING -->
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- FAVICON CONFIG -->
-    <link rel="icon" type="image/png"
-        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=">
-
-    <!-- INLINE STYLES FOR CRITICAL LOADING STATE -->
     <style>
         #loader-overlay {
             position: fixed;
@@ -90,1967 +43,236 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body>
-
-    <!-- 
-    ================================================================================
-       SECTION 1: CRITICAL LOADER
-       Visible immediately upon load, hidden after JS init.
-    ================================================================================ 
-    -->
+    <!-- LOADER -->
     <div id="loader-overlay">
-        <div class="flex-col items-center gap-4">
-            <div class="loader-spinner"></div>
-            <div class="text-sm font-mono text-gradient uppercase tracking-widest">LOADING SYSTEM...</div>
-        </div>
+        <div class="loader-spinner"></div>
     </div>
 
-    <!-- 
-    ================================================================================
-       SECTION 2: SVG SPRITE SYSTEM (INLINE DEF)
-       Defines reusable icons to reduce HTTP requests.
-    ================================================================================ 
-    -->
-    <svg style="display: none;">
-        <defs>
-            <!-- LOGO ICON -->
-            <symbol id="icon-logo" viewBox="0 0 100 100">
-                <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" fill="none" stroke="currentColor"
-                    stroke-width="5" />
-                <circle cx="50" cy="50" r="15" fill="currentColor" />
-            </symbol>
-
-            <!-- DASHBOARD ICON -->
-            <symbol id="icon-dashboard" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="7" height="7" stroke="currentColor" fill="none" stroke-width="2" />
-                <rect x="14" y="3" width="7" height="7" stroke="currentColor" fill="none" stroke-width="2" />
-                <rect x="14" y="14" width="7" height="7" stroke="currentColor" fill="none" stroke-width="2" />
-                <rect x="3" y="14" width="7" height="7" stroke="currentColor" fill="none" stroke-width="2" />
-            </symbol>
-
-            <!-- GAMEPAD ICON -->
-            <symbol id="icon-gamepad" viewBox="0 0 24 24">
-                <path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z" fill="none"
-                    stroke="currentColor" stroke-width="2" />
-                <path d="M6 12h4m-2-2v4m10-2h4m-2-2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            </symbol>
-
-            <!-- CHAT ICON -->
-            <symbol id="icon-chat" viewBox="0 0 24 24">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none"
-                    stroke="currentColor" stroke-width="2" />
-            </symbol>
-
-            <!-- MARKET ICON -->
-            <symbol id="icon-market" viewBox="0 0 24 24">
-                <path
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.29 2.29a1 1 0 0 0 .7 1.71h12M10 21a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
-                    fill="none" stroke="currentColor" stroke-width="2" />
-            </symbol>
-
-            <!-- COIN ICON -->
-            <symbol id="icon-coin" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
-                <path d="M12 8v8m-3-4h6" stroke="currentColor" stroke-width="2" />
-            </symbol>
-        </defs>
-    </svg>
-
-    <!-- 
-    ================================================================================
-       SECTION 3: BACKGROUND LAYERS
-    ================================================================================ 
-    -->
+    <!-- BACKGROUND -->
     <div id="universe-bg">
         <div id="starfield"></div>
-        <canvas id="particle-canvas"></canvas>
         <div class="scanline-overlay"></div>
     </div>
 
-    <!-- 
-    ================================================================================
-       SECTION 4: SIDEBAR NAVIGATION (LEFT)
-    ================================================================================ 
-    -->
-    <aside class="app-sidebar" id="sidebar">
-        <!-- BRAND -->
-        <div class="sidebar-brand">
-            <svg class="w-8 h-8 text-primary mr-3" viewBox="0 0 100 100">
-                <use href="#icon-logo" />
-            </svg>
-            <span class="brand-logo text-gradient">SAHIKALI</span>
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-logo">SAHIKALI</h1>
         </div>
 
-        <!-- NAVIGATION MENU -->
-        <nav class="sidebar-nav custom-scroll">
-            <div class="nav-section-label">PLATFORM</div>
-
+        <nav class="sidebar-nav">
             <a href="#" class="nav-link active" onclick="app.router.go('dashboard')" data-page="dashboard">
-                <svg class="w-6 h-6" viewBox="0 0 24 24">
-                    <use href="#icon-dashboard" />
-                </svg>
-                <span>KOMUTA MERKEZİ</span>
-            </a>
-
-            <a href="#" class="nav-link" onclick="app.router.go('games')" data-page="games">
-                <svg class="w-6 h-6" viewBox="0 0 24 24">
-                    <use href="#icon-gamepad" />
-                </svg>
-                <span>OYUN ARENASI</span>
+                <i class="ri-home-4-line"></i>
+                <span>Ana Sayfa</span>
             </a>
 
             <a href="#" class="nav-link" onclick="app.router.go('chat')" data-page="chat">
-                <svg class="w-6 h-6" viewBox="0 0 24 24">
-                    <use href="#icon-chat" />
-                </svg>
-                <span>İLETİŞİM AĞI</span>
-                <span class="badge badge-danger ml-auto">CANLI</span>
+                <i class="ri-chat-3-line"></i>
+                <span>Sohbet</span>
+                <span class="badge badge-success ml-auto">CANLI</span>
+            </a>
+
+            <a href="#" class="nav-link" onclick="app.router.go('profile')" data-page="profile">
+                <i class="ri-user-line"></i>
+                <span>Profilim</span>
             </a>
 
             <div class="nav-divider"></div>
-            <div class="nav-section-label">EKONOMİ</div>
-
-            <a href="#" class="nav-link" onclick="app.router.go('market')" data-page="market">
-                <svg class="w-6 h-6" viewBox="0 0 24 24">
-                    <use href="#icon-market" />
-                </svg>
-                <span>PAZAR YERİ</span>
-            </a>
-
-            <a href="#" class="nav-link" onclick="app.router.go('inventory')" data-page="inventory">
-                <i class="ri-archive-line text-lg"></i>
-                <span>ENVANTERİM</span>
-            </a>
-
-            <a href="#" class="nav-link" onclick="app.router.go('leaderboard')" data-page="leaderboard">
-                <i class="ri-trophy-line text-lg"></i>
-                <span>LİDER TABLOSU</span>
-            </a>
-
-            <div class="nav-divider"></div>
-            <div class="nav-section-label">SİSTEM</div>
 
             <a href="#" class="nav-link" onclick="app.ui.openModal('settings-modal')">
-                <i class="ri-settings-4-line text-lg"></i>
-                <span>AYARLAR</span>
-            </a>
-
-            <a href="#" class="nav-link text-danger hidden" id="nav-admin" onclick="app.router.go('admin')">
-                <i class="ri-shield-keyhole-line text-lg"></i>
-                <span>YÖNETİCİ PANELİ</span>
+                <i class="ri-settings-4-line"></i>
+                <span>Ayarlar</span>
             </a>
         </nav>
 
-        <!-- USER PROFILE MINIY -->
+        <!-- USER CARD -->
         <div class="sidebar-user">
-            <div class="user-mini-card" onclick="app.router.go('profile')">
+            <div class="user-mini-card">
                 <img src="#" id="sb-avatar" class="user-avatar-sm" alt="User">
-                <div class="user-info-sm">
-                    <div class="user-name" id="sb-username">GUEST</div>
-                    <div class="user-level" id="sb-level">LVL 0</div>
-                </div>
-                <div class="ml-auto pointer text-danger" onclick="event.stopPropagation(); app.auth.logout()"
-                    title="Çıkış">
-                    <i class="ri-logout-box-r-line"></i>
+                <div class="user-mini-info">
+                    <div class="font-bold text-sm" id="sb-username">Kullanıcı</div>
+                    <div class="text-xs text-gray-400" id="sb-level">LVL 1</div>
                 </div>
             </div>
+            <button class="btn btn-danger btn-sm w-full mt-2" onclick="app.auth.logout()">
+                <i class="ri-logout-box-line"></i> Çıkış
+            </button>
         </div>
     </aside>
 
-    <!-- 
-    ================================================================================
-       SECTION 5: TOP HEADER
-    ================================================================================ 
-    -->
+    <!-- HEADER -->
     <header class="app-header">
-        <div class="header-left flex items-center gap-4">
-            <div class="mobile-toggle block md:hidden" onclick="app.ui.toggleSidebar()">
-                <i class="ri-menu-2-line text-2xl"></i>
-            </div>
-            <div class="page-title hidden md:block">
-                <h2 id="page-title-text">KOMUTA MERKEZİ</h2>
-            </div>
+        <div class="header-left">
+            <button class="mobile-toggle" onclick="app.ui.toggleSidebar()">
+                <i class="ri-menu-2-line"></i>
+            </button>
+            <h2 class="page-title" id="page-title-text">ANA SAYFA</h2>
         </div>
 
-        <div class="header-tools">
-            <!-- ONLINE COUNTER -->
-            <div class="flex items-center gap-2 text-sm font-mono text-primary">
-                <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-                <span id="online-counter">0</span> ONLİNE
+        <div class="header-right">
+            <div class="online-badge">
+                <span class="online-dot"></span>
+                <span id="online-counter">0</span> Çevrimiçi
             </div>
 
-            <!-- WALLET -->
-            <div class="currency-display pointer hover:bg-white/10 transition" onclick="app.router.go('market')">
-                <svg class="w-6 h-6 text-accent" viewBox="0 0 24 24">
-                    <use href="#icon-coin" />
-                </svg>
-                <span class="currency-val" id="header-balance">0</span>
-                <div
-                    class="w-6 h-6 rounded-full bg-accent text-black flex items-center justify-center font-bold text-xs">
-                    +</div>
-            </div>
-
-            <!-- LEVEL BADGE -->
-            <div
-                class="px-3 py-1 bg-primary bg-opacity-20 border border-primary rounded-full text-xs font-bold text-primary">
-                <span id="header-lvl">LVL 1</span>
-            </div>
-
-            <!-- NOTIFICATIONS -->
-            <div class="relative pointer w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition"
-                onclick="app.ui.toggleNotif()">
-                <i class="ri-notification-3-line text-xl"></i>
-                <div class="absolute top-2 right-2 w-2 h-2 bg-danger rounded-full animate-ping hidden" id="notif-dot">
-                </div>
-            </div>
+            <button class="header-btn" onclick="app.router.go('profile')">
+                <i class="ri-user-line"></i>
+            </button>
         </div>
     </header>
 
-    <!-- 
-    ================================================================================
-       SECTION 6: MAIN CONTENT VIEWPORT
-    ================================================================================ 
-    -->
-    <main class="app-main" id="main-container">
+    <!-- MAIN CONTENT -->
+    <main class="app-main">
 
-        <!-- ################################################################### -->
-        <!-- VIEW 1: DASHBOARD (HOME) -->
-        <!-- ################################################################### -->
+        <!-- DASHBOARD VIEW -->
         <section id="view-dashboard" class="view-section active">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="welcome-card">
+                <h1>Hoş Geldin! 👋</h1>
+                <p>SAHIKALI topluluğuna hoş geldin. Sohbet et, arkadaş edin ve eğlen!</p>
+            </div>
 
-                <!-- HERO BANNER -->
-                <div
-                    class="lg:col-span-3 card relative overflow-hidden flex flex-col justify-center p-8 min-h-[300px] border-primary-500">
-                    <div class="absolute inset-0 z-0 bg-gradient-to-r from-primary-900/50 to-transparent"></div>
-                    <div class="relative z-10 z-base">
-                        <h3 class="text-gradient">HOŞ GELDİN, <span id="dash-username">AJAN</span></h3>
-                        <h1 class="text-4xl md:text-6xl font-black mb-4 glitch-text" data-text="SAHIKALI SYSTEM">
-                            SAHIKALI SYSTEM</h1>
-                        <p class="max-w-2xl text-gray-300 text-lg mb-8">
-                            Yeni nesil oyun protokolü aktif. Günlük görevlerini tamamla,
-                            rakiplerini alt et ve sıralamada yüksel.
-                        </p>
-                        <div class="flex gap-4">
-                            <button class="btn btn-primary" onclick="app.router.go('games')">OYUNA BAŞLA</button>
-                            <button class="btn btn-ghost" onclick="app.router.go('market')">MARKETİ GEZ</button>
-                        </div>
-                    </div>
-                    <!-- Decorative particles -->
-                    <div class="absolute right-0 top-0 w-1/2 h-full opacity-30 pointer-events-none"
-                        style="background: radial-gradient(circle, var(--c-primary-500) 0%, transparent 70%); filter: blur(60px);">
-                    </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="ri-user-line stat-icon"></i>
+                    <div class="stat-value" id="total-users">0</div>
+                    <div class="stat-label">Toplam Üye</div>
                 </div>
-
-                <!-- STATS CARDS -->
-                <div class="card flex items-center justify-between p-6 corner-accent">
-                    <div>
-                        <div class="text-sm text-gray-400 uppercase tracking-widest">TOPLAM KAZANÇ</div>
-                        <div class="text-3xl font-mono font-bold text-success" id="dash-wins">0</div>
-                    </div>
-                    <i class="ri-bar-chart-groupped-line text-4xl text-gray-700"></i>
+                <div class="stat-card">
+                    <i class="ri-chat-3-line stat-icon"></i>
+                    <div class="stat-value" id="total-messages">0</div>
+                    <div class="stat-label">Mesaj</div>
                 </div>
-
-                <div class="card flex items-center justify-between p-6 corner-accent">
-                    <div>
-                        <div class="text-sm text-gray-400 uppercase tracking-widest">RANKING</div>
-                        <div class="text-3xl font-mono font-bold text-accent" id="dash-rank">#PENDING</div>
-                    </div>
-                    <i class="ri-trophy-line text-4xl text-gray-700"></i>
+                <div class="stat-card">
+                    <i class="ri-user-add-line stat-icon"></i>
+                    <div class="stat-value" id="online-users">0</div>
+                    <div class="stat-label">Çevrimiçi</div>
                 </div>
+            </div>
 
-                <div class="card flex items-center justify-between p-6 corner-accent">
-                    <div>
-                        <div class="text-sm text-gray-400 uppercase tracking-widest">OYUN GEÇMİŞİ</div>
-                        <div class="text-3xl font-mono font-bold text-info" id="dash-games">0</div>
-                    </div>
-                    <i class="ri-history-line text-4xl text-gray-700"></i>
+            <div class="card">
+                <h3 class="card-title">Hızlı Erişim</h3>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="app.router.go('chat')">
+                        <i class="ri-chat-3-line"></i> Sohbete Katıl
+                    </button>
+                    <button class="btn btn-accent" onclick="app.router.go('profile')">
+                        <i class="ri-user-line"></i> Profilim
+                    </button>
                 </div>
-
-                <!-- FEATURED GAME -->
-                <div class="lg:col-span-2 card p-0 overflow-hidden group cursor-pointer"
-                    onclick="app.game.launch('mines')">
-                    <div class="relative h-64 bg-black">
-                        <img src="https://placehold.co/800x400/101010/00c6ff/png?text=MAYIN+TARLASI"
-                            class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition duration-500">
-                        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent p-6">
-                            <h3 class="text-white mb-1">MAYIN TARLASI (MINES)</h3>
-                            <div class="flex items-center gap-4 text-sm">
-                                <span class="bg-primary-900 text-primary-300 px-2 py-1 rounded">RTP %98</span>
-                                <span class="text-gray-300">Strateji Odaklı</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- NEWS/UPDATES -->
-                <div class="card p-6">
-                    <h4 class="border-b border-gray-700 pb-2 mb-4">SİSTEM GÜNLÜĞÜ</h4>
-                    <ul class="space-y-4 text-sm font-mono text-gray-400">
-                        <li class="flex gap-2">
-                            <span class="text-primary">[SİSTEM]</span>
-                            <span>v4.2.0 Güncellemesi yayında. Yeni fizik motoru aktif.</span>
-                        </li>
-                        <li class="flex gap-2">
-                            <span class="text-danger">[ALERT]</span>
-                            <span>Haftalık turnuva kayıtları başladı.</span>
-                        </li>
-                        <li class="flex gap-2">
-                            <span class="text-accent">[MARKET]</span>
-                            <span>Yeni 'Neon' koleksiyonu eklendi.</span>
-                        </li>
-                    </ul>
-                </div>
-
             </div>
         </section>
 
-        <!-- ################################################################### -->
-        <!-- VIEW 2: GAMES HUB -->
-        <!-- ################################################################### -->
-        <section id="view-games" class="view-section">
-            <h2 class="mb-6 flex items-center gap-3">
-                <i class="ri-gamepad-fill text-primary"></i>
-                OYUN KÜTÜPHANESİ
-            </h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- GAME CARD: MINES -->
-                <div class="card p-0 overflow-hidden hover:border-primary-500 transition cursor-pointer"
-                    onclick="app.game.launch('mines')">
-                    <div class="h-40 bg-zinc-900 flex items-center justify-center relative">
-                        <i class="ri-grid-fill text-6xl text-gray-700"></i>
-                        <div class="absolute top-2 right-2 bg-success text-black text-xs font-bold px-2 py-1 rounded">
-                            POPÜLER</div>
-                    </div>
-                    <div class="p-4">
-                        <h4 class="text-lg font-bold">MAYIN TARLASI</h4>
-                        <p class="text-xs text-gray-400">Mayınlardan kaç, elmasları topla, çarpanı katla.</p>
+        <!-- CHAT VIEW -->
+        <section id="view-chat" class="view-section">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3>Global Sohbet</h3>
+                    <div class="chat-online">
+                        <span class="online-dot"></span>
+                        <span id="chat-online-count">0</span> kişi
                     </div>
                 </div>
 
-                <!-- GAME CARD: SLOTS -->
-                <div class="card p-0 overflow-hidden hover:border-accent-500 transition cursor-pointer"
-                    onclick="app.game.launch('slots')">
-                    <div class="h-40 bg-zinc-900 flex items-center justify-center relative">
-                        <i class="ri-copper-diamond-line text-6xl text-gray-700"></i>
-                    </div>
-                    <div class="p-4">
-                        <h4 class="text-lg font-bold">NEON SLOTS</h4>
-                        <p class="text-xs text-gray-400">3 Makara, 5 Ödeme Çizgisi. Jackpot şansı!</p>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will be inserted here -->
+                </div>
+
+                <form class="chat-input-form" id="chat-form">
+                    <input type="text" id="chat-msg-input" class="chat-input" placeholder="Mesajınızı yazın..."
+                        maxlength="500" autocomplete="off">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-send-plane-fill"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- PROFILE VIEW -->
+        <section id="view-profile" class="view-section">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <img src="#" id="profile-avatar" class="profile-avatar" alt="Avatar">
+                    <div class="profile-info">
+                        <h2 id="profile-username">Kullanıcı</h2>
+                        <p class="profile-email" id="profile-email">email@example.com</p>
+                        <div class="profile-badges">
+                            <span class="badge badge-primary" id="profile-level">LVL 1</span>
+                            <span class="badge badge-accent" id="profile-role">Üye</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- GAME CARD: ROULETTE -->
-                <div class="card p-0 overflow-hidden hover:border-danger-500 transition cursor-pointer"
-                    onclick="app.game.launch('roulette')">
-                    <div class="h-40 bg-zinc-900 flex items-center justify-center relative">
-                        <i class="ri-focus-2-line text-6xl text-gray-700"></i>
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profile-messages">0</div>
+                        <div class="profile-stat-label">Mesaj</div>
                     </div>
-                    <div class="p-4">
-                        <h4 class="text-lg font-bold">CYBER RULET</h4>
-                        <p class="text-xs text-gray-400">Klasik Avrupa Ruleti. Kırmızı mı Siyah mı?</p>
-                    </div>
-                </div>
-
-                <!-- GAME CARD: CRASH -->
-                <div class="card p-0 overflow-hidden hover:border-info-500 transition cursor-pointer"
-                    onclick="app.game.launch('crash')">
-                    <div class="h-40 bg-zinc-900 flex items-center justify-center relative">
-                        <i class="ri-line-chart-line text-6xl text-gray-700"></i>
-                        <div class="absolute top-2 right-2 bg-warning text-black text-xs font-bold px-2 py-1 rounded">
-                            YENİ</div>
-                    </div>
-                    <div class="p-4">
-                        <h4 class="text-lg font-bold">CRASH (MOON)</h4>
-                        <p class="text-xs text-gray-400">Grafik çökmeden önce bahsini bozdur.</p>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profile-joined">-</div>
+                        <div class="profile-stat-label">Katılma</div>
                     </div>
                 </div>
-
-                <!-- COMING SOON -->
-                <div class="card p-0 opacity-50 border-dashed border-gray-700">
-                    <div class="h-40 flex items-center justify-center">
-                        <i class="ri-lock-2-line text-4xl"></i>
-                    </div>
-                    <div class="p-4 text-center">
-                        <h4 class="text-sm">YAKINDA</h4>
-                        <p class="text-xs">BLACKJACK</p>
-                    </div>
-                    <!-- VIEW 1: DASHBOARD (COMMAND CENTER) -->
-                    <!-- ################################################################### -->
-                    <section id="view-dashboard" class="view-section active">
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                            <!-- WELCOME CARD -->
-                            <div class="card lg:col-span-2 p-6">
-                                <h2 class="text-gradient mb-4">KOMUTA MERKEZİNE HOŞGELDİN</h2>
-                                <p class="text-gray-400 mb-6">
-                                    Sahikali platformuna hoş geldin! Burada oyunlar oynayabilir, sohbet edebilir ve
-                                    topluluğumuzla etkileşime geçebilirsin. Başlamak için aşağıdaki hızlı eylemlerden
-                                    birini seç.
-                                </p>
-                                <div class="flex gap-4 flex-wrap">
-                                    <button class="btn btn-primary" onclick="app.router.go('games')">
-                                        <i class="ri-gamepad-line"></i> OYUNLARA GİT
-                                    </button>
-                                    <button class="btn btn-accent" onclick="app.router.go('chat')">
-                                        <i class="ri-chat-3-line"></i> SOHBETE KATIL
-                                    </button>
-                                    <button class="btn btn-ghost" onclick="app.router.go('market')">
-                                        <i class="ri-shopping-bag-line"></i> PAZARI KEŞFET
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- ONLINE USERS CARD -->
-                            <div class="card p-6 text-center">
-                                <div class="text-6xl mb-4">👥</div>
-                                <div class="text-5xl font-black font-mono text-primary mb-2" id="online-counter">0</div>
-                                <div class="text-sm text-gray-400">AKTİF KULLANICI</div>
-                                <div class="mt-4 pt-4 border-t border-gray-800">
-                                    <div class="text-xs text-gray-500">Son 24 saat</div>
-                                    <div class="text-2xl font-bold text-accent">1,247</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- STATS ROW -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div class="card p-4 text-center">
-                                <i class="ri-trophy-line text-4xl text-accent mb-2"></i>
-                                <div class="font-mono text-2xl font-bold" id="dash-wins">0</div>
-                                <div class="text-xs text-gray-400">GALİBİYET</div>
-                            </div>
-                            <div class="card p-4 text-center">
-                                <i class="ri-gamepad-line text-4xl text-primary mb-2"></i>
-                                <div class="font-mono text-2xl font-bold" id="dash-games">0</div>
-                                <div class="text-xs text-gray-400">OYNANAN OYUN</div>
-                            </div>
-                            <div class="card p-4 text-center">
-                                <i class="ri-medal-line text-4xl text-success mb-2"></i>
-                                <div class="font-mono text-2xl font-bold" id="dash-level">1</div>
-                                <div class="text-xs text-gray-400">SEVİYE</div>
-                            </div>
-                            <div class="card p-4 text-center">
-                                <i class="ri-coin-line text-4xl text-warning mb-2"></i>
-                                <div class="font-mono text-2xl font-bold" id="dash-points">0</div>
-                                <div class="text-xs text-gray-400">PUAN</div>
-                            </div>
-                        </div>
-
-                        <!-- DAILY QUESTS -->
-                        <div class="card p-6 mb-8">
-                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-                                <i class="ri-task-line text-primary"></i>
-                                GÜNLÜK GÖREVLER
-                            </h3>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between p-3 bg-black bg-opacity-30 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <i class="ri-check-line text-2xl text-success"></i>
-                                        <div>
-                                            <div class="font-bold text-sm">İlk Giriş Bonusu</div>
-                                            <div class="text-xs text-gray-400">Bugün ilk kez giriş yap</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-accent font-mono font-bold">+500</div>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-black bg-opacity-30 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <i class="ri-checkbox-blank-circle-line text-2xl text-gray-600"></i>
-                                        <div>
-                                            <div class="font-bold text-sm">5 Oyun Oyna</div>
-                                            <div class="text-xs text-gray-400">Herhangi bir oyunu 5 kez oyna (0/5)</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-accent font-mono font-bold">+1000</div>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-black bg-opacity-30 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <i class="ri-checkbox-blank-circle-line text-2xl text-gray-600"></i>
-                                        <div>
-                                            <div class="font-bold text-sm">Sohbete Katıl</div>
-                                            <div class="text-xs text-gray-400">10 mesaj gönder (0/10)</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-accent font-mono font-bold">+250</div>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-black bg-opacity-30 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <i class="ri-checkbox-blank-circle-line text-2xl text-gray-600"></i>
-                                        <div>
-                                            <div class="font-bold text-sm">Kazanç Hedefi</div>
-                                            <div class="text-xs text-gray-400">5000 puan kazan (0/5000)</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-accent font-mono font-bold">+2500</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ANNOUNCEMENTS & LEADERBOARD -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Announcements -->
-                            <div class="card p-6">
-                                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-                                    <i class="ri-megaphone-line text-accent"></i>
-                                    DUYURULAR
-                                </h3>
-                                <div class="space-y-4">
-                                    <div class="p-4 bg-primary bg-opacity-10 border-l-4 border-primary rounded">
-                                        <div class="flex items-start gap-3">
-                                            <i class="ri-information-line text-xl text-primary"></i>
-                                            <div>
-                                                <div class="font-bold text-sm mb-1">Yeni Oyun: BLACKJACK!</div>
-                                                <div class="text-xs text-gray-400">
-                                                    Blackjack oyunu artık oynanabilir. Krupiyeye karşı şansını dene!
-                                                </div>
-                                                <div class="text-xs text-gray-600 mt-2">2 saat önce</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="p-4 bg-accent bg-opacity-10 border-l-4 border-accent rounded">
-                                        <div class="flex items-start gap-3">
-                                            <i class="ri-trophy-line text-xl text-accent"></i>
-                                            <div>
-                                                <div class="font-bold text-sm mb-1">Haftalık Turnuva Başladı!</div>
-                                                <div class="text-xs text-gray-400">
-                                                    En çok puan toplayan 10 oyuncu ödül kazanacak. Toplam ödül havuzu:
-                                                    100,000!
-                                                </div>
-                                                <div class="text-xs text-gray-600 mt-2">1 gün önce</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="p-4 bg-success bg-opacity-10 border-l-4 border-success rounded">
-                                        <div class="flex items-start gap-3">
-                                            <i class="ri-gift-line text-xl text-success"></i>
-                                            <div>
-                                                <div class="font-bold text-sm mb-1">Günlük Bonus Artırıldı!</div>
-                                                <div class="text-xs text-gray-400">
-                                                    Günlük giriş bonusu 500'den 750'ye çıkarıldı. Hemen giriş yap!
-                                                </div>
-                                                <div class="text-xs text-gray-600 mt-2">3 gün önce</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Top Players -->
-                            <div class="card p-6">
-                                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-                                    <i class="ri-vip-crown-line text-warning"></i>
-                                    EN İYİ OYUNCULAR
-                                </h3>
-                                <div class="space-y-3">
-                                    <div
-                                        class="flex items-center gap-3 p-3 bg-gradient-to-r from-yellow-900 to-transparent rounded-lg">
-                                        <div class="text-2xl font-black text-yellow-500">1</div>
-                                        <img src="https://ui-avatars.com/api/?name=ProGamer&background=ffd700&color=000"
-                                            class="w-10 h-10 rounded-full border-2 border-yellow-500">
-                                        <div class="flex-1">
-                                            <div class="font-bold">ProGamer</div>
-                                            <div class="text-xs text-gray-400">Seviye 87</div>
-                                        </div>
-                                        <div class="font-mono font-bold text-accent">1,247,890</div>
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-700 to-transparent rounded-lg">
-                                        <div class="text-2xl font-black text-gray-400">2</div>
-                                        <img src="https://ui-avatars.com/api/?name=ElitePlayer&background=c0c0c0&color=000"
-                                            class="w-10 h-10 rounded-full border-2 border-gray-400">
-                                        <div class="flex-1">
-                                            <div class="font-bold">ElitePlayer</div>
-                                            <div class="text-xs text-gray-400">Seviye 76</div>
-                                        </div>
-                                        <div class="font-mono font-bold text-accent">987,654</div>
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-900 to-transparent rounded-lg">
-                                        <div class="text-2xl font-black text-orange-600">3</div>
-                                        <img src="https://ui-avatars.com/api/?name=MasterX&background=cd7f32&color=000"
-                                            class="w-10 h-10 rounded-full border-2 border-orange-600">
-                                        <div class="flex-1">
-                                            <div class="font-bold">MasterX</div>
-                                            <div class="text-xs text-gray-400">Seviye 65</div>
-                                        </div>
-                                        <div class="font-mono font-bold text-accent">765,432</div>
-                                    </div>
-                                    <div class="flex items-center gap-3 p-3 bg-black bg-opacity-30 rounded-lg">
-                                        <div class="text-xl font-bold text-gray-600">4</div>
-                                        <img src="https://ui-avatars.com/api/?name=NinjaKid&background=666&color=fff"
-                                            class="w-10 h-10 rounded-full border-2 border-gray-700">
-                                        <div class="flex-1">
-                                            <div class="font-bold">NinjaKid</div>
-                                            <div class="text-xs text-gray-400">Seviye 54</div>
-                                        </div>
-                                        <div class="font-mono font-bold text-accent">654,321</div>
-                                    </div>
-                                    <div class="flex items-center gap-3 p-3 bg-black bg-opacity-30 rounded-lg">
-                                        <div class="text-xl font-bold text-gray-600">5</div>
-                                        <img src="https://ui-avatars.com/api/?name=CyberAce&background=666&color=fff"
-                                            class="w-10 h-10 rounded-full border-2 border-gray-700">
-                                        <div class="flex-1">
-                                            <div class="font-bold">CyberAce</div>
-                                            <div class="text-xs text-gray-400">Seviye 48</div>
-                                        </div>
-                                        <div class="font-mono font-bold text-accent">543,210</div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-ghost w-full mt-4" onclick="app.router.go('leaderboard')">
-                                    TÜMÜNÜ GÖSTER <i class="ri-arrow-right-line"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- ################################################################### -->
-                    <!-- VIEW 2: GAMES HUB -->
-                    <!-- ################################################################### -->
-                    <section id="view-games" class="view-section">
-                        <div class="mb-8">
-                            <h2 class="text-gradient mb-2">OYUN ARENASI</h2>
-                            <p class="text-gray-400">Şansını dene, becerilerini göster ve ödüller kazan!</p>
-                        </div>
-
-                        <!-- GAME CATEGORIES -->
-                        <div class="flex gap-3 mb-6 overflow-x-auto pb-2">
-                            <button class="btn btn-primary btn-sm active">TÜMÜ</button>
-                            <button class="btn btn-ghost btn-sm">KART OYUNLARI</button>
-                            <button class="btn btn-ghost btn-sm">ŞANS OYUNLARI</button>
-                            <button class="btn btn-ghost btn-sm">STRATEJİ</button>
-                            <button class="btn btn-ghost btn-sm">ARCADE</button>
-                        </div>
-
-                        <!-- FEATURED GAME -->
-                        <div class="card p-8 mb-8 bg-gradient-to-br from-primary-900 to-accent-900 border-primary-500">
-                            <div class="flex items-center gap-2 mb-4">
-                                <i class="ri-star-fill text-accent"></i>
-                                <span class="text-xs font-bold text-accent uppercase tracking-widest">ÖNE ÇIKAN
-                                    OYUN</span>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
-                                    <h2 class="text-4xl font-black mb-4">BLACKJACK</h2>
-                                    <p class="text-gray-300 mb-6">
-                                        Klasik kart oyunu Blackjack'te krupiyeye karşı mücadele et!
-                                        21'e en yakın olan kazanır. Stratejini kur, şansını dene!
-                                    </p>
-                                    <div class="flex gap-4 mb-6">
-                                        <div>
-                                            <div class="text-xs text-gray-400">MIN BAHİS</div>
-                                            <div class="font-mono font-bold text-xl">100</div>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs text-gray-400">MAX BAHİS</div>
-                                            <div class="font-mono font-bold text-xl">10,000</div>
-                                        </div>
-                                        <div>
-                                            <div class="text-xs text-gray-400">KAZANÇ</div>
-                                            <div class="font-mono font-bold text-xl text-success">2x</div>
-                                        </div>
-                                    </div>
-                                    <button class="btn btn-accent btn-lg" onclick="app.game.launch('blackjack')">
-                                        <i class="ri-play-fill"></i> OYNA
-                                    </button>
-                                </div>
-                                <div class="flex items-center justify-center">
-                                    <div class="text-9xl">🃏</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- GAME GRID -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- MINES -->
-                            <div class="card overflow-hidden group cursor-pointer" onclick="app.game.launch('mines')">
-                                <div
-                                    class="h-48 bg-gradient-to-br from-danger to-warning flex items-center justify-center text-8xl relative overflow-hidden">
-                                    💣
-                                    <div
-                                        class="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity">
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="text-xl font-bold mb-2">MINES</h3>
-                                    <p class="text-sm text-gray-400 mb-4">
-                                        Mayınları bul, kareleri aç ve kazanmaya devam et!
-                                    </p>
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <div class="text-xs text-gray-500">KAZANÇ</div>
-                                            <div class="font-mono font-bold text-success">1.5x - 24x</div>
-                                        </div>
-                                        <button class="btn btn-primary btn-sm">
-                                            OYNA <i class="ri-arrow-right-line"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- SLOTS -->
-                            <div class="card overflow-hidden group cursor-pointer" onclick="app.game.launch('slots')">
-                                <div
-                                    class="h-48 bg-gradient-to-br from-accent to-primary flex items-center justify-center text-8xl relative overflow-hidden">
-                                    🎰
-                                    <div
-                                        class="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity">
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="text-xl font-bold mb-2">NEON SLOTS</h3>
-                                    <p class="text-sm text-gray-400 mb-4">
-                                        Klasik slot makinesi! 3 sembol eşleştir, büyük kazan!
-                                    </p>
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <div class="text-xs text-gray-500">KAZANÇ</div>
-                                            <div class="font-mono font-bold text-success">2x - 100x</div>
-                                        </div>
-                                        <button class="btn btn-primary btn-sm">
-                                            OYNA <i class="ri-arrow-right-line"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- ROULETTE -->
-                            <div class="card overflow-hidden group cursor-pointer"
-                                onclick="app.game.launch('roulette')">
-                                <div
-                                    class="h-48 bg-gradient-to-br from-success to-info flex items-center justify-center text-8xl relative overflow-hidden">
-                                    🎡
-                                    <div
-                                        class="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity">
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="text-xl font-bold mb-2">CYBER ROULETTE</h3>
-                                    <p class="text-sm text-gray-400 mb-4">
-                                        Şansını rulet çarkında dene! Kırmızı mı, siyah mı?
-                                    </p>
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <div class="text-xs text-gray-500">KAZANÇ</div>
-                                            <div class="font-mono font-bold text-success">2x - 36x</div>
-                                        </div>
-                                        <button class="btn btn-primary btn-sm">
-                                            OYNA <i class="ri-arrow-right-line"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- PLINKO -->
-                            <div class="card overflow-hidden group cursor-pointer" onclick="app.game.launch('plinko')">
-                                <div
-                                    class="h-48 bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-8xl relative overflow-hidden">
-                                    ⚪
-                                    <div
-                                        class="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity">
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="text-xl font-bold mb-2">PLINKO</h3>
-                                    <p class="text-sm text-gray-400 mb-4">
-                                        Topu bırak, nereye düşeceğini izle!
-                                    </p>
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <div class="text-xs text-gray-500">KAZANÇ</div>
-                                            <div class="font-mono font-bold text-success">0.2x - 5x</div>
-                                        </div>
-                                        <button class="btn btn-primary btn-sm">
-                                            OYNA <i class="ri-arrow-right-line"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- KENO -->
-                            <div class="card overflow-hidden group cursor-pointer" onclick="app.game.launch('keno')">
-                                <div
-                                    class="h-48 bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-8xl relative overflow-hidden">
-                                    🔢
-                                    <div
-                                        class="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity">
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="text-xl font-bold mb-2">KENO</h3>
-                                    <p class="text-sm text-gray-400 mb-4">
-                                        Sayılarını seç, eşleşmeleri bekle!
-                                    </p>
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <div class="text-xs text-gray-500">KAZANÇ</div>
-                                            <div class="font-mono font-bold text-success">1x - 500x</div>
-                                        </div>
-                                        <button class="btn btn-primary btn-sm">
-                                            OYNA <i class="ri-arrow-right-line"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- CRASH (Coming Soon) -->
-                            <div class="card overflow-hidden opacity-50">
-                                <div
-                                    class="h-48 bg-gradient-to-br from-red-600 to-orange-600 flex items-center justify-center text-8xl relative">
-                                    🚀
-                                    <div class="absolute inset-0 bg-black opacity-50"></div>
-                                    <div class="absolute inset-0 flex items-center justify-center">
-                                        <span class="bg-black px-4 py-2 rounded-full text-sm font-bold">YAKINDA</span>
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="text-xl font-bold mb-2">CRASH (MOON)</h3>
-                                    <p class="text-sm text-gray-400 mb-4">
-                                        Roket yükselirken çık, patlamadan önce!
-                                    </p>
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <div class="text-xs text-gray-500">KAZANÇ</div>
-                                            <div class="font-mono font-bold text-gray-600">1x - ∞</div>
-                                        </div>
-                                        <button class="btn btn-ghost btn-sm" disabled>
-                                            KİLİTLİ
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TOURNAMENT INFO -->
-                        <div class="card p-6 mt-8 bg-gradient-to-r from-accent-900 to-transparent border-accent">
-                            <div class="flex items-start gap-4">
-                                <i class="ri-trophy-line text-5xl text-accent"></i>
-                                <div class="flex-1">
-                                    <h3 class="text-2xl font-bold mb-2">HAFTALIK TURNUVA</h3>
-                                    <p class="text-gray-400 mb-4">
-                                        Bu hafta en çok puan toplayan 10 oyuncu büyük ödüller kazanacak!
-                                        Turnuva 3 gün 14 saat sonra sona erecek.
-                                    </p>
-                                    <div class="grid grid-cols-3 gap-4 mb-4">
-                                        <div class="text-center p-3 bg-black bg-opacity-30 rounded">
-                                            <div class="text-2xl font-bold text-yellow-500">🥇 50,000</div>
-                                            <div class="text-xs text-gray-400">1. Ödül</div>
-                                        </div>
-                                        <div class="text-center p-3 bg-black bg-opacity-30 rounded">
-                                            <div class="text-2xl font-bold text-gray-400">🥈 30,000</div>
-                                            <div class="text-xs text-gray-400">2. Ödül</div>
-                                        </div>
-                                        <div class="text-center p-3 bg-black bg-opacity-30 rounded">
-                                            <div class="text-2xl font-bold text-orange-600">🥉 20,000</div>
-                                            <div class="text-xs text-gray-400">3. Ödül</div>
-                                        </div>
-                                    </div>
-                                    <button class="btn btn-accent">
-                                        TURNUVAYA KATIL <i class="ri-arrow-right-line"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- ################################################################### -->
-                    <!-- VIEW 3: MARKETPLACE -->
-                    <!-- ################################################################### -->
-                    <section id="view-market" class="view-section">
-                        <div class="flex justify-between items-end mb-6">
-                            <div>
-                                <h2>PAZAR YERİ</h2>
-                                <p>Kazandığın puanları harca, nadir eşyalar topla.</p>
-                            </div>
-                            <div class="btn-group flex gap-2">
-                                <button class="btn btn-ghost active">TÜMÜ</button>
-                                <button class="btn btn-ghost">KOZMETİK</button>
-                                <button class="btn btn-ghost">BONUSLAR</button>
-                            </div>
-                        </div>
-
-                        <div class="market-grid" id="market-container">
-                            <!-- ITEMS WILL BE INJECTED HERE via JS -->
-                            <!-- TEMPLATE ITEM (HIDDEN) -->
-                            <div class="market-item template hidden">
-                                <div class="item-preview">🎁</div>
-                                <div class="item-details">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h5 class="text-md font-bold">ITEM NAME</h5>
-                                        <span class="text-xs px-2 py-1 rounded border">RARE</span>
-                                    </div>
-                                    <p class="text-xs text-gray-400 mb-4 h-8 overflow-hidden">Item description goes
-                                        here.</p>
-                                    <div class="flex justify-between items-center">
-                                        <div class="text-lg font-mono font-bold text-accent">5000 P</div>
-                                        <button class="btn-action-sm">AL</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- ################################################################### -->
-                    <!-- VIEW 4: CHAT ROOM -->
-                    <!-- ################################################################### -->
-                    <section id="view-chat" class="view-section h-[calc(100vh-140px)]">
-                        <div class="chat-wrapper h-full">
-                            <!-- Chat Header -->
-                            <div class="chat-header">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-3 h-3 rounded-full bg-success"></div>
-                                    <h4 class="m-0 text-lg">GLOBAL KANAL</h4>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="btn-icon bg-white/5" onclick="app.chat.clear()"><i
-                                            class="ri-brush-line"></i></button>
-                                </div>
-                            </div>
-
-                            <!-- Message Area -->
-                            <div id="chat-messages" class="chat-messages custom-scroll">
-                                <div class="text-center text-xs text-gray-500 py-4">
-                                    --- SOHBET BAŞLANGICI ---
-                                    <br>Lütfen saygı çerçevesinde konuşun.
-                                </div>
-                                <!-- Messages Injected Here -->
-                            </div>
-
-                            <!-- Input Area -->
-                            <form class="chat-input" id="chat-form">
-                                <input type="text" id="chat-msg-input" class="input-field"
-                                    placeholder="Mesajını yaz... (/help için komutlar)" autocomplete="off">
-                                <button type="submit" class="btn btn-primary"><i
-                                        class="ri-send-plane-fill"></i></button>
-                            </form>
-                        </div>
-                    </section>
-
-                    <!-- ################################################################### -->
-                    <!-- VIEW 5: PROFILE PAGE -->
-                    <!-- ################################################################### -->
-                    <section id="view-profile" class="view-section">
-                        <div class="card mb-6">
-                            <div class="h-32 bg-gradient-to-r from-primary-900 to-secondary-900 rounded-t-lg relative">
-                                <div class="absolute -bottom-12 left-8">
-                                    <img src="" id="pf-avatar"
-                                        class="w-24 h-24 rounded-full border-4 border-black bg-black object-cover">
-                                </div>
-                            </div>
-                            <div class="pt-16 px-8 pb-8">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h2 class="m-0" id="pf-name">KULLANICI ADI</h2>
-                                        <div class="flex items-center gap-2 mt-2">
-                                            <span
-                                                class="badge bg-primary-900 text-primary px-2 py-1 rounded text-xs font-bold border border-primary-700"
-                                                id="pf-role">MEMBER</span>
-                                            <span class="text-gray-500 text-sm" id="pf-id">ID: 000000</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-xs text-gray-400 uppercase">SEVİYE</div>
-                                        <div
-                                            class="text-4xl font-mono font-bold text-white flex items-center gap-2 justify-end">
-                                            <span id="pf-lvl">1</span>
-                                            <span class="text-sm text-gray-600 font-normal">/ 99</span>
-                                        </div>
-                                        <div class="w-48 h-2 bg-gray-800 rounded mt-2 ml-auto">
-                                            <div class="h-full bg-primary-500 rounded" style="width: 45%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                                    <div class="bg-white/5 p-4 rounded text-center">
-                                        <div class="text-xs text-gray-400">POKER YÜZÜ</div>
-                                        <div class="text-xl font-bold">0</div>
-                                    </div>
-                                    <div class="bg-white/5 p-4 rounded text-center">
-                                        <div class="text-xs text-gray-400">TOPLAM OYUN</div>
-                                        <div class="text-xl font-bold" id="pf-stat-games">0</div>
-                                    </div>
-                                    <div class="bg-white/5 p-4 rounded text-center">
-                                        <div class="text-xs text-gray-400">EN YÜKSEK KAZANÇ</div>
-                                        <div class="text-xl font-bold text-accent" id="pf-stat-high">0</div>
-                                    </div>
-                                    <div class="bg-white/5 p-4 rounded text-center">
-                                        <div class="text-xs text-gray-400">KATILIM</div>
-                                        <div class="text-xl font-bold" id="pf-date">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- INVENTORY -->
-                            <div class="card p-6">
-                                <h4 class="mb-4">ENVANTER ÇANTASI</h4>
-                                <div class="grid grid-cols-4 gap-2" id="pf-inventory-grid">
-                                    <div
-                                        class="aspect-square bg-white/5 rounded border border-white/10 flex items-center justify-center text-gray-600 hover:bg-white/10 cursor-pointer transition">
-                                        ?</div>
-                                    <div
-                                        class="aspect-square bg-white/5 rounded border border-white/10 flex items-center justify-center text-gray-600">
-                                    </div>
-                                    <div
-                                        class="aspect-square bg-white/5 rounded border border-white/10 flex items-center justify-center text-gray-600">
-                                    </div>
-                                    <div
-                                        class="aspect-square bg-white/5 rounded border border-white/10 flex items-center justify-center text-gray-600">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- ACHIEVEMENTS -->
-                            <div class="card p-6">
-                                <h4 class="mb-4">BAŞARIMLAR</h4>
-                                <div class="space-y-3">
-                                    <div class="flex items-center gap-3 p-2 bg-white/5 rounded opacity-50">
-                                        <div
-                                            class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center grayscale">
-                                            🏆</div>
-                                        <div>
-                                            <div class="font-bold text-sm">İLK KAN</div>
-                                            <div class="text-xs text-gray-400">İlk oyununu kazan.</div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-3 p-2 bg-white/5 rounded opacity-50">
-                                        <div
-                                            class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center grayscale">
-                                            💰</div>
-                                        <div>
-                                            <div class="font-bold text-sm">MİLYONER</div>
-                                            <div class="text-xs text-gray-400">Toplam 1.000.000 puana ulaş.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- ################################################################### -->
-                    <!-- VIEW 6: ADMIN CONSOLE -->
-                    <!-- ################################################################### -->
-                    <section id="view-admin" class="view-section">
-                        <div class="admin-dashboard">
-                            <div class="flex justify-between items-center mb-6">
-                                <h2 class="text-danger m-0">ADMIN KONSOLU (ROOT)</h2>
-                                <button class="btn btn-danger btn-sm">SİSTEMİ KİLİTLE</button>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                                <div class="p-4 bg-black/50 border border-danger rounded text-center">
-                                    <div class="text-xs text-danger">AKTİF SESSION</div>
-                                    <div class="text-2xl font-mono">1</div>
-                                </div>
-                                <div class="p-4 bg-black/50 border border-danger rounded text-center">
-                                    <div class="text-xs text-danger">DB REQUESTS</div>
-                                    <div class="text-2xl font-mono">42/s</div>
-                                </div>
-                                <div class="p-4 bg-black/50 border border-danger rounded text-center">
-                                    <div class="text-xs text-danger">SERVER UPTIME</div>
-                                    <div class="text-2xl font-mono">99.9%</div>
-                                </div>
-                            </div>
-
-                            <div class="bg-black/50 p-4 rounded mb-6">
-                                <h4 class="text-sm mb-2 text-danger">KULLANICI YÖNETİMİ</h4>
-                                <div class="flex gap-2">
-                                    <input type="text" class="input-field h-10" placeholder="Kullanıcı ID veya Email">
-                                    <button class="btn btn-danger">BAN</button>
-                                    <button class="btn btn-ghost">MUTE</button>
-                                    <button class="btn btn-success">GIFT CREDITS</button>
-                                </div>
-                            </div>
-
-                            <div class="bg-black/50 p-4 rounded">
-                                <h4 class="text-sm mb-2 text-danger">SİSTEM LOGLARI</h4>
-                                <div
-                                    class="h-40 overflow-y-auto font-mono text-xs text-gray-400 p-2 border border-gray-800 bg-black">
-                                    [SYSTEM] Init Sequence Started...<br>
-                                    [AUTH] User connected via ID: 938492<br>
-                                    [GAME] Mines game initialized<br>
-                                    [SYSTEM] Performance Nominal.
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+            </div>
+        </section>
 
     </main>
 
-    <!-- 
-    ================================================================================
-       SECTION 8: MODALS & OVERLAYS
-    ================================================================================ 
-    -->
+    <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>Giriş Yap / Kayıt Ol</h3>
+            </div>
+            <form id="form-login" class="modal-body">
+                <div class="form-group">
+                    <label>E-posta</label>
+                    <input type="email" id="login-email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Şifre</label>
+                    <input type="password" id="login-pass" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Devam Et</button>
+            </form>
+        </div>
+    </div>
 
     <!-- SETTINGS MODAL -->
-    <div id="settings-modal" class="modal-overlay">
+    <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>SİSTEM AYARLARI</h3>
-                <button class="text-xl" onclick="app.ui.closeModal('settings-modal')">&times;</button>
-            </div>
-            <div class="modal-body space-y-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="font-bold">SES EFEKTLERİ</div>
-                        <div class="text-xs text-gray-400">Arayüz ve oyun sesleri.</div>
-                    </div>
-                    <input type="checkbox" id="set-sfx" checked class="w-6 h-6">
-                </div>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="font-bold">MÜZİK</div>
-                        <div class="text-xs text-gray-400">Arka plan ambiyans müziği.</div>
-                    </div>
-                    <input type="checkbox" id="set-music" class="w-6 h-6">
-                </div>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="font-bold">DÜŞÜK PERFORMANS</div>
-                        <div class="text-xs text-gray-400">Parçacık efektlerini kapat.</div>
-                    </div>
-                    <input type="checkbox" id="set-low-perf" class="w-6 h-6">
-                </div>
-                <hr class="border-gray-800">
-                <div class="p-4 bg-red-900/20 border border-red-900 rounded">
-                    <h5 class="text-danger mb-2">HESAP İŞLEMLERİ</h5>
-                    <button class="btn btn-danger w-full mb-2" onclick="app.auth.logout()">OTURUMU KAPAT</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- GAME OVERLAY CONTAINER (Universal Game Wrapper) -->
-    <div id="game-modal" class="modal-overlay backdrop-blur-xl">
-        <div
-            class="modal-content w-full max-w-5xl h-[90vh] flex flex-col border-accent-500 shadow-2xl shadow-accent-500/20">
-            <div class="modal-header bg-black/50 border-accent-900">
-                <div class="flex items-center gap-4">
-                    <span class="text-accent font-bold tracking-widest text-xl" id="gm-title">OYUN BAŞLIĞI</span>
-                    <span class="px-2 py-0.5 rounded bg-accent/20 text-accent text-xs border border-accent/50">CANLI
-                        BAHİS</span>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <div class="text-[10px] text-gray-400">KAZANÇ</div>
-                        <div class="text-xl font-mono text-success font-bold" id="gm-win-amount">0</div>
-                    </div>
-                    <button class="text-2xl text-gray-500 hover:text-white transition"
-                        onclick="app.game.close()">&times;</button>
-                </div>
-            </div>
-
-            <div class="modal-body flex-1 bg-black/80 relative overflow-hidden flex flex-col items-center justify-center"
-                id="game-stage">
-                <!-- DYNAMIC GAME UI INJECTED HERE -->
-            </div>
-        </div>
-    </div>
-
-    <!-- AUTHENTICATION MODAL -->
-    <div id="auth-modal" class="modal-overlay z-[9999]">
-        <div class="modal-content max-w-sm text-center p-8 border-primary-500 glow-primary">
-            <div class="mb-6">
-                <svg class="w-16 h-16 text-primary mx-auto animate-pulse" viewBox="0 0 100 100">
-                    <use href="#icon-logo" />
-                </svg>
-            </div>
-            <h2 class="mb-2">SAHIKALI</h2>
-            <p class="text-sm text-gray-400 mb-8">Kimlik doğrulaması gerekli. Lütfen giriş yapın.</p>
-
-            <form id="form-login" class="space-y-4">
-                <div class="input-group">
-                    <input type="email" id="login-email" class="input-field" placeholder="E-Posta Adresi" required>
-                    <i class="ri-mail-line input-icon"></i>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="login-pass" class="input-field" placeholder="Şifre" required>
-                    <i class="ri-lock-2-line input-icon"></i>
-                </div>
-                <button type="submit" class="btn btn-primary w-full shadow-lg shadow-primary-500/30">Oturum Aç</button>
-            </form>
-            <div class="mt-4 text-xs text-gray-500">
-                Hesabınız yoksa otomatik oluşturulacaktır.
-            </div>
-        </div>
-    </div>
-
-    <!-- 
-    ================================================================================
-       SECTION 9: TEMPLATES (Hidden)
-    ================================================================================ 
-    -->
-    <!-- TEMPLATE: MINES UI -->
-    <template id="tpl-mines">
-        <div class="mines-interface w-full h-full flex flex-col md:flex-row gap-4 p-4">
-            <div class="mines-controls w-full md:w-1/3 flex flex-col gap-4">
-                <div class="p-4 bg-white/5 rounded border border-white/10">
-                    <label class="text-xs text-gray-400 block mb-2">BAHİS MİKTARI</label>
-                    <div class="flex gap-2">
-                        <input type="number" id="m-bet-inp"
-                            class="w-full bg-black border border-gray-700 p-2 rounded text-white font-mono text-center text-lg"
-                            value="100">
-                        <button class="btn btn-ghost px-2"
-                            onclick="document.getElementById('m-bet-inp').value*=2">2x</button>
-                        <button class="btn btn-ghost px-2"
-                            onclick="document.getElementById('m-bet-inp').value/=2">1/2</button>
-                    </div>
-                </div>
-                <div class="p-4 bg-white/5 rounded border border-white/10">
-                    <label class="text-xs text-gray-400 block mb-2">MAYIN SAYISI (1-24)</label>
-                    <input type="range" id="m-mines-rng" min="1" max="24" value="3" class="w-full mb-2"
-                        oninput="document.getElementById('m-mines-val').innerText=this.value">
-                    <div class="text-center font-bold text-danger text-xl" id="m-mines-val">3</div>
-                </div>
-                <button id="btn-m-play" class="btn btn-primary w-full py-4 text-xl mt-auto"
-                    onclick="app.game.mines.start()">BAŞLAT</button>
-                <button id="btn-m-cashout" class="btn btn-success w-full py-4 text-xl mt-auto hidden"
-                    onclick="app.game.mines.cashout()">KASAYI ÇEK</button>
-            </div>
-            <div
-                class="mines-grid-container w-full md:w-2/3 flex items-center justify-center bg-black/30 rounded-lg border border-white/5 relative">
-                <div class="absolute top-4 left-4 text-xs text-gray-500">FIELD_ID: #8392</div>
-                <div class="mines-grid" id="m-grid-target">
-                    <!-- Cells injected via JS -->
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <!-- TEMPLATE: SLOTS UI -->
-    <template id="tpl-slots">
-        <div class="flex flex-col items-center justify-center h-full w-full gap-8">
-            <div class="slot-machine relative">
-                <div class="slot-display-window">
-                    <div class="slot-reel" id="reel-1">
-                        <div class="reel-strip" id="rs-1"></div>
-                    </div>
-                    <div class="slot-reel" id="reel-2">
-                        <div class="reel-strip" id="rs-2"></div>
-                    </div>
-                    <div class="slot-reel" id="reel-3">
-                        <div class="reel-strip" id="rs-3"></div>
-                    </div>
-                    <div class="winning-line" id="win-line"></div>
-                </div>
-                <div class="absolute -right-12 top-20 w-8 h-40 bg-gray-800 rounded-r-lg border-r-4 border-gray-600">
-                    <div id="slot-handle"
-                        class="w-8 h-8 rounded-full bg-red-600 absolute -top-10 left-0 border-4 border-red-800 shadow-lg cursor-pointer transition-all duration-300"
-                        onclick="app.game.slots.spin()"></div>
-                    <div class="w-2 h-40 bg-gray-500 mx-auto"></div>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-4 bg-black/50 p-4 rounded-full border border-accent">
-                <div class="flex flex-col">
-                    <label class="text-[10px] text-gray-400 uppercase text-center">BAHİS</label>
-                    <input type="number" id="s-bet" value="50"
-                        class="bg-transparent text-center font-mono font-bold text-xl w-24 border-none text-white focus:outline-none">
-                </div>
-                <button
-                    class="btn btn-accent rounded-full px-8 py-4 font-black text-xl shadow-[0_0_20px_rgba(255,193,7,0.5)]"
-                    onclick="app.game.slots.spin()">ÇEVİR</button>
-            </div>
-            <div class="text-xs text-gray-500">
-                KOMBİNASYONLAR: 🍒🍒🍒 (10x) | 7️⃣7️⃣7️⃣ (50x) | 💎💎💎 (100x)
-            </div>
-        </div>
-    </template>
-
-    <!-- TEMPLATE: ROULETTE UI -->
-    <template id="tpl-roulette">
-        <div class="flex flex-col items-center justify-center p-4 w-full h-full overflow-y-auto">
-            <div
-                class="roulette-table flex-col lg:flex-row items-center justify-center transform scale-90 lg:scale-100">
-                <div class="roulette-wheel-container">
-                    <div class="roulette-wheel" id="r-wheel"></div>
-                    <div class="roulette-ball" id="r-ball"></div>
-                </div>
-                <div class="flex flex-col gap-4">
-                    <div class="roulette-board" id="r-board">
-                        <!-- Board Grid (0-36) -->
-                        <div class="bet-spot green row-span-5 flex items-center justify-center"
-                            onclick="app.game.roulette.bet('0')">0</div>
-                        <!-- COLS 1 -->
-                        <div class="bet-spot red" onclick="app.game.roulette.bet('3')">3</div>
-                        <div class="bet-spot black" onclick="app.game.roulette.bet('6')">6</div>
-                        <div class="bet-spot red" onclick="app.game.roulette.bet('9')">9</div>
-                        <div class="bet-spot red" onclick="app.game.roulette.bet('12')">12</div>
-                        <div class="bet-spot black" onclick="app.game.roulette.bet('15')">15</div>
-                        <div class="bet-spot red" onclick="app.game.roulette.bet('18')">18</div>
-                        <div class="bet-spot red" onclick="app.game.roulette.bet('21')">21</div>
-                        <div class="bet-spot black" onclick="app.game.roulette.bet('24')">24</div>
-                        <div class="bet-spot red" onclick="app.game.roulette.bet('27')">27</div>
-                        <div class="bet-spot red" onclick="app.game.roulette.bet('30')">30</div>
-                        <div class="bet-spot black" onclick="app.game.roulette.bet('33')">33</div>
-                        <div class="bet-spot red" onclick="app.game.roulette.bet('36')">36</div>
-                        <!-- ... more spots simplified for layout -->
-                        <div class="bet-spot col-span-4 border-t-4 border-white mt-2"
-                            onclick="app.game.roulette.bet('red')">RED</div>
-                        <div class="bet-spot col-span-4 border-t-4 border-white mt-2"
-                            onclick="app.game.roulette.bet('black')">BLACK</div>
-                    </div>
-                    <div class="flex gap-2 justify-center">
-                        <div class="chip chip-50 pointer" onclick="app.game.roulette.setChip(50)">50</div>
-                        <div class="chip chip-100 pointer" onclick="app.game.roulette.setChip(100)">100</div>
-                        <div class="chip chip-500 pointer" onclick="app.game.roulette.setChip(500)">500</div>
-                        <button class="btn btn-primary" onclick="app.game.roulette.spin()">BAŞLAT</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <!-- ################################################################### -->
-    <!-- VIEW 7: LEADERBOARD PAGE -->
-    <!-- ################################################################### -->
-    <section id="view-leaderboard" class="view-section">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h2 class="m-0">LİDER TABLOSU</h2>
-                <p class="text-sm text-gray-400">En iyi oyuncular</p>
-            </div>
-            <div class="flex gap-2">
-                <button class="btn btn-ghost btn-sm active">GÜNLÜK</button>
-                <button class="btn btn-ghost btn-sm">HAFTALIK</button>
-                <button class="btn btn-ghost btn-sm">TÜM ZAMANLAR</button>
-            </div>
-        </div>
-
-        <div class="card p-0">
-            <div id="leaderboard-list" class="divide-y divide-gray-800">
-                <!-- Leaderboard rows injected by JS -->
-            </div>
-        </div>
-    </section>
-
-    <!-- ################################################################### -->
-    <!-- VIEW 8: INVENTORY PAGE -->
-    <!-- ################################################################### -->
-    <section id="view-inventory" class="view-section">
-        <h2 class="mb-6">ENVANTER ÇANTASI</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Inventory Item Card -->
-            <div class="card p-4 text-center">
-                <div class="text-6xl mb-4">🎁</div>
-                <h4 class="text-sm font-bold mb-2">BAŞLANGIÇ PAKETİ</h4>
-                <p class="text-xs text-gray-400 mb-4">İlk giriş bonusu</p>
-                <button class="btn btn-primary btn-sm w-full">KULLAN</button>
-            </div>
-
-            <div class="card p-4 text-center opacity-50">
-                <div class="text-6xl mb-4 grayscale">🏆</div>
-                <h4 class="text-sm font-bold mb-2">ŞAMPIYON ROZETI</h4>
-                <p class="text-xs text-gray-400 mb-4">100 galibiyet gerekli</p>
-                <button class="btn btn-ghost btn-sm w-full" disabled>KİLİTLİ</button>
-            </div>
-
-            <div class="card p-4 text-center">
-                <div class="text-6xl mb-4">💎</div>
-                <h4 class="text-sm font-bold mb-2">ELMAS BOOST</h4>
-                <p class="text-xs text-gray-400 mb-4">2x XP - 1 saat</p>
-                <button class="btn btn-accent btn-sm w-full">AKTİF ET</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- ################################################################### -->
-    <!-- NOTIFICATION PANEL (Dropdown) -->
-    <!-- ################################################################### -->
-    <div id="notification-panel"
-        class="fixed top-20 right-5 w-96 max-h-[600px] bg-surface-1 border border-gray-800 rounded-lg shadow-2xl hidden z-[1100]">
-        <div class="p-4 border-b border-gray-800 flex justify-between items-center">
-            <h4 class="m-0 text-sm font-bold">BİLDİRİMLER</h4>
-            <button class="text-xs text-primary" onclick="app.notifications.markAllRead()">Tümünü Okundu
-                İşaretle</button>
-        </div>
-        <div id="notif-list" class="overflow-y-auto max-h-[500px] custom-scroll">
-            <!-- Notifications injected by JS -->
-        </div>
-    </div>
-
-    <!-- ################################################################### -->
-    <!-- DM PANEL (Slide-in) -->
-    <!-- ################################################################### -->
-    <div id="dm-panel"
-        class="fixed top-0 right-0 bottom-0 w-full md:w-96 bg-surface-0 border-l border-gray-800 transform translate-x-full transition-transform duration-300 z-[1100]">
-        <div class="h-full flex flex-col">
-            <!-- DM Header -->
-            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
-                <h3 class="m-0">MESAJLAR</h3>
-                <button onclick="app.ui.toggleDM()" class="text-xl">&times;</button>
-            </div>
-
-            <!-- Conversation List -->
-            <div id="dm-conversation-list" class="flex-1 overflow-y-auto custom-scroll">
-                <!-- Conversations injected by JS -->
-            </div>
-
-            <!-- Active Chat Area (Hidden by default) -->
-            <div id="dm-chat-area" class="hidden flex-1 flex flex-col">
-                <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="dm-messages">
-                    <!-- Messages injected by JS -->
-                </div>
-                <form class="p-4 border-t border-gray-800 flex gap-2" id="dm-form">
-                    <input type="text" id="dm-input" class="input-field flex-1" placeholder="Mesaj yaz...">
-                    <button type="submit" class="btn btn-primary"><i class="ri-send-plane-fill"></i></button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- ################################################################### -->
-    <!-- ACHIEVEMENTS MODAL -->
-    <!-- ################################################################### -->
-    <div id="achievements-modal" class="modal-overlay">
-        <div class="modal-content max-w-4xl">
-            <div class="modal-header">
-                <h3>BAŞARIMLAR</h3>
-                <button onclick="app.ui.closeModal('achievements-modal')">&times;</button>
+                <h3>Ayarlar</h3>
+                <button class="modal-close" onclick="app.ui.closeModal('settings-modal')">
+                    <i class="ri-close-line"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <div id="achievement-list" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <!-- Achievement cards injected by JS -->
+                <div class="settings-group">
+                    <h4>Genel</h4>
+                    <div class="setting-item">
+                        <label>Bildirimler</label>
+                        <input type="checkbox" class="toggle" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label>Sesler</label>
+                        <input type="checkbox" class="toggle" checked>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ################################################################### -->
-    <!-- ADVANCED SETTINGS MODAL -->
-    <!-- ################################################################### -->
-    <div id="advanced-settings-modal" class="modal-overlay">
-        <div class="modal-content max-w-2xl">
-            <div class="modal-header">
-                <h3>GELİŞMİŞ AYARLAR</h3>
-                <button onclick="app.ui.closeModal('advanced-settings-modal')">&times;</button>
-            </div>
-            <div class="modal-body space-y-6">
-                <!-- Theme Picker -->
-                <div>
-                    <h4 class="text-sm font-bold mb-3">TEMA RENGİ</h4>
-                    <div id="theme-picker" class="flex gap-3">
-                        <!-- Theme swatches injected by JS -->
-                    </div>
-                </div>
-
-                <!-- Graphics Settings -->
-                <div>
-                    <h4 class="text-sm font-bold mb-3">GRAFİK AYARLARI</h4>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-sm">Parçacık Efektleri</div>
-                                <div class="text-xs text-gray-400">Arka plan animasyonları</div>
-                            </div>
-                            <input type="checkbox" id="toggle-particles" class="w-6 h-6">
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-sm">Animasyonlar</div>
-                                <div class="text-xs text-gray-400">UI geçiş efektleri</div>
-                            </div>
-                            <input type="checkbox" id="toggle-animations" class="w-6 h-6" checked>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-sm">Glow Efektleri</div>
-                                <div class="text-xs text-gray-400">Neon ışıltılar</div>
-                            </div>
-                            <input type="checkbox" id="toggle-glow" class="w-6 h-6" checked>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Privacy Settings -->
-                <div>
-                    <h4 class="text-sm font-bold mb-3">GİZLİLİK</h4>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-sm">Seviyemi Göster</div>
-                                <div class="text-xs text-gray-400">Profilinde görünsün</div>
-                            </div>
-                            <input type="checkbox" id="privacy-level" class="w-6 h-6" checked>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-sm">Envanteri Göster</div>
-                                <div class="text-xs text-gray-400">Başkaları görebilsin</div>
-                            </div>
-                            <input type="checkbox" id="privacy-inventory" class="w-6 h-6" checked>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Language -->
-                <div>
-                    <h4 class="text-sm font-bold mb-3">DİL</h4>
-                    <select class="input-field">
-                        <option value="tr" selected>Türkçe</option>
-                        <option value="en">English</option>
-                        <option value="de">Deutsch</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ################################################################### -->
-    <!-- TEMPLATE: BLACKJACK UI -->
-    <!-- ################################################################### -->
-    <template id="tpl-blackjack">
-        <div class="blackjack-table w-full h-full flex flex-col items-center justify-center p-4 gap-6">
-            <!-- Dealer Area -->
-            <div class="text-center">
-                <div class="text-xs text-gray-400 mb-2">KRUPIYE</div>
-                <div id="bj-dealer-hand" class="flex gap-2 justify-center mb-2">
-                    <!-- Dealer cards -->
-                </div>
-                <div class="font-mono text-xl" id="bj-dealer-total">0</div>
-            </div>
-
-            <!-- Table -->
-            <div
-                class="w-full max-w-2xl h-48 bg-green-900 rounded-full border-8 border-amber-900 flex items-center justify-center relative">
-                <div class="text-amber-700 text-6xl font-bold opacity-20">21</div>
-            </div>
-
-            <!-- Player Area -->
-            <div class="text-center">
-                <div class="text-xs text-gray-400 mb-2">SEN</div>
-                <div id="bj-player-hand" class="flex gap-2 justify-center mb-2">
-                    <!-- Player cards -->
-                </div>
-                <div class="font-mono text-xl text-primary" id="bj-player-total">0</div>
-            </div>
-
-            <!-- Controls -->
-            <div class="flex gap-4">
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs text-gray-400">BAHİS</label>
-                    <input type="number" id="bj-bet" value="100" class="input-field w-32 text-center font-mono">
-                </div>
-                <button class="btn btn-primary" id="btn-bj-deal"
-                    onclick="app.game.blackjack.start(parseInt(document.getElementById('bj-bet').value))">DAĞIT</button>
-                <button class="btn btn-success" id="btn-bj-hit" onclick="app.game.blackjack.hit()">KART ÇEK</button>
-                <button class="btn btn-danger" id="btn-bj-stand" onclick="app.game.blackjack.stand()">DUR</button>
-            </div>
-        </div>
-    </template>
-
-    <!-- ################################################################### -->
-    <!-- TEMPLATE: PLINKO UI -->
-    <!-- ################################################################### -->
-    <template id="tpl-plinko">
-        <div class="plinko-game w-full h-full flex flex-col items-center justify-center p-4 gap-4">
-            <h3 class="text-gradient">PLINKO</h3>
-
-            <!-- Canvas -->
-            <canvas id="plinko-canvas" width="600" height="500"
-                class="border border-gray-700 rounded-lg bg-black"></canvas>
-
-            <!-- Multipliers -->
-            <div class="flex gap-1 text-xs font-mono">
-                <div class="px-2 py-1 bg-red-900 rounded">0.2x</div>
-                <div class="px-2 py-1 bg-orange-900 rounded">0.5x</div>
-                <div class="px-2 py-1 bg-yellow-900 rounded">1x</div>
-                <div class="px-2 py-1 bg-green-900 rounded">1.5x</div>
-                <div class="px-2 py-1 bg-cyan-900 rounded">2x</div>
-                <div class="px-2 py-1 bg-blue-900 rounded">3x</div>
-                <div class="px-2 py-1 bg-purple-900 rounded">5x</div>
-                <div class="px-2 py-1 bg-blue-900 rounded">3x</div>
-                <div class="px-2 py-1 bg-cyan-900 rounded">2x</div>
-                <div class="px-2 py-1 bg-green-900 rounded">1.5x</div>
-                <div class="px-2 py-1 bg-yellow-900 rounded">1x</div>
-                <div class="px-2 py-1 bg-orange-900 rounded">0.5x</div>
-                <div class="px-2 py-1 bg-red-900 rounded">0.2x</div>
-            </div>
-
-            <!-- Controls -->
-            <div class="flex gap-4 items-center">
-                <div class="flex flex-col">
-                    <label class="text-xs text-gray-400">BAHİS</label>
-                    <input type="number" id="plinko-bet" value="100" class="input-field w-32 text-center font-mono">
-                </div>
-                <button class="btn btn-primary"
-                    onclick="app.game.plinko.start(parseInt(document.getElementById('plinko-bet').value))">TOP
-                    BIRAK</button>
-            </div>
-        </div>
-    </template>
-
-    <!-- ################################################################### -->
-    <!-- TEMPLATE: KENO UI -->
-    <!-- ################################################################### -->
-    <template id="tpl-keno">
-        <div class="keno-game w-full h-full flex flex-col items-center p-4 gap-4 overflow-y-auto">
-            <h3 class="text-gradient">KENO</h3>
-            <p class="text-xs text-gray-400">1-10 arası sayı seç, 20 sayı çekilecek</p>
-
-            <!-- Keno Board -->
-            <div id="keno-board" class="grid grid-cols-10 gap-2 max-w-3xl">
-                <!-- Numbers 1-80 injected by JS -->
-            </div>
-
-            <!-- Selected Numbers Display -->
-            <div class="text-sm">
-                <span class="text-gray-400">Seçili:</span>
-                <span class="font-mono font-bold text-primary" id="keno-selected-count">0</span> / 10
-            </div>
-
-            <!-- Controls -->
-            <div class="flex gap-4 items-center">
-                <div class="flex flex-col">
-                    <label class="text-xs text-gray-400">BAHİS</label>
-                    <input type="number" id="keno-bet" value="100" class="input-field w-32 text-center font-mono">
-                </div>
-                <button class="btn btn-primary"
-                    onclick="app.game.keno.start(parseInt(document.getElementById('keno-bet').value))">OYNA</button>
-                <button class="btn btn-ghost"
-                    onclick="app.game.keno.selectedNumbers = []; app.game.keno.renderBoard()">TEMİZLE</button>
-            </div>
-
-            <!-- Payout Table -->
-            <div class="text-xs text-gray-400 mt-4">
-                <div class="font-bold mb-2">ÖDEME TABLOSU:</div>
-                <div class="grid grid-cols-2 gap-1">
-                    <div>3 eşleşme: 1x</div>
-                    <div>4 eşleşme: 2x</div>
-                    <div>5 eşleşme: 5x</div>
-                    <div>6 eşleşme: 10x</div>
-                    <div>7 eşleşme: 20x</div>
-                    <div>8 eşleşme: 50x</div>
-                    <div>9 eşleşme: 100x</div>
-                    <div>10 eşleşme: 500x</div>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <!-- ################################################################### -->
-    <!-- TEMPLATE: CRASH UI -->
-    <!-- ################################################################### -->
-    <template id="tpl-crash">
-        <div class="crash-game w-full h-full flex flex-col items-center justify-center p-4 gap-6">
-            <h3 class="text-gradient">CRASH (MOON)</h3>
-
-            <!-- Multiplier Display -->
-            <div class="text-center">
-                <div class="text-8xl font-black font-mono text-primary animate-pulse" id="crash-multiplier">1.00x</div>
-                <div class="text-sm text-gray-400 mt-2">Çarpan</div>
-            </div>
-
-            <!-- Graph Area -->
-            <div class="w-full max-w-2xl h-64 bg-black border border-gray-700 rounded-lg relative overflow-hidden">
-                <canvas id="crash-canvas" class="w-full h-full"></canvas>
-                <div class="absolute top-2 left-2 text-xs text-gray-500 font-mono">GRAPH</div>
-            </div>
-
-            <!-- Controls -->
-            <div class="flex gap-4 items-end">
-                <div class="flex flex-col">
-                    <label class="text-xs text-gray-400">BAHİS</label>
-                    <input type="number" id="crash-bet" value="100" class="input-field w-32 text-center font-mono">
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-xs text-gray-400">OTO ÇIKIŞ</label>
-                    <input type="number" id="crash-auto" value="2" step="0.1"
-                        class="input-field w-32 text-center font-mono">
-                </div>
-                <button class="btn btn-primary" id="btn-crash-bet">BAHİS YAP</button>
-                <button class="btn btn-success hidden" id="btn-crash-cashout">ÇIKIŞ YAP</button>
-            </div>
-
-            <!-- Recent History -->
-            <div class="flex gap-2 text-xs font-mono">
-                <div class="px-3 py-1 bg-green-900 rounded">2.45x</div>
-                <div class="px-3 py-1 bg-red-900 rounded">1.02x</div>
-                <div class="px-3 py-1 bg-green-900 rounded">3.78x</div>
-                <div class="px-3 py-1 bg-green-900 rounded">1.89x</div>
-                <div class="px-3 py-1 bg-red-900 rounded">1.15x</div>
-            </div>
-        </div>
-    </template>
-
-    <!-- ################################################################### -->
-    <!-- MOBILE BOTTOM NAVIGATION (Auto-injected by JS if mobile) -->
-    <!-- ################################################################### -->
-
-    <!-- ################################################################### -->
-    <!-- HELPER FUNCTIONS & UI TOGGLES -->
-    <!-- ################################################################### -->
-    <script>
-        // UI Helper Functions (Non-module)
-        window.toggleNotifications = function () {
-            const panel = document.getElementById('notification-panel');
-            if (panel) {
-                panel.classList.toggle('hidden');
-            }
-        };
-
-        window.toggleDM = function () {
-            const panel = document.getElementById('dm-panel');
-            if (panel) {
-                panel.classList.toggle('translate-x-full');
-            }
-        };
-
-        window.toggleSidebar = function () {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('open');
-            }
-        };
-
-        // Notification icon click handler
-        document.addEventListener('DOMContentLoaded', () => {
-            const notifBtn = document.querySelector('[onclick*="toggleNotif"]');
-            if (notifBtn) {
-                notifBtn.onclick = toggleNotifications;
-            }
-        });
-    </script>
-
-    <!-- 
-    ================================================================================
-       SECTION 10: SCRIPTS
-    ================================================================================
-    -->
     <script type="module" src="app.js"></script>
-
-    <!-- 
-    ================================================================================
-       SECTION 11: FOOTER & CREDITS
-    ================================================================================
-    -->
-    <footer
-        class="fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-sm border-t border-gray-800 py-2 px-4 text-center text-xs text-gray-500 z-[100] hidden md:block">
-        <div class="flex justify-between items-center max-w-7xl mx-auto">
-            <div>
-                © 2026 <span class="text-primary font-bold">SAHIKALI</span> Platform. Tüm hakları saklıdır.
-            </div>
-            <div class="flex gap-4">
-                <a href="#" class="hover:text-primary transition-colors">Gizlilik Politikası</a>
-                <a href="#" class="hover:text-primary transition-colors">Kullanım Koşulları</a>
-                <a href="#" class="hover:text-primary transition-colors">İletişim</a>
-                <a href="#" class="hover:text-primary transition-colors">Yardım</a>
-            </div>
-            <div>
-                <span class="text-gray-600">v</span><span class="text-accent font-mono">6.0.1-PATCH</span>
-            </div>
-        </div>
-    </footer>
-
-    <!-- 
-    ================================================================================
-       ADDITIONAL DOCUMENTATION & COMMENTS
-    ================================================================================
-    
-    This platform is built with the following technologies:
-    - HTML5 for structure
-    - CSS3 with custom properties for styling
-    - Vanilla JavaScript (ES6+) for logic
-    - Firebase for backend (Auth, Realtime Database)
-    
-    Key Features:
-    1. Real-time chat system with role-based permissions
-    2. Multiple casino-style games (Mines, Slots, Roulette, Blackjack, Plinko, Keno)
-    3. User profile system with levels, XP, and achievements
-    4. Leaderboard and competitive features
-    5. Marketplace for virtual items
-    6. Admin panel for moderation
-    7. Direct messaging system
-    8. Notification system
-    9. Theme customization
-    10. Mobile-responsive design
-    
-    Architecture:
-    - Single Page Application (SPA) design
-    - Component-based UI structure
-    - State management with custom StateManager
-    - Event-driven architecture
-    - Modular game engines
-    
-    Security Features:
-    - Firebase Authentication
-    - Role-based access control (Founder, Admin, Member)
-    - Input validation and sanitization
-    - XSS protection
-    - Rate limiting on critical actions
-    
-    Performance Optimizations:
-    - Lazy loading of game interfaces
-    - Debounced and throttled event handlers
-    - Efficient DOM manipulation
-    - CSS animations with GPU acceleration
-    - Code splitting and modularization
-    
-    Accessibility:
-    - Semantic HTML5 elements
-    - ARIA labels where appropriate
-    - Keyboard navigation support
-    - High contrast color scheme
-    - Responsive font sizing
-    
-    Browser Support:
-    - Chrome 90+
-    - Firefox 88+
-    - Safari 14+
-    - Edge 90+
-    
-    Future Enhancements:
-    - [ ] Crash game implementation
-    - [ ] Tournament system
-    - [ ] Clan/Guild system
-    - [ ] Trading system
-    - [ ] Mobile app (React Native)
-    - [ ] Voice chat integration
-    - [ ] Streaming integration
-    - [ ] NFT marketplace
-    - [ ] Cryptocurrency integration
-    - [ ] AI-powered chat moderation
-    
-    Known Issues:
-    - None at this time
-    
-    Credits:
-    - Design: Antigravity AI
-    - Development: Antigravity AI
-    - Testing: Community
-    - Hosting: Firebase
-    
-    Contact:
-    - Email: support@sahikali.com
-    - Discord: discord.gg/sahikali
-    - Twitter: @sahikali
-    
-    License:
-    - Proprietary - All Rights Reserved
-    
-    Last Updated: 2026-01-30
-    Build: PRODUCTION
-    Environment: LIVE
-    
-    ================================================================================
-    -->
-
-    <!-- 
-    ================================================================================
-       DEBUG PANEL (Development Only)
-    ================================================================================
-    -->
-    <div id="debug-panel"
-        class="fixed bottom-4 right-4 bg-black bg-opacity-90 border border-primary rounded-lg p-4 text-xs font-mono hidden z-[10000]">
-        <div class="text-primary font-bold mb-2">DEBUG PANEL</div>
-        <div class="space-y-1 text-gray-400">
-            <div>FPS: <span id="debug-fps">60</span></div>
-            <div>Memory: <span id="debug-memory">0 MB</span></div>
-            <div>Online: <span id="debug-online">0</span></div>
-            <div>User: <span id="debug-user">Guest</span></div>
-            <div>View: <span id="debug-view">dashboard</span></div>
-        </div>
-        <button onclick="document.getElementById('debug-panel').classList.add('hidden')"
-            class="mt-2 text-danger hover:text-red-400">
-            [CLOSE]
-        </button>
-    </div>
-
-    <!-- 
-    ================================================================================
-       KEYBOARD SHORTCUTS REFERENCE
-    ================================================================================
-    
-    Global Shortcuts:
-    - Ctrl/Cmd + K: Open command palette (future feature)
-    - Ctrl/Cmd + /: Toggle chat
-    - Ctrl/Cmd + ,: Open settings
-    - Esc: Close active modal
-    - F11: Toggle fullscreen
-    
-    Navigation Shortcuts:
-    - Alt + 1: Dashboard
-    - Alt + 2: Games
-    - Alt + 3: Market
-    - Alt + 4: Chat
-    - Alt + 5: Profile
-    
-    Chat Shortcuts:
-    - /clear: Clear chat
-    - /roll [max]: Roll dice
-    - /help: Show help
-    
-    Admin Shortcuts (Admin/Founder only):
-    - /ban [user] [reason]: Ban user
-    - /mute [user] [duration]: Mute user
-    - /give [user] [amount]: Give credits
-    - /announce [message]: Send announcement
-    
-    ================================================================================
-    -->
-
-    <!-- 
-    ================================================================================
-       ANALYTICS & TRACKING (Placeholder)
-    ================================================================================
-    -->
-    <!-- Google Analytics -->
-    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
-
-    <!-- Facebook Pixel -->
-    <!-- <script>
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', 'YOUR_PIXEL_ID');
-        fbq('track', 'PageView');
-    </script> -->
-
-    <!-- Hotjar Tracking Code -->
-    <!-- <script>
-        (function(h,o,t,j,a,r){
-            h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
-            h._hjSettings={hjid:YOUR_HOTJAR_ID,hjsv:6};
-            a=o.getElementsByTagName('head')[0];
-            r=o.createElement('script');r.async=1;
-            r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
-            a.appendChild(r);
-        })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
-    </script> -->
-
-    <!-- 
-    ================================================================================
-       END OF DOCUMENT
-    ================================================================================
-    
-    Thank you for using SAHIKALI Platform!
-    
-    For support, please contact: support@sahikali.com
-    For business inquiries: business@sahikali.com
-    
-    Follow us on social media:
-    - Twitter: @sahikali
-    - Instagram: @sahikali
-    - Discord: discord.gg/sahikali
-    - YouTube: youtube.com/@sahikali
-    
-    Join our community and start your gaming journey today!
-    
-    ================================================================================
-    -->
-
 </body>
 
 </html>
