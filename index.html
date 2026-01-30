@@ -477,434 +477,478 @@
                     </button>
                 </div>
 
+                <!-- Stats -->
                 <div class="members-stats">
                     <div class="member-stat-item">
-                        <span class="stat-number" id="members-total">0</span>
-                        <span class="stat-text">Toplam Üye</span>
+                        <div class="stat-number" id="members-total">0</div>
+                        <div class="stat-text">Toplam Üye</div>
                     </div>
                     <div class="member-stat-item">
-                        <span class="stat-number" id="members-online">0</span>
-                        <span class="stat-text">Çevrimiçi</span>
+                        <div class="stat-number" id="members-online">0</div>
+                        <div class="stat-text">Çevrimiçi</div>
                     </div>
                     <div class="member-stat-item">
-                        <span class="stat-number" id="members-showing">0</span>
-                        <span class="stat-text">Gösterilen</span>
+                        <div class="stat-number" id="members-showing">0</div>
+                        <div class="stat-text">Gösterilen</div>
                     </div>
                 </div>
 
-                <div id="members-grid" class="members-grid">
-                    <p class="text-muted">Üyeler yükleniyor...</p>
+                <!-- Members List (Changed from Grid to List) -->
+                <div id="members-list-container" class="members-list-container">
+                    <!-- Members will be rendered here -->
                 </div>
             </div>
         </section>
 
-    </main>
+        <!-- FLOATING CHAT BTN -->
+        <button class="floating-chat-btn" onclick="app.ui.toggleFloatingChat()" id="floating-chat-btn">
+            <i class="ri-chat-3-line"></i>
+            <span class="chat-badge" id="chat-badge">0</span>
+        </button>
 
-    <!-- FLOATING CHAT BUTTON -->
-    <button class="floating-chat-btn" onclick="app.ui.toggleFloatingChat()" id="floating-chat-btn">
-        <i class="ri-chat-3-line"></i>
-        <span class="chat-badge" id="chat-badge">0</span>
-    </button>
-
-    <!-- FLOATING CHAT WINDOW -->
-    <div class="floating-chat-window" id="floating-chat-window">
-        <div class="floating-chat-header">
-            <h4>💬 Global Chat</h4>
-            <button class="chat-close-btn" onclick="app.ui.toggleFloatingChat()">
-                <i class="ri-close-line"></i>
-            </button>
-        </div>
-        <div class="floating-chat-messages" id="floating-chat-messages">
-            <!-- Messages will be inserted here -->
-        </div>
-        <form class="floating-chat-input-form" id="floating-chat-form">
-            <button type="button" class="btn btn-vs" onclick="app.game.openGameMenu()" title="Oyun Daveti Gönder">
-                VS
-            </button>
-            <input type="text" id="floating-chat-input" class="chat-input" placeholder="Mesaj yaz..." maxlength="500"
-                autocomplete="off">
-            <button type="submit" class="btn btn-primary btn-sm">
-                <i class="ri-send-plane-fill"></i>
-            </button>
-        </form>
-    </div>
-
-    <!-- HOCKEY GAME MODAL -->
-    <div class="modal-overlay" id="hockey-modal">
-        <div class="game-container" id="game-container">
-            <div class="game-header">
-                <div class="player-score p1">
-                    <span id="game-p1-name">Oyuncu 1</span>
-                    <span class="score" id="game-p1-score">0</span>
+        <!-- FLOATING CHAT WINDOW -->
+        <div class="floating-chat-window" id="floating-chat-window">
+            <div class="floating-chat-header">
+                <div class="chat-tabs">
+                    <button class="chat-tab active" onclick="app.chat.switchTab('global')" id="tab-global">
+                        Genel
+                    </button>
+                    <button class="chat-tab" onclick="app.chat.switchTab('dm')" id="tab-dm">
+                        Mesajlar <span class="tab-badge hidden" id="dm-total-badge">0</span>
+                    </button>
                 </div>
-                <div class="game-timer" id="game-status-text">BEKLENİYOR...</div>
-                <div class="player-score p2">
-                    <span class="score" id="game-p2-score">0</span>
-                    <span id="game-p2-name">Oyuncu 2</span>
-                </div>
-                <button class="modal-close" onclick="app.game.quitGame()">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="canvas-wrapper">
-                <canvas id="hockey-canvas" width="400" height="600"></canvas>
-                <div id="game-overlay" class="game-overlay">
-                    <div class="countdown" id="game-countdown">3</div>
-                    <button class="btn btn-primary hidden" id="game-rematch-btn">Tekrar Oyna</button>
-                </div>
-                <!-- Fullscreen Button -->
-                <button class="game-fullscreen-btn" id="game-fullscreen-btn" onclick="app.game.toggleFullscreen()"
-                    title="Tam Ekran">
-                    <i class="ri-fullscreen-line"></i>
-                </button>
-            </div>
-            <div class="game-controls-hint">
-                <i class="ri-drag-move-line"></i> Diski parmağınla veya mouse ile sürükle!
-            </div>
-        </div>
-    </div>
-
-    <!-- CHESS GAME MODAL -->
-    <div class="modal-overlay" id="chess-modal">
-        <div class="chess-game-container">
-            <div class="chess-header">
-                <div class="chess-player-info">
-                    <div class="chess-player white-player">
-                        <div class="player-avatar-wrapper">
-                            <img src="#" id="chess-white-avatar" class="player-avatar" alt="White">
-                            <div class="player-color-indicator white"></div>
-                        </div>
-                        <div class="player-details">
-                            <div class="player-name" id="chess-white-name">Oyuncu 1</div>
-                            <div class="player-status">Beyaz Taşlar</div>
-                        </div>
-                    </div>
-                    <div class="chess-game-status">
-                        <div class="turn-indicator" id="chess-turn">Beyazın Sırası</div>
-                        <div class="game-timer" id="chess-timer">--:--</div>
-                    </div>
-                    <div class="chess-player black-player">
-                        <div class="player-details">
-                            <div class="player-name" id="chess-black-name">Oyuncu 2</div>
-                            <div class="player-status">Siyah Taşlar</div>
-                        </div>
-                        <div class="player-avatar-wrapper">
-                            <img src="#" id="chess-black-avatar" class="player-avatar" alt="Black">
-                            <div class="player-color-indicator black"></div>
-                        </div>
-                    </div>
-                </div>
-                <button class="modal-close" onclick="app.chess.quitGame()">
+                <button class="chat-close-btn" onclick="app.ui.toggleFloatingChat()">
                     <i class="ri-close-line"></i>
                 </button>
             </div>
 
-            <div class="chess-main">
-                <div class="chess-board-wrapper">
-                    <div id="chess-board" class="chess-board">
-                        <!-- Board will be generated by JavaScript -->
-                    </div>
-                    <div id="chess-overlay" class="chess-overlay hidden">
-                        <div class="chess-result" id="chess-result"></div>
-                        <button class="btn btn-primary" id="chess-rematch-btn" onclick="app.chess.requestRematch()">
-                            Tekrar Oyna
-                        </button>
+            <!-- GLOBAL CHAT SECTION -->
+            <div id="section-global" class="chat-section active">
+                <div class="floating-chat-messages" id="floating-chat-messages">
+                    <!-- Global Messages -->
+                </div>
+                <form class="floating-chat-input-form" id="floating-chat-form">
+                    <button type="button" class="btn btn-vs" onclick="app.game.openGameMenu()"
+                        title="Oyun Daveti Gönder">
+                        VS
+                    </button>
+                    <input type="text" id="floating-chat-input" class="chat-input" placeholder="Mesaj yaz..."
+                        maxlength="500" autocomplete="off">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="ri-send-plane-fill"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- DM SECTION -->
+            <div id="section-dm" class="chat-section">
+                <!-- DM List View -->
+                <div id="dm-list-view" class="dm-view active">
+                    <div class="dm-list" id="dm-list">
+                        <p class="text-muted text-center p-3">Henüz mesajınız yok.</p>
                     </div>
                 </div>
 
-                <div class="chess-sidebar">
-                    <div class="chess-captured">
-                        <h4>Alınan Taşlar</h4>
-                        <div class="captured-pieces">
-                            <div class="captured-white" id="captured-white"></div>
-                            <div class="captured-black" id="captured-black"></div>
-                        </div>
-                    </div>
-
-                    <div class="chess-moves">
-                        <h4>Hamle Geçmişi</h4>
-                        <div class="moves-list" id="chess-moves-list">
-                            <p class="text-muted">Henüz hamle yapılmadı</p>
-                        </div>
-                    </div>
-
-                    <div class="chess-controls">
-                        <button class="btn btn-warning btn-sm" onclick="app.chess.offerDraw()">
-                            <i class="ri-hand-heart-line"></i> Beraberlik Teklifi
+                <!-- DM Chat View -->
+                <div id="dm-chat-view" class="dm-view hidden">
+                    <div class="dm-header">
+                        <button class="btn-icon" onclick="app.chat.closeDM()">
+                            <i class="ri-arrow-left-line"></i>
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="app.chess.resign()">
-                            <i class="ri-flag-line"></i> Pes Et
+                        <span id="dm-chat-username" class="dm-username">Kullanıcı</span>
+                        <span id="dm-chat-status" class="dm-status"></span>
+                    </div>
+                    <div class="floating-chat-messages" id="dm-messages">
+                        <!-- DM Messages -->
+                    </div>
+                    <form class="floating-chat-input-form" id="dm-chat-form">
+                        <input type="text" id="dm-chat-input" class="chat-input" placeholder="Mesaj yaz..."
+                            maxlength="500" autocomplete="off">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="ri-send-plane-fill"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOCKEY GAME MODAL -->
+        <div class="modal-overlay" id="hockey-modal">
+            <div class="game-container" id="game-container">
+                <div class="game-header">
+                    <div class="player-score p1">
+                        <span id="game-p1-name">Oyuncu 1</span>
+                        <span class="score" id="game-p1-score">0</span>
+                    </div>
+                    <div class="game-timer" id="game-status-text">BEKLENİYOR...</div>
+                    <div class="player-score p2">
+                        <span class="score" id="game-p2-score">0</span>
+                        <span id="game-p2-name">Oyuncu 2</span>
+                    </div>
+                    <button class="modal-close" onclick="app.game.quitGame()">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="hockey-canvas" width="400" height="600"></canvas>
+                    <div id="game-overlay" class="game-overlay">
+                        <div class="countdown" id="game-countdown">3</div>
+                        <button class="btn btn-primary hidden" id="game-rematch-btn">Tekrar Oyna</button>
+                    </div>
+                    <!-- Fullscreen Button -->
+                    <button class="game-fullscreen-btn" id="game-fullscreen-btn" onclick="app.game.toggleFullscreen()"
+                        title="Tam Ekran">
+                        <i class="ri-fullscreen-line"></i>
+                    </button>
+                </div>
+                <div class="game-controls-hint">
+                    <i class="ri-drag-move-line"></i> Diski parmağınla veya mouse ile sürükle!
+                </div>
+            </div>
+        </div>
+
+        <!-- CHESS GAME MODAL -->
+        <div class="modal-overlay" id="chess-modal">
+            <div class="chess-game-container">
+                <div class="chess-header">
+                    <div class="chess-player-info">
+                        <div class="chess-player white-player">
+                            <div class="player-avatar-wrapper">
+                                <img src="#" id="chess-white-avatar" class="player-avatar" alt="White">
+                                <div class="player-color-indicator white"></div>
+                            </div>
+                            <div class="player-details">
+                                <div class="player-name" id="chess-white-name">Oyuncu 1</div>
+                                <div class="player-status">Beyaz Taşlar</div>
+                            </div>
+                        </div>
+                        <div class="chess-game-status">
+                            <div class="turn-indicator" id="chess-turn">Beyazın Sırası</div>
+                            <div class="game-timer" id="chess-timer">--:--</div>
+                        </div>
+                        <div class="chess-player black-player">
+                            <div class="player-details">
+                                <div class="player-name" id="chess-black-name">Oyuncu 2</div>
+                                <div class="player-status">Siyah Taşlar</div>
+                            </div>
+                            <div class="player-avatar-wrapper">
+                                <img src="#" id="chess-black-avatar" class="player-avatar" alt="Black">
+                                <div class="player-color-indicator black"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="modal-close" onclick="app.chess.quitGame()">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+
+                <div class="chess-main">
+                    <div class="chess-board-wrapper">
+                        <div id="chess-board" class="chess-board">
+                            <!-- Board will be generated by JavaScript -->
+                        </div>
+                        <div id="chess-overlay" class="chess-overlay hidden">
+                            <div class="chess-result" id="chess-result"></div>
+                            <button class="btn btn-primary" id="chess-rematch-btn" onclick="app.chess.requestRematch()">
+                                Tekrar Oyna
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chess-sidebar">
+                        <div class="chess-captured">
+                            <h4>Alınan Taşlar</h4>
+                            <div class="captured-pieces">
+                                <div class="captured-white" id="captured-white"></div>
+                                <div class="captured-black" id="captured-black"></div>
+                            </div>
+                        </div>
+
+                        <div class="chess-moves">
+                            <h4>Hamle Geçmişi</h4>
+                            <div class="moves-list" id="chess-moves-list">
+                                <p class="text-muted">Henüz hamle yapılmadı</p>
+                            </div>
+                        </div>
+
+                        <div class="chess-controls">
+                            <button class="btn btn-warning btn-sm" onclick="app.chess.offerDraw()">
+                                <i class="ri-hand-heart-line"></i> Beraberlik Teklifi
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="app.chess.resign()">
+                                <i class="ri-flag-line"></i> Pes Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME SELECTION MODAL -->
+        <div class="modal-overlay" id="game-select-modal">
+            <div class="modal-content modal-sm">
+                <div class="modal-header">
+                    <h3>🎮 Oyun Seç</h3>
+                    <button class="modal-close" onclick="app.ui.closeModal('game-select-modal')">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="game-select-grid">
+                        <button class="game-select-card" onclick="app.game.sendInvite('hockey')">
+                            <div class="game-icon">🏑</div>
+                            <div class="game-name">Hava Hokeyi</div>
+                            <div class="game-desc">2 oyuncu - Hızlı tempolu</div>
+                        </button>
+                        <button class="game-select-card" onclick="app.game.sendInvite('chess')">
+                            <div class="game-icon">♟️</div>
+                            <div class="game-name">Satranç</div>
+                            <div class="game-desc">2 oyuncu - Strateji</div>
+                        </button>
+                        <!-- More games can be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTH MODAL -->
+        <div class="modal-overlay" id="auth-modal">
+            <div class="modal-content modal-sm">
+                <div class="modal-header">
+                    <h3>Giriş Yap / Kayıt Ol</h3>
+                </div>
+                <form id="form-login" class="modal-body">
+                    <div class="form-group">
+                        <label>E-posta</label>
+                        <input type="email" id="login-email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Şifre</label>
+                        <input type="password" id="login-pass" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Devam Et</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- USER SETTINGS MODAL -->
+        <div class="modal-overlay" id="user-settings-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚙️ Kullanıcı Ayarları</h3>
+                    <button class="modal-close" onclick="app.ui.closeModal('user-settings-modal')">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-group">
+                        <h4>🖼️ Profil Fotoğrafı</h4>
+                        <div class="profile-picture-preview">
+                            <img id="settings-avatar-preview" src="" alt="Avatar" class="avatar-preview">
+                        </div>
+                        <div class="form-group">
+                            <label>Fotoğraf URL</label>
+                            <input type="url" id="settings-avatar-url" class="form-input"
+                                placeholder="https://example.com/avatar.jpg">
+                            <small class="text-muted">Profil fotoğrafı URL'si girin veya aşağıdaki seçeneklerden birini
+                                kullanın</small>
+                        </div>
+                        <div class="avatar-options">
+                            <button type="button" class="btn btn-sm btn-accent" onclick="app.profile.useGravatar()">
+                                <i class="ri-user-smile-line"></i> Gravatar Kullan
+                            </button>
+                            <button type="button" class="btn btn-sm btn-accent" onclick="app.profile.useUIAvatar()">
+                                <i class="ri-user-line"></i> İsim Avatar
+                            </button>
+                        </div>
+                        <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateAvatar()">
+                            Fotoğrafı Güncelle
+                        </button>
+                    </div>
+
+                    <div class="settings-group">
+                        <h4>👤 Profil Bilgileri</h4>
+                        <div class="form-group">
+                            <label>Kullanıcı Adı</label>
+                            <input type="text" id="settings-username" class="form-input"
+                                placeholder="Yeni kullanıcı adı">
+                            <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateUsername()">
+                                Kullanıcı Adını Güncelle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h4>📧 E-posta Değişikliği</h4>
+                        <div class="form-group">
+                            <label>Yeni E-posta</label>
+                            <input type="email" id="settings-email" class="form-input" placeholder="yeni@email.com">
+                            <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateEmail()">
+                                E-posta Güncelle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h4>🔒 Şifre Değişikliği</h4>
+                        <div class="form-group">
+                            <label>Mevcut Şifre</label>
+                            <input type="password" id="settings-current-pass" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Yeni Şifre</label>
+                            <input type="password" id="settings-new-pass" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Yeni Şifre (Tekrar)</label>
+                            <input type="password" id="settings-new-pass-confirm" class="form-input">
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="app.profile.updatePassword()">
+                            Şifreyi Güncelle
+                        </button>
+                    </div>
+
+                    <div class="settings-group">
+                        <h4>⚠️ Tehlikeli Bölge</h4>
+                        <p class="text-muted">Bu işlemler geri alınamaz!</p>
+                        <button class="btn btn-danger btn-sm" onclick="app.profile.deleteAccount()">
+                            Hesabı Sil
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- GAME SELECTION MODAL -->
-    <div class="modal-overlay" id="game-select-modal">
-        <div class="modal-content modal-sm">
-            <div class="modal-header">
-                <h3>🎮 Oyun Seç</h3>
-                <button class="modal-close" onclick="app.ui.closeModal('game-select-modal')">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="game-select-grid">
-                    <button class="game-select-card" onclick="app.game.sendInvite('hockey')">
-                        <div class="game-icon">🏑</div>
-                        <div class="game-name">Hava Hokeyi</div>
-                        <div class="game-desc">2 oyuncu - Hızlı tempolu</div>
-                    </button>
-                    <button class="game-select-card" onclick="app.game.sendInvite('chess')">
-                        <div class="game-icon">♟️</div>
-                        <div class="game-name">Satranç</div>
-                        <div class="game-desc">2 oyuncu - Strateji</div>
-                    </button>
-                    <!-- More games can be added here -->
+        <!-- SETTINGS MODAL -->
+        <div class="modal-overlay" id="auth-modal">
+            <div class="modal-content modal-sm">
+                <div class="modal-header">
+                    <h3>Giriş Yap / Kayıt Ol</h3>
                 </div>
+                <form id="form-login" class="modal-body">
+                    <div class="form-group">
+                        <label>E-posta</label>
+                        <input type="email" id="login-email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Şifre</label>
+                        <input type="password" id="login-pass" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Devam Et</button>
+                </form>
             </div>
         </div>
-    </div>
 
-    <!-- AUTH MODAL -->
-    <div class="modal-overlay" id="auth-modal">
-        <div class="modal-content modal-sm">
-            <div class="modal-header">
-                <h3>Giriş Yap / Kayıt Ol</h3>
-            </div>
-            <form id="form-login" class="modal-body">
-                <div class="form-group">
-                    <label>E-posta</label>
-                    <input type="email" id="login-email" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label>Şifre</label>
-                    <input type="password" id="login-pass" class="form-input" required>
-                </div>
-                <button type="submit" class="btn btn-primary w-full">Devam Et</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- USER SETTINGS MODAL -->
-    <div class="modal-overlay" id="user-settings-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>⚙️ Kullanıcı Ayarları</h3>
-                <button class="modal-close" onclick="app.ui.closeModal('user-settings-modal')">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="settings-group">
-                    <h4>🖼️ Profil Fotoğrafı</h4>
-                    <div class="profile-picture-preview">
-                        <img id="settings-avatar-preview" src="" alt="Avatar" class="avatar-preview">
-                    </div>
-                    <div class="form-group">
-                        <label>Fotoğraf URL</label>
-                        <input type="url" id="settings-avatar-url" class="form-input"
-                            placeholder="https://example.com/avatar.jpg">
-                        <small class="text-muted">Profil fotoğrafı URL'si girin veya aşağıdaki seçeneklerden birini
-                            kullanın</small>
-                    </div>
-                    <div class="avatar-options">
-                        <button type="button" class="btn btn-sm btn-accent" onclick="app.profile.useGravatar()">
-                            <i class="ri-user-smile-line"></i> Gravatar Kullan
-                        </button>
-                        <button type="button" class="btn btn-sm btn-accent" onclick="app.profile.useUIAvatar()">
-                            <i class="ri-user-line"></i> İsim Avatar
-                        </button>
-                    </div>
-                    <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateAvatar()">
-                        Fotoğrafı Güncelle
+        <!-- SETTINGS MODAL -->
+        <div class="modal-overlay" id="settings-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚙️ Ayarlar</h3>
+                    <button class="modal-close" onclick="app.ui.closeModal('settings-modal')">
+                        <i class="ri-close-line"></i>
                     </button>
                 </div>
-
-                <div class="settings-group">
-                    <h4>👤 Profil Bilgileri</h4>
-                    <div class="form-group">
-                        <label>Kullanıcı Adı</label>
-                        <input type="text" id="settings-username" class="form-input" placeholder="Yeni kullanıcı adı">
-                        <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateUsername()">
-                            Kullanıcı Adını Güncelle
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-group">
-                    <h4>📧 E-posta Değişikliği</h4>
-                    <div class="form-group">
-                        <label>Yeni E-posta</label>
-                        <input type="email" id="settings-email" class="form-input" placeholder="yeni@email.com">
-                        <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateEmail()">
-                            E-posta Güncelle
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-group">
-                    <h4>🔒 Şifre Değişikliği</h4>
-                    <div class="form-group">
-                        <label>Mevcut Şifre</label>
-                        <input type="password" id="settings-current-pass" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label>Yeni Şifre</label>
-                        <input type="password" id="settings-new-pass" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label>Yeni Şifre (Tekrar)</label>
-                        <input type="password" id="settings-new-pass-confirm" class="form-input">
-                    </div>
-                    <button class="btn btn-primary btn-sm" onclick="app.profile.updatePassword()">
-                        Şifreyi Güncelle
-                    </button>
-                </div>
-
-                <div class="settings-group">
-                    <h4>⚠️ Tehlikeli Bölge</h4>
-                    <p class="text-muted">Bu işlemler geri alınamaz!</p>
-                    <button class="btn btn-danger btn-sm" onclick="app.profile.deleteAccount()">
-                        Hesabı Sil
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SETTINGS MODAL -->
-    <div class="modal-overlay" id="auth-modal">
-        <div class="modal-content modal-sm">
-            <div class="modal-header">
-                <h3>Giriş Yap / Kayıt Ol</h3>
-            </div>
-            <form id="form-login" class="modal-body">
-                <div class="form-group">
-                    <label>E-posta</label>
-                    <input type="email" id="login-email" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label>Şifre</label>
-                    <input type="password" id="login-pass" class="form-input" required>
-                </div>
-                <button type="submit" class="btn btn-primary w-full">Devam Et</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- SETTINGS MODAL -->
-    <div class="modal-overlay" id="settings-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>⚙️ Ayarlar</h3>
-                <button class="modal-close" onclick="app.ui.closeModal('settings-modal')">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- TEMA SEÇİMİ -->
-                <div class="settings-group">
-                    <h4>🎨 Tema Seçimi</h4>
-                    <p class="text-muted">Sitenin görünümünü değiştirin</p>
-                    <div class="theme-grid">
-                        <div class="theme-card" data-theme="dark-cyber"
-                            onclick="app.settings.changeTheme('dark-cyber')">
-                            <div class="theme-preview theme-dark-cyber">
-                                <div class="theme-color" style="background: #00c6ff;"></div>
-                                <div class="theme-color" style="background: #ae00ff;"></div>
-                                <div class="theme-color" style="background: #020202;"></div>
+                <div class="modal-body">
+                    <!-- TEMA SEÇİMİ -->
+                    <div class="settings-group">
+                        <h4>🎨 Tema Seçimi</h4>
+                        <p class="text-muted">Sitenin görünümünü değiştirin</p>
+                        <div class="theme-grid">
+                            <div class="theme-card" data-theme="dark-cyber"
+                                onclick="app.settings.changeTheme('dark-cyber')">
+                                <div class="theme-preview theme-dark-cyber">
+                                    <div class="theme-color" style="background: #00c6ff;"></div>
+                                    <div class="theme-color" style="background: #ae00ff;"></div>
+                                    <div class="theme-color" style="background: #020202;"></div>
+                                </div>
+                                <div class="theme-name">Dark Cyber</div>
+                                <div class="theme-check" id="check-dark-cyber">
+                                    <i class="ri-check-line"></i>
+                                </div>
                             </div>
-                            <div class="theme-name">Dark Cyber</div>
-                            <div class="theme-check" id="check-dark-cyber">
-                                <i class="ri-check-line"></i>
-                            </div>
-                        </div>
 
-                        <div class="theme-card" data-theme="purple-dream"
-                            onclick="app.settings.changeTheme('purple-dream')">
-                            <div class="theme-preview theme-purple-dream">
-                                <div class="theme-color" style="background: #a855f7;"></div>
-                                <div class="theme-color" style="background: #ec4899;"></div>
-                                <div class="theme-color" style="background: #1a1a2e;"></div>
+                            <div class="theme-card" data-theme="purple-dream"
+                                onclick="app.settings.changeTheme('purple-dream')">
+                                <div class="theme-preview theme-purple-dream">
+                                    <div class="theme-color" style="background: #a855f7;"></div>
+                                    <div class="theme-color" style="background: #ec4899;"></div>
+                                    <div class="theme-color" style="background: #1a1a2e;"></div>
+                                </div>
+                                <div class="theme-name">Purple Dream</div>
+                                <div class="theme-check" id="check-purple-dream">
+                                    <i class="ri-check-line"></i>
+                                </div>
                             </div>
-                            <div class="theme-name">Purple Dream</div>
-                            <div class="theme-check" id="check-purple-dream">
-                                <i class="ri-check-line"></i>
-                            </div>
-                        </div>
 
-                        <div class="theme-card" data-theme="ocean-blue"
-                            onclick="app.settings.changeTheme('ocean-blue')">
-                            <div class="theme-preview theme-ocean-blue">
-                                <div class="theme-color" style="background: #0ea5e9;"></div>
-                                <div class="theme-color" style="background: #06b6d4;"></div>
-                                <div class="theme-color" style="background: #0f172a;"></div>
+                            <div class="theme-card" data-theme="ocean-blue"
+                                onclick="app.settings.changeTheme('ocean-blue')">
+                                <div class="theme-preview theme-ocean-blue">
+                                    <div class="theme-color" style="background: #0ea5e9;"></div>
+                                    <div class="theme-color" style="background: #06b6d4;"></div>
+                                    <div class="theme-color" style="background: #0f172a;"></div>
+                                </div>
+                                <div class="theme-name">Ocean Blue</div>
+                                <div class="theme-check" id="check-ocean-blue">
+                                    <i class="ri-check-line"></i>
+                                </div>
                             </div>
-                            <div class="theme-name">Ocean Blue</div>
-                            <div class="theme-check" id="check-ocean-blue">
-                                <i class="ri-check-line"></i>
-                            </div>
-                        </div>
 
-                        <div class="theme-card" data-theme="sunset-orange"
-                            onclick="app.settings.changeTheme('sunset-orange')">
-                            <div class="theme-preview theme-sunset-orange">
-                                <div class="theme-color" style="background: #f97316;"></div>
-                                <div class="theme-color" style="background: #ef4444;"></div>
-                                <div class="theme-color" style="background: #1c1917;"></div>
-                            </div>
-                            <div class="theme-name">Sunset Orange</div>
-                            <div class="theme-check" id="check-sunset-orange">
-                                <i class="ri-check-line"></i>
+                            <div class="theme-card" data-theme="sunset-orange"
+                                onclick="app.settings.changeTheme('sunset-orange')">
+                                <div class="theme-preview theme-sunset-orange">
+                                    <div class="theme-color" style="background: #f97316;"></div>
+                                    <div class="theme-color" style="background: #ef4444;"></div>
+                                    <div class="theme-color" style="background: #1c1917;"></div>
+                                </div>
+                                <div class="theme-name">Sunset Orange</div>
+                                <div class="theme-check" id="check-sunset-orange">
+                                    <i class="ri-check-line"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- GENEL AYARLAR -->
-                <div class="settings-group">
-                    <h4>🔔 Genel Ayarlar</h4>
-                    <div class="setting-item">
-                        <label>Bildirimler</label>
-                        <input type="checkbox" class="toggle" id="setting-notifications" checked>
+                    <!-- GENEL AYARLAR -->
+                    <div class="settings-group">
+                        <h4>🔔 Genel Ayarlar</h4>
+                        <div class="setting-item">
+                            <label>Bildirimler</label>
+                            <input type="checkbox" class="toggle" id="setting-notifications" checked>
+                        </div>
+                        <div class="setting-item">
+                            <label>Sesler</label>
+                            <input type="checkbox" class="toggle" id="setting-sounds" checked>
+                        </div>
                     </div>
-                    <div class="setting-item">
-                        <label>Sesler</label>
-                        <input type="checkbox" class="toggle" id="setting-sounds" checked>
-                    </div>
-                </div>
 
-                <!-- ŞİKAYET SİSTEMİ -->
-                <div class="settings-group">
-                    <h4>📢 Şikayet & Öneri</h4>
-                    <p class="text-muted">Sorun bildirin veya öneride bulunun. Mesajınız kurucuya iletilecektir.</p>
-                    <div class="form-group">
-                        <label>Konu</label>
-                        <select id="complaint-type" class="form-input">
-                            <option value="bug">🐛 Hata Bildirimi</option>
-                            <option value="suggestion">💡 Öneri</option>
-                            <option value="complaint">⚠️ Şikayet</option>
-                            <option value="other">📝 Diğer</option>
-                        </select>
+                    <!-- ŞİKAYET SİSTEMİ -->
+                    <div class="settings-group">
+                        <h4>📢 Şikayet & Öneri</h4>
+                        <p class="text-muted">Sorun bildirin veya öneride bulunun. Mesajınız kurucuya iletilecektir.</p>
+                        <div class="form-group">
+                            <label>Konu</label>
+                            <select id="complaint-type" class="form-input">
+                                <option value="bug">🐛 Hata Bildirimi</option>
+                                <option value="suggestion">💡 Öneri</option>
+                                <option value="complaint">⚠️ Şikayet</option>
+                                <option value="other">📝 Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Mesajınız</label>
+                            <textarea id="complaint-message" class="form-input" rows="4"
+                                placeholder="Lütfen detaylı açıklama yapın..." maxlength="500"></textarea>
+                            <small class="text-muted">Maksimum 500 karakter</small>
+                        </div>
+                        <button class="btn btn-primary w-full" onclick="app.settings.sendComplaint()">
+                            <i class="ri-send-plane-fill"></i> Gönder
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label>Mesajınız</label>
-                        <textarea id="complaint-message" class="form-input" rows="4"
-                            placeholder="Lütfen detaylı açıklama yapın..." maxlength="500"></textarea>
-                        <small class="text-muted">Maksimum 500 karakter</small>
-                    </div>
-                    <button class="btn btn-primary w-full" onclick="app.settings.sendComplaint()">
-                        <i class="ri-send-plane-fill"></i> Gönder
-                    </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script type="module" src="app.js"></script>
+        <script type="module" src="app.js"></script>
 </body>
 
 </html>
