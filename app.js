@@ -15,7 +15,16 @@ import {
     getDoc,
     updateDoc,
     serverTimestamp,
-    enableIndexedDbPersistence
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    limit,
+    onSnapshot,
+    where,
+    deleteDoc,
+    initializeFirestore,
+    persistentLocalCache
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import {
     getDatabase,
@@ -41,19 +50,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
-const db = getFirestore(app);
+// Initialize Firestore with persistent cache
+const db = initializeFirestore(app, { localCache: persistentLocalCache() });
 const rtdb = getDatabase(app);
-
-// Enable Offline Persistence for Firestore (Robustness)
-try {
-    enableIndexedDbPersistence(db).catch((err) => {
-        if (err.code == 'failed-precondition') {
-            console.warn('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
-        } else if (err.code == 'unimplemented') {
-            console.warn('The current browser does not support all of the features required to enable persistence');
-        }
-    });
-} catch (e) { console.log("Persistence setup skipped"); }
 
 
 // --- STATE MANAGEMENT ---
