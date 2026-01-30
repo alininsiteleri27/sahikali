@@ -464,7 +464,7 @@
 
     <!-- HOCKEY GAME MODAL -->
     <div class="modal-overlay" id="hockey-modal">
-        <div class="game-container">
+        <div class="game-container" id="game-container">
             <div class="game-header">
                 <div class="player-score p1">
                     <span id="game-p1-name">Oyuncu 1</span>
@@ -486,6 +486,11 @@
                     <button class="btn btn-primary hidden" id="game-rematch-btn" onclick="app.game.rematch()">Tekrar
                         Oyna</button>
                 </div>
+                <!-- Fullscreen Button -->
+                <button class="game-fullscreen-btn" id="game-fullscreen-btn" onclick="app.game.toggleFullscreen()"
+                    title="Tam Ekran">
+                    <i class="ri-fullscreen-line"></i>
+                </button>
             </div>
             <div class="game-controls-hint">
                 <i class="ri-drag-move-line"></i> Diski parmağınla veya mouse ile sürükle!
