@@ -402,7 +402,6 @@ const Router = {
             setTimeout(() => {
                 Founder.loadStats();
                 Founder.loadComplaints();
-                Founder.loadOnlineUsers();
             }, 100);
         }
 
@@ -1359,73 +1358,6 @@ const Founder = {
             }
         } catch (error) {
             console.error(error);
-        }
-    },
-
-    // Load Online Users
-    async loadOnlineUsers() {
-        try {
-            const container = DOMHelper.get('online-users-list');
-            if (!container) return;
-
-            // Get online status
-            const statusSnap = await get(ref(db, 'status'));
-            if (!statusSnap.exists()) {
-                container.innerHTML = '<p class="text-muted">Şu anda çevrimiçi kullanıcı yok.</p>';
-                return;
-            }
-
-            const onlineUserIds = Object.keys(statusSnap.val());
-
-            // Get all users
-            const usersSnap = await get(ref(db, 'users'));
-            if (!usersSnap.exists()) {
-                container.innerHTML = '<p class="text-muted">Kullanıcı bulunamadı.</p>';
-                return;
-            }
-
-            const users = usersSnap.val();
-            const onlineUsers = [];
-
-            // Filter online users
-            for (const uid of onlineUserIds) {
-                if (users[uid]) {
-                    onlineUsers.push({ uid, ...users[uid] });
-                }
-            }
-
-            if (onlineUsers.length === 0) {
-                container.innerHTML = '<p class="text-muted">Şu anda çevrimiçi kullanıcı yok.</p>';
-                return;
-            }
-
-            // Render online users
-            container.innerHTML = onlineUsers.map(user => {
-                const roleText = user.role === 'founder' ? 'Founder' :
-                    user.role === 'admin' ? 'Admin' : 'Üye';
-                const roleClass = user.role === 'founder' ? 'badge-danger' :
-                    user.role === 'admin' ? 'badge-primary' : 'badge-secondary';
-
-                return `
-                    <div class="online-user-item">
-                        <img src="${user.avatar || 'https://ui-avatars.com/api/?name=User&background=666&color=fff'}" 
-                             class="online-user-avatar" alt="${user.username}">
-                        <div class="online-user-info">
-                            <div class="online-user-name">${user.username}</div>
-                            <div class="online-user-email">${user.email}</div>
-                        </div>
-                        <span class="badge ${roleClass}">${roleText}</span>
-                        <span class="online-indicator"></span>
-                    </div>
-                `;
-            }).join('');
-
-        } catch (error) {
-            console.error('Online users yükleme hatası:', error);
-            const container = DOMHelper.get('online-users-list');
-            if (container) {
-                container.innerHTML = '<p class="text-muted text-danger">Hata oluştu!</p>';
-            }
         }
     }
 };
