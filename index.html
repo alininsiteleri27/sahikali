@@ -92,6 +92,11 @@
                 <span class="badge badge-danger ml-auto">FOUNDER</span>
             </a>
 
+            <a href="#" class="nav-link" onclick="app.router.go('members')" data-page="members">
+                <i class="ri-team-line"></i>
+                <span>Üyeler</span>
+            </a>
+
             <div class="nav-divider"></div>
 
             <a href="#" class="nav-link" onclick="app.ui.openModal('settings-modal')">
@@ -333,6 +338,19 @@
                     </div>
                 </div>
 
+                <!-- ÇEVRİMİÇİ KULLANICILAR -->
+                <div class="card">
+                    <h3 class="card-title">🟢 Çevrimiçi Kullanıcılar</h3>
+                    <div class="founder-section">
+                        <div id="online-users-list" class="online-users-list">
+                            <p class="text-muted">Çevrimiçi kullanıcılar yükleniyor...</p>
+                        </div>
+                        <button class="btn btn-primary w-full mt-2" onclick="app.founder.loadOnlineUsers()">
+                            <i class="ri-refresh-line"></i> Yenile
+                        </button>
+                    </div>
+                </div>
+
                 <!-- İSTATİSTİKLER -->
                 <div class="card">
                     <h3 class="card-title">📊 Site İstatistikleri</h3>
@@ -431,6 +449,66 @@
             </div>
         </section>
 
+        <!-- MEMBERS VIEW -->
+        <section id="view-members" class="view-section">
+            <div class="members-container">
+                <div class="members-header">
+                    <div>
+                        <h1>👥 Üyeler</h1>
+                        <p class="text-muted">Topluluk üyelerini görüntüle</p>
+                    </div>
+                    <button class="btn btn-ghost" onclick="app.router.go('dashboard')">
+                        <i class="ri-arrow-left-line"></i> Geri Dön
+                    </button>
+                </div>
+
+                <div class="members-search-bar">
+                    <div class="search-input-wrapper">
+                        <i class="ri-search-line"></i>
+                        <input type="text" id="members-search" class="members-search"
+                            placeholder="Kullanıcı adı veya email ara..." oninput="app.members.searchMembers()">
+                    </div>
+                </div>
+
+                <div class="members-filters">
+                    <button class="filter-btn active" onclick="app.members.filterByRole('all')" data-role="all">
+                        <i class="ri-team-line"></i> Tümü
+                    </button>
+                    <button class="filter-btn" onclick="app.members.filterByRole('founder')" data-role="founder">
+                        <i class="ri-shield-star-line"></i> Founder
+                    </button>
+                    <button class="filter-btn" onclick="app.members.filterByRole('admin')" data-role="admin">
+                        <i class="ri-admin-line"></i> Admin
+                    </button>
+                    <button class="filter-btn" onclick="app.members.filterByRole('member')" data-role="member">
+                        <i class="ri-user-line"></i> Üye
+                    </button>
+                    <button class="filter-btn" onclick="app.members.filterByRole('online')" data-role="online">
+                        <i class="ri-checkbox-blank-circle-fill"></i> Çevrimiçi
+                    </button>
+                </div>
+
+                <div class="members-stats">
+                    <div class="member-stat-item">
+                        <span class="stat-number" id="members-total">0</span>
+                        <span class="stat-text">Toplam Üye</span>
+                    </div>
+                    <div class="member-stat-item">
+                        <span class="stat-number" id="members-online">0</span>
+                        <span class="stat-text">Çevrimiçi</span>
+                    </div>
+                    <div class="member-stat-item">
+                        <span class="stat-number" id="members-showing">0</span>
+                        <span class="stat-text">Gösterilen</span>
+                    </div>
+                </div>
+
+                <div id="members-grid" class="members-grid">
+                    <p class="text-muted">Üyeler yükleniyor...</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- FLOATING CHAT BUTTON -->
@@ -497,6 +575,83 @@
         </div>
     </div>
 
+    <!-- CHESS GAME MODAL -->
+    <div class="modal-overlay" id="chess-modal">
+        <div class="chess-game-container">
+            <div class="chess-header">
+                <div class="chess-player-info">
+                    <div class="chess-player white-player">
+                        <div class="player-avatar-wrapper">
+                            <img src="#" id="chess-white-avatar" class="player-avatar" alt="White">
+                            <div class="player-color-indicator white"></div>
+                        </div>
+                        <div class="player-details">
+                            <div class="player-name" id="chess-white-name">Oyuncu 1</div>
+                            <div class="player-status">Beyaz Taşlar</div>
+                        </div>
+                    </div>
+                    <div class="chess-game-status">
+                        <div class="turn-indicator" id="chess-turn">Beyazın Sırası</div>
+                        <div class="game-timer" id="chess-timer">--:--</div>
+                    </div>
+                    <div class="chess-player black-player">
+                        <div class="player-details">
+                            <div class="player-name" id="chess-black-name">Oyuncu 2</div>
+                            <div class="player-status">Siyah Taşlar</div>
+                        </div>
+                        <div class="player-avatar-wrapper">
+                            <img src="#" id="chess-black-avatar" class="player-avatar" alt="Black">
+                            <div class="player-color-indicator black"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="app.chess.quitGame()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+
+            <div class="chess-main">
+                <div class="chess-board-wrapper">
+                    <div id="chess-board" class="chess-board">
+                        <!-- Board will be generated by JavaScript -->
+                    </div>
+                    <div id="chess-overlay" class="chess-overlay hidden">
+                        <div class="chess-result" id="chess-result"></div>
+                        <button class="btn btn-primary" id="chess-rematch-btn" onclick="app.chess.requestRematch()">
+                            Tekrar Oyna
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chess-sidebar">
+                    <div class="chess-captured">
+                        <h4>Alınan Taşlar</h4>
+                        <div class="captured-pieces">
+                            <div class="captured-white" id="captured-white"></div>
+                            <div class="captured-black" id="captured-black"></div>
+                        </div>
+                    </div>
+
+                    <div class="chess-moves">
+                        <h4>Hamle Geçmişi</h4>
+                        <div class="moves-list" id="chess-moves-list">
+                            <p class="text-muted">Henüz hamle yapılmadı</p>
+                        </div>
+                    </div>
+
+                    <div class="chess-controls">
+                        <button class="btn btn-warning btn-sm" onclick="app.chess.offerDraw()">
+                            <i class="ri-hand-heart-line"></i> Beraberlik Teklifi
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="app.chess.resign()">
+                            <i class="ri-flag-line"></i> Pes Et
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- GAME SELECTION MODAL -->
     <div class="modal-overlay" id="game-select-modal">
         <div class="modal-content modal-sm">
@@ -512,6 +667,11 @@
                         <div class="game-icon">🏑</div>
                         <div class="game-name">Hava Hokeyi</div>
                         <div class="game-desc">2 oyuncu - Hızlı tempolu</div>
+                    </button>
+                    <button class="game-select-card" onclick="app.game.sendInvite('chess')">
+                        <div class="game-icon">♟️</div>
+                        <div class="game-name">Satranç</div>
+                        <div class="game-desc">2 oyuncu - Strateji</div>
                     </button>
                     <!-- More games can be added here -->
                 </div>
