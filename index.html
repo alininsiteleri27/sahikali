@@ -81,6 +81,14 @@
                 <span>Profilim</span>
             </a>
 
+            <!-- FOUNDER PANEL (Only visible for founder role) -->
+            <a href="#" class="nav-link founder-only" onclick="app.router.go('founder')" data-page="founder"
+                style="display: none;">
+                <i class="ri-shield-star-line"></i>
+                <span>Founder Paneli</span>
+                <span class="badge badge-danger ml-auto">FOUNDER</span>
+            </a>
+
             <div class="nav-divider"></div>
 
             <a href="#" class="nav-link" onclick="app.ui.openModal('settings-modal')">
@@ -150,6 +158,203 @@
                     <i class="ri-user-add-line stat-icon"></i>
                     <div class="stat-value" id="online-users">0</div>
                     <div class="stat-label">Çevrimiçi</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOUNDER PANEL VIEW -->
+        <section id="view-founder" class="view-section">
+            <div class="founder-container">
+                <div class="founder-header">
+                    <h1>🛡️ Founder Paneli</h1>
+                    <p class="text-muted">Tüm site yönetimi ve kontrol paneli</p>
+                </div>
+
+                <!-- KULLANICI YÖNETİMİ -->
+                <div class="card">
+                    <h3 class="card-title">👥 Kullanıcı Yönetimi</h3>
+                    <div class="founder-section">
+                        <div class="form-group">
+                            <label>Kullanıcı Email veya ID</label>
+                            <input type="text" id="founder-user-id" class="form-input"
+                                placeholder="email@example.com veya UID">
+                        </div>
+
+                        <div class="founder-actions">
+                            <button class="btn btn-primary" onclick="app.founder.makeAdmin()">
+                                <i class="ri-admin-line"></i> Admin Yap
+                            </button>
+                            <button class="btn btn-accent" onclick="app.founder.removeAdmin()">
+                                <i class="ri-user-unfollow-line"></i> Admin Kaldır
+                            </button>
+                            <button class="btn btn-danger" onclick="app.founder.banUser()">
+                                <i class="ri-forbid-line"></i> Kullanıcıyı Banla
+                            </button>
+                            <button class="btn btn-warning" onclick="app.founder.kickUser()">
+                                <i class="ri-logout-box-line"></i> Oturumu Kapat
+                            </button>
+                            <button class="btn btn-danger" onclick="app.founder.deleteUser()">
+                                <i class="ri-delete-bin-line"></i> Kullanıcıyı Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PUAN SİSTEMİ -->
+                <div class="card">
+                    <h3 class="card-title">⭐ Puan Yönetimi</h3>
+                    <div class="founder-section">
+                        <div class="form-group">
+                            <label>Kullanıcı Email/ID</label>
+                            <input type="text" id="founder-points-user" class="form-input"
+                                placeholder="email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Puan Miktarı</label>
+                            <input type="number" id="founder-points-amount" class="form-input" placeholder="100">
+                        </div>
+                        <div class="founder-actions">
+                            <button class="btn btn-success" onclick="app.founder.addPoints()">
+                                <i class="ri-add-circle-line"></i> Puan Ekle
+                            </button>
+                            <button class="btn btn-warning" onclick="app.founder.removePoints()">
+                                <i class="ri-subtract-line"></i> Puan Kaldır
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHAT YÖNETİMİ -->
+                <div class="card">
+                    <h3 class="card-title">💬 Chat Yönetimi</h3>
+                    <div class="founder-section">
+                        <div class="founder-actions">
+                            <button class="btn btn-danger" onclick="app.founder.disableChat()">
+                                <i class="ri-chat-off-line"></i> Global Chat'i Kapat
+                            </button>
+                            <button class="btn btn-success" onclick="app.founder.enableChat()">
+                                <i class="ri-chat-check-line"></i> Global Chat'i Aç
+                            </button>
+                            <button class="btn btn-warning" onclick="app.founder.clearChat()">
+                                <i class="ri-delete-bin-line"></i> Tüm Mesajları Sil
+                            </button>
+                        </div>
+                        <div class="form-group mt-2">
+                            <label>Mesaj ID (Silmek için)</label>
+                            <input type="text" id="founder-message-id" class="form-input" placeholder="Mesaj ID">
+                            <button class="btn btn-danger btn-sm mt-2" onclick="app.founder.deleteMessage()">
+                                <i class="ri-delete-bin-line"></i> Mesajı Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DUYURU SİSTEMİ -->
+                <div class="card">
+                    <h3 class="card-title">📢 Duyuru Yönetimi</h3>
+                    <div class="founder-section">
+                        <div class="form-group">
+                            <label>Duyuru Başlığı</label>
+                            <input type="text" id="founder-announcement-title" class="form-input"
+                                placeholder="Önemli Duyuru">
+                        </div>
+                        <div class="form-group">
+                            <label>Duyuru Mesajı</label>
+                            <textarea id="founder-announcement-message" class="form-input" rows="3"
+                                placeholder="Duyuru içeriği..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Duyuru Tipi</label>
+                            <select id="founder-announcement-type" class="form-input">
+                                <option value="info">ℹ️ Bilgi</option>
+                                <option value="warning">⚠️ Uyarı</option>
+                                <option value="success">✅ Başarı</option>
+                                <option value="danger">🚨 Acil</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary w-full" onclick="app.founder.sendAnnouncement()">
+                            <i class="ri-megaphone-line"></i> Duyuru Yayınla
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ÖZEL MESAJ -->
+                <div class="card">
+                    <h3 class="card-title">✉️ Özel Uyarı Mesajı</h3>
+                    <div class="founder-section">
+                        <div class="form-group">
+                            <label>Kullanıcı Email/ID</label>
+                            <input type="text" id="founder-dm-user" class="form-input" placeholder="email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Uyarı Mesajı</label>
+                            <textarea id="founder-dm-message" class="form-input" rows="3"
+                                placeholder="Kullanıcıya özel mesaj..."></textarea>
+                        </div>
+                        <button class="btn btn-warning w-full" onclick="app.founder.sendWarning()">
+                            <i class="ri-alert-line"></i> Uyarı Gönder
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SİTE YÖNETİMİ -->
+                <div class="card">
+                    <h3 class="card-title">🔧 Site Yönetimi</h3>
+                    <div class="founder-section">
+                        <div class="form-group">
+                            <label>Bakım Modu Mesajı</label>
+                            <textarea id="founder-maintenance-message" class="form-input" rows="2"
+                                placeholder="Site bakımda, lütfen daha sonra tekrar deneyin..."></textarea>
+                        </div>
+                        <div class="founder-actions">
+                            <button class="btn btn-warning" onclick="app.founder.enableMaintenance()">
+                                <i class="ri-tools-line"></i> Bakım Modunu Aç
+                            </button>
+                            <button class="btn btn-success" onclick="app.founder.disableMaintenance()">
+                                <i class="ri-check-line"></i> Bakım Modunu Kapat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ŞİKAYETLER -->
+                <div class="card">
+                    <h3 class="card-title">📋 Şikayetler & Öneriler</h3>
+                    <div class="founder-section">
+                        <div id="complaints-list" class="complaints-list">
+                            <p class="text-muted">Şikayetler yükleniyor...</p>
+                        </div>
+                        <button class="btn btn-primary w-full mt-2" onclick="app.founder.loadComplaints()">
+                            <i class="ri-refresh-line"></i> Şikayetleri Yenile
+                        </button>
+                    </div>
+                </div>
+
+                <!-- İSTATİSTİKLER -->
+                <div class="card">
+                    <h3 class="card-title">📊 Site İstatistikleri</h3>
+                    <div class="founder-stats">
+                        <div class="founder-stat">
+                            <i class="ri-user-line"></i>
+                            <div class="founder-stat-value" id="founder-total-users">0</div>
+                            <div class="founder-stat-label">Toplam Kullanıcı</div>
+                        </div>
+                        <div class="founder-stat">
+                            <i class="ri-admin-line"></i>
+                            <div class="founder-stat-value" id="founder-total-admins">0</div>
+                            <div class="founder-stat-label">Admin Sayısı</div>
+                        </div>
+                        <div class="founder-stat">
+                            <i class="ri-chat-3-line"></i>
+                            <div class="founder-stat-value" id="founder-total-messages">0</div>
+                            <div class="founder-stat-label">Toplam Mesaj</div>
+                        </div>
+                        <div class="founder-stat">
+                            <i class="ri-forbid-line"></i>
+                            <div class="founder-stat-value" id="founder-banned-users">0</div>
+                            <div class="founder-stat-label">Banlı Kullanıcı</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
