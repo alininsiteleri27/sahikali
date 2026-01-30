@@ -53,6 +53,10 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 const analytics = getAnalytics(app);
 
+// EXPOSE TO WINDOW FOR CLASSES
+window.db = db;
+window.auth = auth;
+
 // Global State Object
 const STATE = {
     currentUser: null,  // Auth object
@@ -62,6 +66,7 @@ const STATE = {
     audioEnabled: true,
     systemAnnouncements: [] // Cache
 };
+window.STATE = STATE;
 
 /* ==========================================================================
    MODULE 1: UTILITIES & UI CONTROLLER
