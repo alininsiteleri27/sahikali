@@ -1366,7 +1366,8 @@ const Game = {
         puck: { x: 200, y: 300, vx: 0, vy: 0, r: 15 },
         p1: { x: 200, y: 550, r: 25, score: 0 },
         p2: { x: 200, y: 50, r: 25, score: 0 },
-        status: 'waiting' // waiting, countdown, playing, finished
+        status: 'waiting', // waiting, countdown, playing, finished
+        winner: null // 'p1' or 'p2'
     },
     // Local input
     input: { x: 0, y: 0 },
@@ -1494,7 +1495,8 @@ const Game = {
             puck: { x: 200, y: 300, vx: 0, vy: 0, r: 15 },
             p1: { x: 200, y: 550, r: 25, score: 0 },
             p2: { x: 200, y: 50, r: 25, score: 0 },
-            status: 'waiting'
+            status: 'waiting',
+            winner: null
         };
 
         // Open Modal
@@ -1550,8 +1552,11 @@ const Game = {
                 }
             }
 
-            // Always sync status to local state
+            // Always sync status and winner to local state
             this.state.status = currentStatus;
+            if (data.state && data.state.winner) {
+                this.state.winner = data.state.winner;
+            }
 
             // Update UI based on status
             this.updateUI(currentStatus);
@@ -1589,9 +1594,23 @@ const Game = {
             DOMHelper.get('game-rematch-btn').classList.add('hidden');
         } else if (status === 'finished') {
             overlay.classList.remove('hidden');
-            const winner = this.state.p1.score >= 3 ? 'P1' : 'P2';
-            countdown.textContent = `${winner} KAZANDI!`;
-            statusText.textContent = 'BİTTİ';
+
+            // Determine if current player won or lost
+            const winner = this.state.winner;
+            const isHost = this.role === 'host';
+            const didIWin = (isHost && winner === 'p1') || (!isHost && winner === 'p2');
+
+            // Show WIN or LOSE based on result
+            if (didIWin) {
+                countdown.textContent = '🏆 WIN';
+                countdown.className = 'countdown win-text';
+                statusText.textContent = 'KAZANDIN!';
+            } else {
+                countdown.textContent = '💔 LOSE';
+                countdown.className = 'countdown lose-text';
+                statusText.textContent = 'KAYBETTİN!';
+            }
+
             DOMHelper.get('game-rematch-btn').classList.remove('hidden');
         }
     },
@@ -1759,9 +1778,13 @@ const Game = {
         this.state.puck.vx = 0;
         this.state.puck.vy = 0;
 
-        // Check Winner
+        // Check Winner - First to 3 wins
         if (this.state.p1.score >= 3 || this.state.p2.score >= 3) {
             this.state.status = 'finished';
+
+            // Determine winner
+            const winner = this.state.p1.score >= 3 ? 'p1' : 'p2';
+            this.state.winner = winner;
         }
 
         // Sync Score & Status
@@ -1769,8 +1792,17 @@ const Game = {
             p1: this.state.p1,
             p2: this.state.p2,
             puck: this.state.puck,
-            status: this.state.status
+            status: this.state.status,
+            winner: this.state.winner
         });
+
+        // Also update root status
+        if (this.state.status === 'finished') {
+            update(ref(db, `games/${this.gameId}`), {
+                status: 'finished',
+                winner: this.state.winner
+            });
+        }
     },
 
     draw() {
@@ -1793,10 +1825,74 @@ const Game = {
         ctx.arc(this.width / 2, this.height / 2, 50, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Draw Goals
-        ctx.fillStyle = '#111';
-        ctx.fillRect(this.width / 3, 0, this.width / 3, 10);
-        ctx.fillRect(this.width / 3, this.height - 10, this.width / 3, 10);
+        // Draw Goals - More visible with colors and glow
+        const goalWidth = this.width / 3;
+        const goalHeight = 15;
+        const goalX = this.width / 3;
+
+        // Top Goal (P2's goal) - Purple
+        ctx.fillStyle = '#1a0a2e';
+        ctx.fillRect(goalX, 0, goalWidth, goalHeight);
+
+        // Goal border and glow
+        ctx.strokeStyle = '#ae00ff';
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ae00ff';
+        ctx.strokeRect(goalX, 0, goalWidth, goalHeight);
+        ctx.shadowBlur = 0;
+
+        // Goal net pattern
+        ctx.strokeStyle = '#ae00ff';
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.3;
+        for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.moveTo(goalX + (goalWidth / 5) * i, 0);
+            ctx.lineTo(goalX + (goalWidth / 5) * i, goalHeight);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        // Bottom Goal (P1's goal) - Cyan
+        ctx.fillStyle = '#0a1a2e';
+        ctx.fillRect(goalX, this.height - goalHeight, goalWidth, goalHeight);
+
+        // Goal border and glow
+        ctx.strokeStyle = '#00c6ff';
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#00c6ff';
+        ctx.strokeRect(goalX, this.height - goalHeight, goalWidth, goalHeight);
+        ctx.shadowBlur = 0;
+
+        // Goal net pattern
+        ctx.strokeStyle = '#00c6ff';
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.3;
+        for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.moveTo(goalX + (goalWidth / 5) * i, this.height - goalHeight);
+            ctx.lineTo(goalX + (goalWidth / 5) * i, this.height);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        // Draw Score on Canvas
+        ctx.font = 'bold 24px Inter, sans-serif';
+        ctx.textAlign = 'center';
+
+        // P1 Score (bottom)
+        ctx.fillStyle = '#00c6ff';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#00c6ff';
+        ctx.fillText(this.state.p1.score, 30, this.height - 30);
+
+        // P2 Score (top)
+        ctx.fillStyle = '#ae00ff';
+        ctx.shadowColor = '#ae00ff';
+        ctx.fillText(this.state.p2.score, 30, 50);
+        ctx.shadowBlur = 0;
 
         // Draw Players
         this.drawCircle(this.state.p1.x, this.state.p1.y, this.state.p1.r, '#00c6ff');
@@ -1832,7 +1928,51 @@ const Game = {
             this.state.p1.score = 0;
             this.state.p2.score = 0;
             this.state.status = 'countdown';
+            this.state.winner = null;
             update(ref(db, `games/${this.gameId}/state`), this.state);
+        }
+    },
+
+    toggleFullscreen() {
+        const container = DOMHelper.get('game-container');
+        const btn = DOMHelper.get('game-fullscreen-btn');
+
+        if (!document.fullscreenElement &&
+            !document.webkitFullscreenElement &&
+            !document.mozFullScreenElement) {
+            // Enter fullscreen
+            if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if (container.webkitRequestFullscreen) {
+                container.webkitRequestFullscreen();
+            } else if (container.mozRequestFullScreen) {
+                container.mozRequestFullScreen();
+            } else if (container.msRequestFullscreen) {
+                container.msRequestFullscreen();
+            }
+
+            // Change icon to exit fullscreen
+            if (btn) {
+                btn.innerHTML = '<i class="ri-fullscreen-exit-line"></i>';
+            }
+            container.classList.add('fullscreen');
+        } else {
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+
+            // Change icon back to fullscreen
+            if (btn) {
+                btn.innerHTML = '<i class="ri-fullscreen-line"></i>';
+            }
+            container.classList.remove('fullscreen');
         }
     }
 };
