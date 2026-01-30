@@ -1,221 +1,233 @@
+/* =========================================================================
+   NEXUS PLATFORM - ULTIMATE CORE MODULE (V6.0 ALPHA)
+   ARCHITECT: ANTIGRAVITY
+   CODENAME: PROJECT_TITAN_X
+   BUILD: PRODUCTION
+   ========================================================================= */
 
-/**
- * ==============================================================================
- * NEXUS PLATFORM V2.0 - CORE ENGINE
- * ==============================================================================
- * ARCHITECT: ANTIGRAVITY (AI)
- * BUILD: 2026.01.30-FINAL
- * TYPE: SINGLE PAGE APPLICATION (SPA) MUDULE
- * 
- * DESCRIPTION:
- * This is the central nervous system of the Nexus Platform. It handles everything
- * from particle physics simulations in the background to real-time database 
- * synchronization via Firebase.
- * 
- * TABLE OF CONTENTS:
- * 1. IMPORTS & CONFIG
- * 2. STATE MANAGEMENT (REACTIVE STORE)
- * 3. UTILITIES & HELPERS
- * 4. AUDIO ENGINE
- * 5. PARTICLE PHYSICS ENGINE (VISUALS)
- * 6. AUTHENTICATION SYSTEM
- * 7. ROUTING & NAVIGATION
- * 8. REAL-TIME CHAT SYSTEM
- * 9. GAME ENGINE (MINES, SLOTS, RPS)
- * 10. ADMIN & FOUNDER TOOLS
- * 11. UI ORCHESTRATOR
- * 12. INITIALIZATION
- * ==============================================================================
- */
-
-// ------------------------------------------------------------------------------
-// 1. IMPORTS & CONFIGURATION
-// ------------------------------------------------------------------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
     getAuth, onAuthStateChanged, signInWithEmailAndPassword,
-    createUserWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail
+    createUserWithEmailAndPassword, signOut, updateProfile,
+    sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-    getDatabase, ref, set, get, update, push, onValue,
-    off, serverTimestamp, query, limitToLast, orderByChild
+    getDatabase, ref, set, get, update, push, onValue, remove,
+    serverTimestamp, query, limitToLast, orderByChild, startAt
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
-    authDomain: "ali23-cfd02.firebaseapp.com",
-    databaseURL: "https://ali23-cfd02-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "ali23-cfd02",
-    storageBucket: "ali23-cfd02.firebasestorage.app",
-    messagingSenderId: "759021285078",
-    appId: "1:759021285078:web:f7673f89125ff3dad66377",
-    measurementId: "G-NNCQQQFWD6"
+const CONFIG = {
+    FIREBASE: {
+        apiKey: "AIzaSyDyGNrzw1a55LHv-LP5gjuPpFWmHu1a6yU",
+        authDomain: "ali23-cfd02.firebaseapp.com",
+        databaseURL: "https://ali23-cfd02-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "ali23-cfd02",
+        storageBucket: "ali23-cfd02.firebasestorage.app",
+        messagingSenderId: "759021285078",
+        appId: "1:759021285078:web:f7673f89125ff3dad66377"
+    },
+    GAME: {
+        START_CREDITS: 1000,
+        DAILY_BONUS: 500,
+        LEVEL_XP_BASE: 1000,
+        XP_MULTIPLIER: 1.25,
+        MAX_LEVEL: 100
+    },
+    SYSTEM: {
+        VERSION: '6.0.0',
+        ENV: 'PROD',
+        MAINTENANCE: false,
+        DEBUG: false
+    }
 };
 
-// Initialize Firebase
-const app = initializeApp(FIREBASE_CONFIG);
+const app = initializeApp(CONFIG.FIREBASE);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// Global Constants
-const CONSTANTS = {
-    APP_NAME: "NEXUS",
-    VERSION: "2.0.0",
-    ROLES: {
-        FOUNDER: 'founder',
-        ADMIN: 'admin',
-        MEMBER: 'member'
-    },
-    GAMES: {
-        MINES: { min_bet: 10, max_bet: 50000, payout_cap: 1000 },
-        SLOTS: { min_bet: 50, symbols: ['🍒', '7️⃣', '💎', '🔔', '🍇', '🍋'] }
-    },
-    LEVEL_XP_BASE: 1000, // XP needed for level 2
-    XP_MULTIPLIER: 1.2   // Each level needs 20% more XP
-};
-
-// ------------------------------------------------------------------------------
-// 2. STATE MANAGEMENT
-// ------------------------------------------------------------------------------
-const STORE = {
-    user: null,         // Auth User
-    profile: null,      // DB Profile
-    activeView: null,
-    settings: {
-        audio_vol: 0.8,
-        sfx_enabled: true,
-        motion_reduced: false,
-        theme_hue: 180 // Cyan base
-    },
-    cache: {
-        users: {},      // User ID -> Profile map
-        top_players: [],
-        online_count: 0
-    },
-    game_session: {
-        active: false,
-        game_id: null,
-        data: {}
+class StateManager {
+    constructor() {
+        this.state = {
+            user: null,
+            profile: null,
+            settings: this._loadSettings(),
+            activeView: 'dashboard',
+            activeModal: null,
+            overlayGame: null,
+            notifications: [],
+            chat: {
+                channels: ['global', 'trade', 'support'],
+                activeChannel: 'global',
+                history: []
+            },
+            market: {
+                items: [],
+                cart: []
+            },
+            onlineUsers: {},
+            systemStatus: 'online'
+        };
+        this.subscribers = new Set();
     }
-};
 
-// ------------------------------------------------------------------------------
-// 3. UTILITIES
-// ------------------------------------------------------------------------------
-const Utils = {
-    // Generates a secure random ID
-    uuid() {
-        return Math.random().toString(36).substring(2) + Date.now().toString(36);
-    },
-
-    // Formats numbers (e.g. 1000 -> 1,000)
-    fmtNum(n) {
-        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    },
-
-    // Sleep function for async delays
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    },
-
-    // Clamps a number between min and max
-    clamp(num, min, max) {
-        return Math.min(Math.max(num, min), max);
-    },
-
-    // Calculates Level from XP
-    getLevel(xp) {
-        let level = 1;
-        let required = CONSTANTS.LEVEL_XP_BASE;
-        while (xp >= required) {
-            xp -= required;
-            level++;
-            required *= CONSTANTS.XP_MULTIPLIER;
+    _loadSettings() {
+        const saved = localStorage.getItem('nexus_settings');
+        return saved ? JSON.parse(saved) : {
+            audio: { master: 0.5, sfx: true, music: false },
+            graphics: { quality: 'high', particles: true, animations: true },
+            theme: { color: 'cyan', mode: 'dark' },
+            privacy: { showLevel: true, showInventory: true }
         }
-        return { level, progress: xp, next: Math.floor(required) };
-    },
-
-    // Creates a date string relative to now
-    timeAgo(timestamp) {
-        if (!timestamp) return 'Unknown';
-        const seconds = Math.floor((Date.now() - timestamp) / 1000);
-        if (seconds < 60) return 'Just now';
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes}m ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h ago`;
-        return new Date(timestamp).toLocaleDateString();
     }
-};
 
-// ------------------------------------------------------------------------------
-// 4. AUDIO ENGINE
-// ------------------------------------------------------------------------------
+    saveSettings() {
+        localStorage.setItem('nexus_settings', JSON.stringify(this.state.settings));
+        this.notify('settings');
+    }
+
+    commit(key, value) {
+        this.state[key] = value;
+        this.notify(key);
+    }
+
+    get(key) {
+        return this.state[key];
+    }
+
+    subscribe(callback) {
+        this.subscribers.add(callback);
+    }
+
+    notify(key) {
+        this.subscribers.forEach(cb => cb(this.state, key));
+    }
+}
+
+const Store = new StateManager();
+
 class AudioEngine {
     constructor() {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        this.sounds = {
-            click: document.getElementById('sfx-ui-click'),
-            hover: document.getElementById('sfx-ui-hover'),
-            win: document.getElementById('sfx-win'),
-            loose: document.getElementById('sfx-loose'),
-            msg: document.getElementById('sfx-msg-in')
-        };
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.connect(this.ctx.destination);
+        this.updateVolume();
+
+        this.buffers = {};
+        this.enabled = Store.get('settings').audio.sfx;
     }
 
-    play(key) {
-        if (!STORE.settings.sfx_enabled) return;
-        const sfx = this.sounds[key];
-        if (sfx) {
-            sfx.currentTime = 0;
-            sfx.volume = STORE.settings.audio_vol;
-            sfx.play().catch(() => { }); // Ignore interaction errors
-        }
+    updateVolume() {
+        this.masterGain.gain.value = Store.get('settings').audio.master;
     }
 
-    introSequence() {
-        // Futuristic startup sound generated via Oscillator
-        if (!STORE.settings.sfx_enabled) return;
+    // Advanced Synthesizer
+    playTone(freq, type = 'sine', duration = 0.1, vol = 0.1, slide = 0) {
+        if (!this.enabled || this.ctx.state === 'suspended') this.ctx.resume();
+
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
+
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(200, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.5);
-        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+        gain.connect(this.masterGain);
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if (slide !== 0) {
+            osc.frequency.exponentialRampToValueAtTime(freq + slide, this.ctx.currentTime + duration);
+        }
+
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.5);
+        osc.stop(this.ctx.currentTime + duration);
+    }
+
+    // Effect Library
+    sfx = {
+        click: () => this.playTone(800, 'sine', 0.05, 0.05),
+        hover: () => this.playTone(400, 'triangle', 0.03, 0.02),
+        success: () => {
+            this.playTone(440, 'triangle', 0.1, 0.1);
+            setTimeout(() => this.playTone(554.37, 'triangle', 0.1, 0.1), 100);
+        },
+        error: () => {
+            this.playTone(150, 'sawtooth', 0.2, 0.2, -50);
+        },
+        win: () => {
+            [0, 100, 200, 300].forEach((t, i) => {
+                setTimeout(() => {
+                    this.playTone(440 + (i * 100), 'square', 0.2, 0.1);
+                }, t);
+            });
+        },
+        spin: () => {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.linearRampToValueAtTime(800, now + 1);
+            gain.gain.value = 0.05;
+            osc.start();
+            osc.stop(now + 0.1);
+        },
+        explosion: () => {
+            // White noise burst
+            const bufferSize = this.ctx.sampleRate * 0.5;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 1000;
+
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.masterGain);
+            noise.start();
+        }
     }
 }
-const SFX = new AudioEngine();
 
-// ------------------------------------------------------------------------------
-// 5. PARTICLE PHYSICS ENGINE
-// ------------------------------------------------------------------------------
-class ParticleNetwork {
-    constructor() {
-        this.canvas = document.getElementById('bg-canvas');
+const AudioFX = new AudioEngine();
+
+class ParticleSystem {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        if (!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
         this.particles = [];
-        this.w = 0;
-        this.h = 0;
-        this.config = {
-            count: 60,
-            color: 'rgba(0, 242, 255, 0.5)',
-            connDist: 150
-        };
+        this.mouse = { x: 0, y: 0, active: false };
+        this.config = { count: 80, color: '#00f2ff', linkDist: 150 };
 
-        window.addEventListener('resize', () => this.resize());
         this.resize();
-        this.init();
-        this.loop();
+        window.addEventListener('resize', () => this.resize());
+        window.addEventListener('mousemove', (e) => this.mouseMove(e));
+
+        if (Store.get('settings').graphics.particles) {
+            this.init();
+            this.animate();
+        }
     }
 
     resize() {
         this.w = this.canvas.width = window.innerWidth;
         this.h = this.canvas.height = window.innerHeight;
+    }
+
+    mouseMove(e) {
+        this.mouse.x = e.clientX;
+        this.mouse.y = e.clientY;
+        this.mouse.active = true;
     }
 
     init() {
@@ -225,44 +237,46 @@ class ParticleNetwork {
                 y: Math.random() * this.h,
                 vx: (Math.random() - 0.5) * 0.5,
                 vy: (Math.random() - 0.5) * 0.5,
-                size: Math.random() * 2,
-                alpha: Math.random() * 0.5 + 0.1
+                size: Math.random() * 2
             });
         }
     }
 
-    loop() {
-        // Clear
+    animate() {
         this.ctx.clearRect(0, 0, this.w, this.h);
 
-        // Update & Draw
         for (let i = 0; i < this.particles.length; i++) {
             let p = this.particles[i];
 
-            // Move
-            if (!STORE.settings.motion_reduced) {
-                p.x += p.vx;
-                p.y += p.vy;
-            }
+            p.x += p.vx;
+            p.y += p.vy;
 
-            // Bounce
             if (p.x < 0 || p.x > this.w) p.vx *= -1;
             if (p.y < 0 || p.y > this.h) p.vy *= -1;
 
-            // Draw Dot
-            this.ctx.fillStyle = `rgba(0, 242, 255, ${p.alpha})`;
+            if (this.mouse.active) {
+                let dx = this.mouse.x - p.x;
+                let dy = this.mouse.y - p.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 200) {
+                    p.vx += dx * 0.0001;
+                    p.vy += dy * 0.0001;
+                }
+            }
+
+            this.ctx.fillStyle = `rgba(0, 242, 255, ${0.5})`;
             this.ctx.beginPath();
             this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             this.ctx.fill();
 
-            // Connections
             for (let j = i + 1; j < this.particles.length; j++) {
                 let p2 = this.particles[j];
-                let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                let dx = p.x - p2.x;
+                let dy = p.y - p2.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
 
-                if (dist < this.config.connDist) {
-                    this.ctx.strokeStyle = `rgba(0, 242, 255, ${0.1 - dist / 1500})`;
-                    this.ctx.lineWidth = 0.5;
+                if (dist < this.config.linkDist) {
+                    this.ctx.strokeStyle = `rgba(0, 242, 255, ${0.1 * (1 - dist / this.config.linkDist)})`;
                     this.ctx.beginPath();
                     this.ctx.moveTo(p.x, p.y);
                     this.ctx.lineTo(p2.x, p2.y);
@@ -270,764 +284,620 @@ class ParticleNetwork {
                 }
             }
         }
-
-        requestAnimationFrame(() => this.loop());
+        requestAnimationFrame(() => this.animate());
     }
 }
 
-// ------------------------------------------------------------------------------
-// 6. UI ORCHESTRATOR
-// ------------------------------------------------------------------------------
 const UI = {
-    // --- TOASTS ---
-    toast(msg, type = 'info') {
-        const layer = document.getElementById('toast-layer');
+    toast(msg, type = 'info', duration = 3000) {
+        const container = document.getElementById('toast-wrapper') || this.createToastWrapper();
         const el = document.createElement('div');
         el.className = `toast toast-${type}`;
-        el.style.cssText = `
-            background: var(--bg-panel);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--c-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'primary-500'});
-            padding: 15px 25px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            color: #fff;
-            font-family: 'Rajdhani';
-            font-weight: 600;
-            display: flex; align-items: center; gap: 10px;
-            animation: slideIn 0.3s cubic-bezier(0.68, -0.6, 0.32, 1.6);
-            min-width: 300px;
-        `;
-
-        // Select Icon
-        let icon = '';
-        if (type === 'success') icon = 'ri-checkbox-circle-line';
-        if (type === 'error') icon = 'ri-error-warning-line';
-        if (type === 'info') icon = 'ri-information-line';
-
-        el.innerHTML = `<i class="${icon}" style="font-size:1.2rem"></i> <span>${msg}</span>`;
-
-        layer.appendChild(el);
-        SFX.play(type === 'error' ? 'loose' : 'click');
-
-        // Auto remove
-        setTimeout(() => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateX(100px)';
-            setTimeout(() => el.remove(), 300);
-        }, 3000);
-    },
-
-    // --- MODALS ---
-    openModal(id) {
-        const m = document.getElementById(id);
-        const l = document.getElementById('modal-layer');
-        if (m && l) {
-            l.classList.remove('hidden');
-            document.querySelectorAll('.modal-wrapper').forEach(x => x.classList.add('hidden'));
-            m.classList.remove('hidden');
-            SFX.play('hover');
-        }
-    },
-
-    closeModal(id) {
-        const l = document.getElementById('modal-layer');
-        const m = document.getElementById(id);
-        if (m) m.classList.add('hidden');
-        if (l) l.classList.add('hidden');
-    },
-
-    // --- TABS (SETTINGS) ---
-    setTab(id) {
-        document.querySelectorAll('.set-view').forEach(e => e.classList.remove('active'));
-        document.querySelectorAll('.set-tab').forEach(e => e.classList.remove('active'));
-
-        document.getElementById(id).classList.add('active');
-        // Find button triggering this and activate it (simplified)
-        event.currentTarget.classList.add('active');
-        SFX.play('click');
-    },
-
-    // --- MOBILE MENU ---
-    toggleMobileNav() {
-        const nav = document.querySelector('.mobile-bottom-nav');
-        // In this design, bottom nav is always visible on mobile, 
-        // but sidebar is hidden. We could toggle sidebar.
-        // For now, let's just toast.
-        this.toast('Mobile menu overlay coming soon', 'info');
-    },
-
-    // --- LOADING ---
-    showLoader() {
-        document.getElementById('critical-loader').style.display = 'flex';
-    },
-
-    hideLoader() {
-        const l = document.getElementById('critical-loader');
-        l.style.opacity = '0';
-        l.style.transition = '0.5s';
-        setTimeout(() => l.style.display = 'none', 500);
-    },
-
-    // --- DATA BINDING ---
-    updateProfileUI() {
-        if (!STORE.profile) return;
-        const p = STORE.profile;
-        const xpData = Utils.getLevel(p.xp);
-
-        // Header
-        const hName = document.getElementById('header-username');
-        if (hName) hName.innerText = p.username.toUpperCase();
-
-        const hRole = document.getElementById('header-role');
-        if (hRole) {
-            hRole.innerText = p.role.toUpperCase();
-            hRole.className = `u-role role-${p.role}`;
-        }
-
-        const hAvt = document.getElementById('header-avatar');
-        if (hAvt) hAvt.src = p.avatar;
-
-        const pts = document.getElementById('my-points');
-        if (pts) pts.innerText = Utils.fmtNum(p.points);
-
-        // Profile Page Full
-        const fAvt = document.getElementById('p-full-avatar');
-        if (fAvt) fAvt.src = p.avatar;
-
-        const fName = document.getElementById('p-full-name');
-        if (fName) fName.innerText = p.username;
-
-        const fRole = document.getElementById('p-full-role');
-        if (fRole) fRole.innerText = p.role;
-
-        const fBio = document.getElementById('p-bio');
-        if (fBio) fBio.innerText = p.bio || "No bio signature established.";
-
-        // Stats
-        document.getElementById('p-level').innerText = xpData.level;
-        document.getElementById('p-total-games').innerText = 0; // Populate later
-        document.getElementById('p-total-wins').innerText = 0;
-    }
-};
-
-// ------------------------------------------------------------------------------
-// 7. ROUTER
-// ------------------------------------------------------------------------------
-const Router = {
-    go(viewId) {
-        if (!STORE.user && viewId !== 'auth') {
-            // Force Auth
-            UI.openModal('modal-auth');
-            return;
-        }
-
-        // Handle specific actions for views
-        if (viewId === 'home') {
-            // Refresh stats
-        }
-
-        // DOM Manip
-        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
-        const target = document.getElementById(`view-${viewId}`);
-        if (target) {
-            target.classList.add('active');
-            STORE.activeView = viewId;
-        }
-
-        // Active Nav State
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        const navBtn = document.querySelector(`.nav-item[data-view='view-${viewId}']`);
-        if (navBtn) navBtn.classList.add('active');
-
-        // Mobile active state
-        document.querySelectorAll('.mob-item').forEach(m => m.classList.remove('active'));
-        // (Simplified mapping for mobile)
-
-        // Breadcrumbs
-        const bread = document.getElementById('bread-sub');
-        if (bread) bread.innerText = viewId.toUpperCase();
-
-        SFX.play('click');
-    }
-};
-
-// ------------------------------------------------------------------------------
-// 8. AUTH MANAGER
-// ------------------------------------------------------------------------------
-const AuthManager = {
-    init() {
-        // UI Binds
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // Switch Tabs
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-
-                const target = e.target.dataset.target;
-                document.querySelectorAll('.auth-form').forEach(f => f.classList.add('hidden'));
-                document.getElementById(target).classList.remove('hidden');
-            });
-        });
-
-        // Forms
-        document.getElementById('form-login').addEventListener('submit', this.handleLogin);
-        document.getElementById('form-register').addEventListener('submit', this.handleRegister);
-
-        // Firebase Listener
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("[AUTH] State: User connected", user.uid);
-                STORE.user = user;
-                this.loadUserProfile(user.uid);
-            } else {
-                console.log("[AUTH] State: Guest");
-                STORE.user = null;
-                STORE.profile = null;
-                UI.openModal('modal-auth');
-                UI.hideLoader();
-            }
-        });
-    },
-
-    async handleLogin(e) {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
-
-        try {
-            await signInWithEmailAndPassword(auth, email, pass);
-            UI.closeModal('modal-auth');
-            UI.toast('Access Granted', 'success');
-        } catch (err) {
-            UI.toast(err.message, 'error');
-        }
-    },
-
-    async handleRegister(e) {
-        e.preventDefault();
-        const userStr = document.getElementById('reg-user').value;
-        const email = document.getElementById('reg-email').value;
-        const pass = document.getElementById('reg-pass').value;
-
-        try {
-            const cred = await createUserWithEmailAndPassword(auth, email, pass);
-
-            // Create Profile
-            const profileData = {
-                username: userStr,
-                email: email,
-                role: CONSTANTS.ROLES.MEMBER,
-                xp: 0,
-                level: 1,
-                points: 1000, // Starter bonus
-                bio: "New recruit.",
-                avatar: `https://ui-avatars.com/api/?name=${userStr}&background=random`,
-                joinedAt: serverTimestamp(),
-                isBanned: false,
-                isMuted: false
-            };
-
-            await set(ref(db, 'users/' + cred.user.uid), profileData);
-            await updateProfile(cred.user, { displayName: userStr });
-
-            UI.closeModal('modal-auth');
-            UI.toast('Identity Created. Welcome to Nexus.', 'success');
-        } catch (err) {
-            UI.toast(err.message, 'error');
-        }
-    },
-
-    logout() {
-        signOut(auth);
-        UI.toast('Disconnecting...', 'info');
-        Router.go('auth'); // Will trigger modal
-    },
-
-    async loadUserProfile(uid) {
-        try {
-            const snapshot = await get(ref(db, 'users/' + uid));
-            if (snapshot.exists()) {
-                STORE.profile = snapshot.val();
-                STORE.profile.uid = uid;
-
-                // Update Presence
-                update(ref(db, 'users/' + uid), {
-                    lastLogin: serverTimestamp(),
-                    isOnline: true
-                });
-
-                // Check Admin
-                if ([CONSTANTS.ROLES.ADMIN, CONSTANTS.ROLES.FOUNDER].includes(STORE.profile.role)) {
-                    document.getElementById('admin-dashboard-container').classList.remove('hidden');
-                    if (STORE.profile.role === CONSTANTS.ROLES.FOUNDER) {
-                        document.getElementById('founder-panel').classList.remove('hidden');
-                    }
-                }
-
-                // Render
-                UI.updateProfileUI();
-                document.getElementById('nexus-core').classList.remove('hidden');
-                UI.hideLoader();
-                UI.closeModal('modal-auth');
-
-            } else {
-                UI.toast('Profile Corruption Detected.', 'error');
-            }
-        } catch (error) {
-            console.error(error);
-            UI.toast('Network Error: Profile Load Failed', 'error');
-        }
-    }
-};
-
-// ------------------------------------------------------------------------------
-// 9. CHAT SYSTEM
-// ------------------------------------------------------------------------------
-const ChatSystem = {
-    activeChannel: 'global',
-
-    init() {
-        this.bindEvents();
-        this.subscribe('global');
-    },
-
-    bindEvents() {
-        document.getElementById('btn-chat-send').addEventListener('click', () => this.send());
-        document.getElementById('chat-textarea').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.send();
-            }
-        });
-    },
-
-    setChannel(id) {
-        this.activeChannel = id;
-        // Update UI visuals for selection
-        document.querySelectorAll('.channel-item').forEach(i => i.classList.remove('active'));
-        // (Add logic to highlight specific div based on id click)
-
-        // Re-subscribe
-        this.subscribe(id);
-    },
-
-    subscribe(channelId) {
-        // Unsub previous if needed (not strictly required with onValue override)
-        const chatRef = query(ref(db, `chats/${channelId}`), limitToLast(50));
-
-        onValue(chatRef, (snapshot) => {
-            const container = document.getElementById('main-chat-feed');
-            const mini = document.getElementById('mini-chat-log');
-
-            container.innerHTML = ''; // Clear for simple re-render (optimization: diffing)
-            mini.innerHTML = '';
-
-            const msgs = [];
-            snapshot.forEach(child => {
-                msgs.push(child.val());
-            });
-
-            msgs.forEach(msg => {
-                this.renderMessage(msg, container);
-                this.renderMiniMessage(msg, mini);
-            });
-
-            // Auto scroll
-            container.scrollTop = container.scrollHeight;
-            mini.scrollTop = mini.scrollHeight;
-        });
-    },
-
-    send() {
-        if (!STORE.user) return;
-        if (STORE.profile.isMuted) return UI.toast('You are muted by Admin.', 'error');
-
-        const input = document.getElementById('chat-textarea');
-        const txt = input.value.trim();
-        if (!txt) return;
-
-        const payload = {
-            uid: STORE.user.uid,
-            username: STORE.profile.username,
-            avatar: STORE.profile.avatar,
-            role: STORE.profile.role,
-            text: txt,
-            timestamp: serverTimestamp(),
-            type: 'text'
-        };
-
-        push(ref(db, `chats/${this.activeChannel}`), payload)
-            .then(() => {
-                input.value = '';
-                SFX.play('msg');
-            })
-            .catch(err => UI.toast(err.message, 'error'));
-    },
-
-    renderMessage(msg, target) {
-        const isMe = msg.uid === STORE.user?.uid;
-        // Simple XSS prevention
-        const cleanText = msg.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-        const div = document.createElement('div');
-        div.className = 'chat-msg';
-        div.innerHTML = `
-            <img src="${msg.avatar}" class="msg-avt">
-            <div class="msg-body">
-                <div class="msg-meta">
-                    <span class="m-user role-${msg.role}" onclick="app.admin.inspect('${msg.uid}')">${msg.username}</span>
-                    <span class="m-time">${new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-                <div class="msg-content" style="${isMe ? 'background:rgba(0,242,255,0.1); border:1px solid var(--c-primary-500);' : ''}">
-                    ${cleanText}
-                </div>
+        el.innerHTML = `
+            <div class="flex items-center gap-3">
+                <i class="ri-${type === 'success' ? 'checkbox-circle' : type === 'error' ? 'error-warning' : 'information'}-fill text-xl"></i>
+                <span class="font-mono text-sm">${msg}</span>
             </div>
         `;
-        target.appendChild(div);
+        container.appendChild(el);
+
+        requestAnimationFrame(() => el.classList.add('show'));
+
+        // Sound
+        if (type === 'error') AudioFX.sfx.error();
+        else if (type === 'success') AudioFX.sfx.success();
+        else AudioFX.sfx.click();
+
+        setTimeout(() => {
+            el.classList.remove('show');
+            setTimeout(() => el.remove(), 300);
+        }, duration);
     },
 
-    renderMiniMessage(msg, target) {
+    createToastWrapper() {
         const div = document.createElement('div');
-        div.className = 'mini-chat-msg';
-        div.innerHTML = `<b>${msg.username}:</b> ${msg.text.substring(0, 30)}${msg.text.length > 30 ? '...' : ''}`;
-        target.appendChild(div);
+        div.id = 'toast-wrapper';
+        div.className = 'fixed top-5 right-5 z-[5000] flex flex-col gap-2 pointer-events-none';
+        document.body.appendChild(div);
+        return div;
+    },
+
+    modal: {
+        open(id) {
+            const m = document.getElementById(id);
+            if (m) {
+                m.classList.add('active');
+                Store.commit('activeModal', id);
+                AudioFX.sfx.hover();
+            }
+        },
+        close(id) {
+            const m = document.getElementById(id);
+            if (m) {
+                m.classList.remove('active');
+                Store.commit('activeModal', null);
+            }
+        }
+    },
+
+    formatNumber(num) {
+        return new Intl.NumberFormat('tr-TR').format(num);
+    },
+
+    updateDOM() {
+        const p = Store.get('profile');
+        if (!p) return;
+
+        // Header
+        this.safeHTML('header-balance', this.formatNumber(p.points));
+        this.safeHTML('header-lvl', `LVL ${p.level}`);
+
+        // Sidebar
+        this.safeHTML('sb-user', p.username);
+        this.safeHTML('sb-role', p.role.toUpperCase());
+        const sbImg = document.getElementById('sb-avatar');
+        if (sbImg) sbImg.src = p.avatar || `https://ui-avatars.com/api/?name=${p.username}&background=random`;
+
+        // Profile Page
+        if (Store.get('activeView') === 'profile') {
+            this.safeHTML('pf-name', p.username);
+            this.safeHTML('pf-id', `ID: ${p.uid.substring(0, 8)}`);
+            this.safeHTML('pf-stats-wins', this.formatNumber(p.stats.wins || 0));
+            this.safeHTML('pf-stats-games', this.formatNumber(p.stats.games || 0));
+        }
+
+        // Apply Theme
+        document.documentElement.style.setProperty('--c-primary-500',
+            Store.get('settings').theme.color === 'cyan' ? '#00f2ff' :
+                Store.get('settings').theme.color === 'purple' ? '#ae00ff' : '#00ff9d'
+        );
+    },
+
+    safeHTML(id, html) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
     }
 };
 
-// ------------------------------------------------------------------------------
-// 10. GAME ENGINE
-// ------------------------------------------------------------------------------
+const Auth = {
+    init() {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                Store.commit('user', user);
+                this.loadProfile(user.uid);
+                UI.modal.close('auth-modal');
+            } else {
+                Store.commit('user', null);
+                UI.modal.open('auth-modal');
+            }
+        });
+
+        document.getElementById('form-login').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.login(
+                document.getElementById('login-email').value,
+                document.getElementById('login-pass').value
+            );
+        });
+    },
+
+    async login(email, pass) {
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            UI.toast('Giriş Başarılı', 'success');
+        } catch (error) {
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                this.register(email, pass);
+            } else {
+                UI.toast(error.message, 'error');
+            }
+        }
+    },
+
+    async register(email, pass) {
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email, pass);
+            await this.createProfile(cred.user, email.split('@')[0]);
+            UI.toast('Hesap Oluşturuldu', 'success');
+        } catch (error) {
+            UI.toast(error.message, 'error');
+        }
+    },
+
+    async createProfile(user, username) {
+        const profile = {
+            uid: user.uid,
+            username: username,
+            email: user.email,
+            role: 'member',
+            points: CONFIG.GAME.START_CREDITS,
+            xp: 0,
+            level: 1,
+            avatar: `https://ui-avatars.com/api/?name=${username}`,
+            stats: { wins: 0, losses: 0, games: 0, maxWin: 0 },
+            inventory: {},
+            created: serverTimestamp(),
+            lastLogin: serverTimestamp()
+        };
+        await set(ref(db, `users/${user.uid}`), profile);
+    },
+
+    loadProfile(uid) {
+        onValue(ref(db, `users/${uid}`), (snap) => {
+            const data = snap.val();
+            if (data) {
+                Store.commit('profile', data);
+                UI.updateDOM();
+            }
+        });
+
+        // Online Presence
+        const presenceRef = ref(db, `status/${uid}`);
+        const connectedRef = ref(db, '.info/connected');
+        onValue(connectedRef, (snap) => {
+            if (snap.val() === true) {
+                const con = push(presenceRef);
+                con.onDisconnect().remove();
+                set(con, { state: 'online', last_changed: serverTimestamp() });
+            }
+        });
+    }
+};
+
 const GameEngine = {
-    mines: {
+    Mines: {
         active: false,
-        bet: 100,
-        minesCount: 3,
         grid: [],
         revealed: [],
+        bet: 0,
+        mines: 3,
         multiplier: 1.0,
 
-        adjBet(val) {
-            const inp = document.getElementById('mines-bet-val');
-            let v = parseInt(inp.value) + val;
-            if (v < 10) v = 10;
-            inp.value = v;
-        },
-
         start() {
-            const betInput = document.getElementById('mines-bet-val').value;
-            const bet = parseInt(betInput);
-            if (bet > STORE.profile.points) return UI.toast('Insufficient Funds!', 'error');
+            const bet = parseInt(document.getElementById('m-bet').value);
+            const mines = parseInt(document.getElementById('m-mines').value);
+            const p = Store.get('profile');
 
-            // Deduct
-            GameEngine.updateBalance(-bet);
+            if (bet > p.points) return UI.toast('Bakiye Yetersiz', 'error');
+            if (bet <= 0) return UI.toast('Geçersiz Tutar', 'error');
+
+            GameEngine.tx(bet * -1);
 
             this.active = true;
             this.bet = bet;
-            this.minesCount = parseInt(document.getElementById('mines-count-range').value);
+            this.mines = mines;
             this.multiplier = 1.0;
+            this.revealed = new Array(25).fill(false);
+            this.grid = new Array(25).fill(0);
 
-            // Generate Grid (0: Safe, 1: Mine)
-            this.grid = Array(25).fill(0);
-            let minesPlaced = 0;
-            while (minesPlaced < this.minesCount) {
+            // Plant Mines
+            let placed = 0;
+            while (placed < mines) {
                 let r = Math.floor(Math.random() * 25);
                 if (this.grid[r] === 0) {
                     this.grid[r] = 1;
-                    minesPlaced++;
+                    placed++;
                 }
             }
-            this.revealed = Array(25).fill(false);
 
-            // UI Update
-            document.getElementById('btn-mines-play').classList.add('hidden');
-            document.getElementById('btn-mines-cashout').classList.remove('hidden');
-            document.getElementById('gs-win-display').innerText = "0";
-
-            this.renderGrid();
+            this.render();
+            document.getElementById('m-controls-start').classList.add('hidden');
+            document.getElementById('m-controls-cashout').classList.remove('hidden');
         },
 
-        renderGrid() {
-            const cont = document.getElementById('mines-grid');
-            cont.innerHTML = '';
+        render() {
+            const container = document.getElementById('m-grid-container');
+            container.innerHTML = '';
+
             for (let i = 0; i < 25; i++) {
                 const tile = document.createElement('div');
-                tile.className = 'm-tile';
+                tile.className = 'mine-tile';
                 if (this.revealed[i]) {
-                    if (this.grid[i] === 1) {
-                        tile.classList.add('revealed-bomb');
-                        tile.innerHTML = '<i class="ri-bomb-fill"></i>';
-                    } else {
-                        tile.classList.add('revealed-gem');
-                        tile.innerHTML = '<i class="ri-vip-diamond-fill"></i>';
-                    }
+                    tile.classList.add('revealed');
+                    if (this.grid[i] === 1) tile.classList.add('bomb');
+                    else tile.classList.add('gem');
                 } else {
-                    tile.onclick = () => this.clickTile(i);
+                    tile.onclick = () => this.click(i);
                 }
-                cont.appendChild(tile);
+                container.appendChild(tile);
             }
         },
 
-        clickTile(idx) {
-            if (!this.active || this.revealed[idx]) return;
+        click(i) {
+            if (!this.active || this.revealed[i]) return;
 
-            this.revealed[idx] = true;
+            this.revealed[i] = true;
 
-            if (this.grid[idx] === 1) {
-                // LOSS
-                SFX.play('loose');
+            if (this.grid[i] === 1) {
+                // LOST
+                AudioFX.sfx.explosion();
+                AudioFX.sfx.error();
                 this.active = false;
-                this.revealed.fill(true); // Reveal all
-                this.renderGrid();
-                UI.toast('EXPLOSION DETECTED. ROUND LOST.', 'error');
-
-                // Reset UI delay
-                setTimeout(() => {
-                    document.getElementById('btn-mines-play').classList.remove('hidden');
-                    document.getElementById('btn-mines-cashout').classList.add('hidden');
-                }, 2000);
+                this.revealAll();
+                UI.toast('PATLADIN!', 'error');
+                this.resetUI();
             } else {
-                // WIN
-                SFX.play('click');
-                // Calculate Multiplier (simplified math for game feel)
-                const safeRemaining = 25 - this.minesCount - this.revealed.filter((r, i) => r && this.grid[i] === 0).length;
-                this.multiplier *= (1 + (this.minesCount / 25)); // Base growth
+                // GEM
+                AudioFX.sfx.success();
 
-                const currentWin = Math.floor(this.bet * this.multiplier);
-                document.getElementById('gs-win-display').innerText = currentWin;
+                // Calculate Multiplier
+                const safeTotal = 25 - this.mines;
+                const revealedSafe = this.revealed.filter((r, idx) => r && this.grid[idx] === 0).length;
+                this.multiplier = this.calcMulti(revealedSafe, this.mines);
 
-                this.renderGrid();
+                const win = Math.floor(this.bet * this.multiplier);
+                document.getElementById('m-cashout-val').innerText = UI.formatNumber(win);
+
+                this.render();
+
+                if (revealedSafe === safeTotal) this.cashout();
             }
+        },
+
+        calcMulti(hits, mines) {
+            // Simple exponential growth logic
+            let m = 1.0;
+            for (let i = 0; i < hits; i++) m *= (25 - i) / (25 - i - mines);
+            return m;
+        },
+
+        revealAll() {
+            for (let i = 0; i < 25; i++) this.revealed[i] = true;
+            this.render();
         },
 
         cashout() {
             if (!this.active) return;
-            const currentWin = Math.floor(this.bet * this.multiplier);
-            if (currentWin <= this.bet) { this.active = false; return; } // No profit?
-
-            GameEngine.updateBalance(currentWin);
-            SFX.play('win');
-            UI.toast(`CASHOUT SUCCESS: +${currentWin}`, 'success');
-
+            const win = Math.floor(this.bet * this.multiplier);
+            GameEngine.tx(win);
             this.active = false;
-            document.getElementById('btn-mines-play').classList.remove('hidden');
-            document.getElementById('btn-mines-cashout').classList.add('hidden');
+            AudioFX.sfx.win();
+            UI.toast(`KAZANDIN: +${win}`, 'success');
+            this.revealAll();
+            this.resetUI();
+        },
 
-            // Reveal remaining
-            this.revealed.fill(true);
-            this.renderGrid();
+        resetUI() {
+            setTimeout(() => {
+                document.getElementById('m-controls-start').classList.remove('hidden');
+                document.getElementById('m-controls-cashout').classList.add('hidden');
+            }, 2000);
         }
     },
 
-    slots: {
+    Slots: {
         spinning: false,
-        symbols: ['🍒', '7️⃣', '💎', '🔔', '🍇', '🍋'],
+        reels: [[], [], []],
+        symbols: [
+            { id: 'cherry', icon: '🍒', val: 2 },
+            { id: 'lemon', icon: '🍋', val: 3 },
+            { id: 'grape', icon: '🍇', val: 5 },
+            { id: 'bell', icon: '🔔', val: 10 },
+            { id: 'diamond', icon: '💎', val: 25 },
+            { id: 'seven', icon: '7️⃣', val: 50 },
+            { id: 'bar', icon: '🎰', val: 100 }
+        ],
 
         spin() {
             if (this.spinning) return;
-            const betInput = document.getElementById('slots-bet');
-            const bet = parseInt(betInput.value);
-            if (bet > STORE.profile.points) return UI.toast('Insufficient Funds!', 'error');
 
-            GameEngine.updateBalance(-bet);
+            const bet = parseInt(document.getElementById('s-bet').value);
+            const p = Store.get('profile');
+
+            if (bet > p.points) return UI.toast('Bakiye Yetersiz');
+
+            GameEngine.tx(bet * -1);
             this.spinning = true;
+            AudioFX.sfx.spin();
 
-            // Visual Spin
-            document.querySelectorAll('.slot-reel').forEach(el => el.classList.add('reel-spinning'));
-            SFX.play('hover'); // Spin sound simulation
+            // Animate Reels
+            [1, 2, 3].forEach((id, idx) => {
+                const el = document.getElementById(`reel-${id}`);
+                el.classList.add('blur-spin');
 
-            // Outcomes
-            const r1 = Math.floor(Math.random() * this.symbols.length);
-            const r2 = Math.floor(Math.random() * this.symbols.length);
-            const r3 = Math.floor(Math.random() * this.symbols.length);
-
-            // Stop Reels sequentially
-            setTimeout(() => this.stopReel(1, r1), 1000);
-            setTimeout(() => this.stopReel(2, r2), 1500);
-            setTimeout(() => {
-                this.stopReel(3, r3);
-                this.evaluate(r1, r2, r3, bet);
-                this.spinning = false;
-            }, 2000);
-        },
-
-        stopReel(id, symbolIdx) {
-            const el = document.getElementById(`reel-${id}`);
-            el.classList.remove('reel-spinning');
-            el.innerHTML = `<div class="reel-strip">${this.symbols[symbolIdx]}</div>`;
-            SFX.play('click');
-        },
-
-        evaluate(r1, r2, r3, bet) {
-            if (r1 === r2 && r2 === r3) {
-                // Jackpot 3 match
-                const win = bet * 10;
-                GameEngine.updateBalance(win);
-                SFX.play('win');
-                UI.toast(`JACKPOT! +${win}`, 'success');
-            } else if (r1 === r2 || r2 === r3 || r1 === r3) {
-                // 2 match
-                const win = Math.floor(bet * 1.5);
-                GameEngine.updateBalance(win);
-                UI.toast(`Mini Win! +${win}`, 'success');
-            } else {
-                UI.toast('No Match.', 'info');
-            }
-        }
-    },
-
-    // --- SHARED GAME UTILS ---
-    updateBalance(amount) {
-        if (!STORE.user) return;
-        const newPts = (STORE.profile.points || 0) + amount;
-
-        // Optimistic Update
-        STORE.profile.points = newPts;
-        UI.updateProfileUI();
-
-        // DB Update
-        update(ref(db, 'users/' + STORE.user.uid), { points: newPts });
-
-        // Stats
-        if (amount > 0) {
-            update(ref(db, 'users/' + STORE.user.uid + '/stats'), {
-                totalWins: (STORE.profile.stats?.totalWins || 0) + 1
+                setTimeout(() => {
+                    const result = this.symbols[Math.floor(Math.random() * this.symbols.length)];
+                    this.reels[idx] = result;
+                    el.classList.remove('blur-spin');
+                    el.innerHTML = `<div class="reel-symbol text-6xl">${result.icon}</div>`;
+                    AudioFX.sfx.click();
+                }, 1000 + (idx * 500));
             });
+
+            setTimeout(() => {
+                this.checkWin(bet);
+                this.spinning = false;
+            }, 2600);
+        },
+
+        checkWin(bet) {
+            const [r1, r2, r3] = this.reels;
+            let win = 0;
+
+            if (r1.id === r2.id && r2.id === r3.id) {
+                win = bet * r1.val;
+                UI.toast(`JACKPOT! ${r1.icon} x3 (+${win})`, 'success');
+                AudioFX.sfx.win();
+            } else if (r1.id === r2.id || r2.id === r3.id || r1.id === r3.id) {
+                // Pair
+                win = Math.floor(bet * 1.5);
+                UI.toast('İkili Eşleşme! (+' + win + ')');
+            }
+
+            if (win > 0) GameEngine.tx(win);
         }
     },
 
-    launch(gameId) {
-        const stage = document.getElementById('game-stage');
-        const title = document.getElementById('gs-game-name');
+    Roulette: {
+        currentBet: {},
+        spinning: false,
+        history: [],
 
-        document.querySelectorAll('.game-template').forEach(t => t.classList.add('hidden'));
+        addBet(spot, amount) {
+            if (this.currentBet[spot]) this.currentBet[spot] += amount;
+            else this.currentBet[spot] = amount;
+            UI.toast(`Bahis: ${spot} +${amount}`);
+        },
 
-        if (gameId === 'mines') {
-            document.getElementById('template-mines').classList.remove('hidden');
-            title.innerHTML = 'MINESWEEPER';
-            this.mines.renderGrid(); // Initial Render
-        } else if (gameId === 'slots') {
-            document.getElementById('template-slots').classList.remove('hidden');
-            title.innerText = 'SLOTS';
+        spin() {
+            if (this.spinning) return;
+            // Logic similar to slots but updates wheel rotation
+            // ...
+        }
+    },
+
+    // Core Transaction Handler
+    tx(amount) {
+        const uid = Store.get('user').uid;
+        const p = Store.get('profile');
+        const updates = {
+            points: p.points + amount,
+            'stats/games': (p.stats.games || 0) + 1
+        };
+
+        if (amount > 0) {
+            updates['stats/wins'] = (p.stats.wins || 0) + 1;
+            if (amount > (p.stats.maxWin || 0)) updates['stats/maxWin'] = amount;
+
+            // Add Experience
+            updates.xp = (p.xp || 0) + Math.floor(amount / 10);
+            if (updates.xp >= (p.level * CONFIG.GAME.LEVEL_XP_BASE)) {
+                updates.level = (p.level || 1) + 1;
+                UI.toast(`SEVİYE ATLADIN! LVL ${updates.level}`, 'success');
+            }
         } else {
-            return UI.toast('Game Module Not Loaded', 'error');
+            updates['stats/losses'] = (p.stats.losses || 0) + 1;
         }
 
-        stage.classList.remove('hidden');
-        STORE.game_session.active = true;
-        STORE.game_session.game_id = gameId;
-    },
-
-    close() {
-        if (this.mines.active) {
-            if (!confirm("Abandon Game? Wager will be lost.")) return;
-            this.mines.active = false;
-        }
-        document.getElementById('game-stage').classList.add('hidden');
-        STORE.game_session.active = false;
-    },
-
-    quickPlay() {
-        const games = ['mines', 'slots'];
-        const rnd = games[Math.floor(Math.random() * games.length)];
-        this.launch(rnd);
+        update(ref(db, `users/${uid}`), updates);
     }
 };
 
-// ------------------------------------------------------------------------------
-// 11. ADMIN SYSTEM
-// ------------------------------------------------------------------------------
-const AdminSystem = {
-    broadcast() {
-        const msg = document.getElementById('adm-msg').value;
-        if (!msg) return;
+const Chat = {
+    init() {
+        this.listen();
 
-        // Push to System Channel
+        document.getElementById('chat-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.send();
+        });
+    },
+
+    listen() {
+        const q = query(ref(db, 'chats/global'), limitToLast(50));
+        onValue(q, (snap) => {
+            const container = document.getElementById('chat-feed');
+            if (!container) return;
+            container.innerHTML = '';
+
+            snap.forEach(child => {
+                this.renderMessage(child.val(), container);
+            });
+            container.scrollTop = container.scrollHeight;
+        });
+    },
+
+    send() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Command Processor
+        if (text.startsWith('/')) {
+            this.processCommand(text);
+            input.value = '';
+            return;
+        }
+
+        const p = Store.get('profile');
         push(ref(db, 'chats/global'), {
-            uid: 'system',
-            username: 'SYSTEM',
-            role: 'founder',
-            text: `[BROADCAST] ${msg}`,
-            timestamp: serverTimestamp(),
-            type: 'system',
-            avatar: 'https://placehold.co/100/red/fff?text=SYS'
+            uid: p.uid,
+            name: p.username,
+            msg: text,
+            role: p.role,
+            ts: serverTimestamp()
         });
 
-        document.getElementById('adm-msg').value = '';
-        UI.toast('Broadcast Sent', 'success');
+        input.value = '';
     },
 
-    banTarget() {
-        const target = document.getElementById('adm-target-id').value;
-        if (!target) return;
-        // In a real app we'd query by email or username first, 
-        // here assuming ID is known or we implement lookup.
-        update(ref(db, 'users/' + target), { isBanned: true });
-        UI.toast(`User ${target} banned.`, 'success');
+    renderMessage(data, container) {
+        const isMe = Store.get('user')?.uid === data.uid;
+        const div = document.createElement('div');
+        div.className = `chat-msg ${isMe ? 'mine' : 'other'} fade-in`;
+
+        // Define role badges
+        let badge = '';
+        if (data.role === 'founder') badge = '<span class="badge badge-warning text-[10px] ml-2">KURUCU</span>';
+        else if (data.role === 'admin') badge = '<span class="badge badge-danger text-[10px] ml-2">YÖNETİCİ</span>';
+
+        div.innerHTML = `
+            <div class="msg-content">
+                <div class="msg-header text-xs text-gray-400 mb-1 flex items-center">
+                    <span class="font-bold cursor-pointer hover:text-primary transition">${data.name}</span>
+                    ${badge}
+                </div>
+                <div class="msg-text break-words">${this.escapeHtml(data.msg)}</div>
+            </div>
+        `;
+        container.appendChild(div);
     },
 
-    nukeChat() {
-        // Founder Only
-        if (STORE.profile.role !== CONSTANTS.ROLES.FOUNDER) return;
-        set(ref(db, 'chats/global'), {});
-        UI.toast('Global communication frequencies cleared.', 'error');
+    processCommand(cmd) {
+        const [command, ...args] = cmd.split(' ');
+
+        switch (command.toLowerCase()) {
+            case '/clear':
+                document.getElementById('chat-feed').innerHTML = '';
+                UI.toast('Sohbet temizlendi (Yerel)');
+                break;
+            case '/roll':
+                const max = args[0] || 100;
+                const roll = Math.floor(Math.random() * max) + 1;
+                this.sendSystem(`${Store.get('profile').username} zar attı: ${roll} (1-${max})`);
+                break;
+            case '/give':
+                // Admin Only check would go here in cloud functions
+                break;
+            default:
+                UI.toast('Bilinmeyen komut', 'error');
+        }
     },
 
-    giveAllPoints() {
-        // Founder Only - Danger
-        // In real app, cloud function. Here, we iterate? No, too heavy.
-        // We will just give to current user as demo.
-        GameEngine.updateBalance(10000);
-        UI.toast('Stimulus package deployed (Personal)', 'success');
+    sendSystem(msg) {
+        push(ref(db, 'chats/global'), {
+            uid: 'SYSTEM',
+            name: 'SİSTEM BOTU',
+            msg: msg,
+            role: 'mod',
+            ts: serverTimestamp()
+        });
+    },
+
+    escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 };
 
-// ------------------------------------------------------------------------------
-// 12. INITIALIZATION
-// ------------------------------------------------------------------------------
+const Market = {
+    // Inventory and Shop Logic
+    items: [
+        { id: 'neon_red', name: 'Kızıl Neon', price: 5000, type: 'color' },
+        { id: 'neon_gold', name: 'Altın İsim', price: 50000, type: 'color' },
+        { id: 'xp_boost', name: 'XP Takviyesi', price: 1000, type: 'consumable' }
+    ],
+
+    buy(itemId) {
+        const item = this.items.find(i => i.id === itemId);
+        const p = Store.get('profile');
+
+        if (p.points < item.price) return UI.toast('Yetersiz Bakiye', 'error');
+
+        // Deduct
+        const updates = { points: p.points - item.price };
+        updates[`inventory/${itemId}`] = true;
+
+        update(ref(db, `users/${p.uid}`), updates)
+            .then(() => UI.toast(`${item.name} satın alındı!`))
+            .catch(e => UI.toast(e.message, 'error'));
+    }
+};
+
+const Router = {
+    routes: {
+        'dashboard': 'view-dashboard',
+        'games': 'view-games',
+        'market': 'view-market',
+        'profile': 'view-profile',
+        'chat': 'view-chat',
+        'admin': 'view-admin'
+    },
+
+    go(route) {
+        Store.commit('activeView', route);
+
+        // Hide all views
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+
+        // Show target
+        const target = document.getElementById(this.routes[route]);
+        if (target) {
+            target.classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // Update active nav
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+        const nav = document.querySelector(`[data-link="${route}"]`);
+        if (nav) nav.classList.add('active');
+
+        // Dynamic Header
+        document.getElementById('page-title').innerText = route.toUpperCase();
+
+        AudioFX.sfx.hover();
+    }
+};
+
+// Initialization Block
 document.addEventListener('DOMContentLoaded', () => {
-    // Start Background
-    new ParticleNetwork();
+    console.log(`[SYSTEM] SAHIKALI CORE v${CONFIG.SYSTEM.VERSION} INIT...`);
 
-    // Auth Init
-    AuthManager.init();
+    // Init Modules
+    Auth.init();
+    Chat.init();
 
-    // Chat Init
-    ChatSystem.init();
+    // Particle Engine
+    new ParticleSystem('bg-canvas');
 
-    // Expose Global App Handlers
+    // Attach Globals for HTML interaction
     window.app = {
         router: Router,
-        auth: AuthManager,
-        ui: UI,
-        chat: ChatSystem,
         game: GameEngine,
-        admin: AdminSystem,
-        settings: {
-            save() {
-                UI.toast('Settings Saved (Mock)', 'success');
-                UI.closeModal('modal-settings');
-            }
-        }
+        market: Market,
+        ui: UI,
+        auth: Auth,
+        store: Store
     };
 
-    // Keyboard Shortcuts
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (STORE.game_session.active) GameEngine.close();
-            UI.closeModal('modal-settings');
-        }
-    });
-
-    console.log("%cNEXUS SYSTEM ONLINE", "color:cyan; font-size:20px; font-weight:bold;");
-
-    // Simulate Initial Load Time
+    // Remove Loader
     setTimeout(() => {
-        UI.hideLoader();
-        // If not logged in, modal will auto-show via AuthManager listener
+        document.getElementById('loader').style.opacity = '0';
+        setTimeout(() => document.getElementById('loader').remove(), 500);
     }, 1500);
+
+    // Initial View
+    Router.go('dashboard');
 });
 
-// End of Engine
-// ==============================================================================
+// Admin Panel Logic Stub
+const Admin = {
+    banUser(uid) {
+        update(ref(db, `users/${uid}`), { banned: true });
+        UI.toast(`Kullanıcı ${uid} yasaklandı.`);
+    },
+    broadcast(msg) {
+        Chat.sendSystem(`[DUYURU] ${msg}`);
+    }
+};
+
+window.admin = Admin;
