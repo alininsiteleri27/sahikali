@@ -399,12 +399,16 @@ class ChatManager {
         input.value = ''; // Clear immediately for UX
 
         try {
+            const safeUsername = STATE.userProfile.username || 'Anonim';
+            const safeAvatar = STATE.userProfile.avatar || 'avatar1.png';
+            const safeRole = STATE.userProfile.role || 'member';
+
             if (type === 'global') {
                 await addDoc(collection(db, "global_chat"), {
                     uid: STATE.currentUser.uid,
-                    username: STATE.userProfile.username,
-                    avatar: STATE.userProfile.avatar,
-                    role: STATE.userProfile.role,
+                    username: safeUsername,
+                    avatar: safeAvatar,
+                    role: safeRole,
                     text: text,
                     timestamp: serverTimestamp()
                 });
