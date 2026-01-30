@@ -487,6 +487,31 @@
             </div>
             <div class="modal-body">
                 <div class="settings-group">
+                    <h4>🖼️ Profil Fotoğrafı</h4>
+                    <div class="profile-picture-preview">
+                        <img id="settings-avatar-preview" src="" alt="Avatar" class="avatar-preview">
+                    </div>
+                    <div class="form-group">
+                        <label>Fotoğraf URL</label>
+                        <input type="url" id="settings-avatar-url" class="form-input"
+                            placeholder="https://example.com/avatar.jpg">
+                        <small class="text-muted">Profil fotoğrafı URL'si girin veya aşağıdaki seçeneklerden birini
+                            kullanın</small>
+                    </div>
+                    <div class="avatar-options">
+                        <button type="button" class="btn btn-sm btn-accent" onclick="app.profile.useGravatar()">
+                            <i class="ri-user-smile-line"></i> Gravatar Kullan
+                        </button>
+                        <button type="button" class="btn btn-sm btn-accent" onclick="app.profile.useUIAvatar()">
+                            <i class="ri-user-line"></i> İsim Avatar
+                        </button>
+                    </div>
+                    <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateAvatar()">
+                        Fotoğrafı Güncelle
+                    </button>
+                </div>
+
+                <div class="settings-group">
                     <h4>👤 Profil Bilgileri</h4>
                     <div class="form-group">
                         <label>Kullanıcı Adı</label>
