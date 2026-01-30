@@ -2451,3 +2451,30 @@ document.querySelectorAll('.game-modal').forEach(modal => {
         }
     });
 });
+// ========================================
+// DOM READY CHECK
+// ========================================
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeEventListeners);
+} else {
+    initializeEventListeners();
+}
+
+function initializeEventListeners() {
+    console.log('✅ DOM Ready - Event listeners initializing...');
+    
+    // Artık tüm elemanlar hazır, güvenle erişebilirsiniz
+    const adminUserSearch = document.getElementById('adminUserSearch');
+    if (adminUserSearch) {
+        adminUserSearch.addEventListener('input', async (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (!searchTerm) {
+                loadAdminUsers();
+                return;
+            }
+            // ... geri kalan kod
+        });
+    }
+    
+    // Diğer tüm addEventListener'ları buraya taşıyın
+}
