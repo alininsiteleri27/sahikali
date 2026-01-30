@@ -383,11 +383,13 @@ const Router = {
         const nav = document.querySelector(`.nav-link[data-page="${viewId}"]`);
         if (nav) nav.classList.add('active');
 
+
         // Update title
         const titles = {
             'dashboard': 'ANA SAYFA',
             'profile': 'PROFİLİM',
-            'founder': 'FOUNDER PANELİ'
+            'founder': 'FOUNDER PANELİ',
+            'members': 'ÜYELER'
         };
         DOMHelper.setText('page-title-text', titles[viewId] || 'SAHIKALI');
 
@@ -400,6 +402,14 @@ const Router = {
             setTimeout(() => {
                 Founder.loadStats();
                 Founder.loadComplaints();
+                Founder.loadOnlineUsers();
+            }, 100);
+        }
+
+        // Load members if navigating to members page
+        if (viewId === 'members') {
+            setTimeout(() => {
+                Members.loadMembers();
             }, 100);
         }
     }
@@ -448,7 +458,13 @@ const Chat = {
         }) : '';
 
         // Check if message is a game invite
-        if (msg.type === 'invite' && msg.game === 'hockey') {
+        if (msg.type === 'invite' && (msg.game === 'hockey' || msg.game === 'chess')) {
+            const gameInfo = {
+                'hockey': { icon: '🏑', title: 'HAVA HOKEYİ' },
+                'chess': { icon: '♟️', title: 'SATRANÇ' }
+            };
+            const info = gameInfo[msg.game];
+
             div.innerHTML = `
                 <img src="${msg.avatar}" class="msg-avatar" alt="${msg.name}">
                 <div class="msg-content">
@@ -457,7 +473,7 @@ const Chat = {
                         <span class="msg-time">${time}</span>
                     </div>
                     <div class="invite-card">
-                        <span class="invite-title">🏑 HAVA HOKEYİ</span>
+                        <span class="invite-title">${info.icon} ${info.title}</span>
                         <span class="invite-vs">VS</span>
                         <button class="btn-game-join" onclick="app.game.joinGame('${msg.gameId}')">
                             KABUL ET
@@ -1344,6 +1360,239 @@ const Founder = {
         } catch (error) {
             console.error(error);
         }
+    },
+
+    // Load Online Users
+    async loadOnlineUsers() {
+        try {
+            const container = DOMHelper.get('online-users-list');
+            if (!container) return;
+
+            // Get online status
+            const statusSnap = await get(ref(db, 'status'));
+            if (!statusSnap.exists()) {
+                container.innerHTML = '<p class="text-muted">Şu anda çevrimiçi kullanıcı yok.</p>';
+                return;
+            }
+
+            const onlineUserIds = Object.keys(statusSnap.val());
+
+            // Get all users
+            const usersSnap = await get(ref(db, 'users'));
+            if (!usersSnap.exists()) {
+                container.innerHTML = '<p class="text-muted">Kullanıcı bulunamadı.</p>';
+                return;
+            }
+
+            const users = usersSnap.val();
+            const onlineUsers = [];
+
+            // Filter online users
+            for (const uid of onlineUserIds) {
+                if (users[uid]) {
+                    onlineUsers.push({ uid, ...users[uid] });
+                }
+            }
+
+            if (onlineUsers.length === 0) {
+                container.innerHTML = '<p class="text-muted">Şu anda çevrimiçi kullanıcı yok.</p>';
+                return;
+            }
+
+            // Render online users
+            container.innerHTML = onlineUsers.map(user => {
+                const roleText = user.role === 'founder' ? 'Founder' :
+                    user.role === 'admin' ? 'Admin' : 'Üye';
+                const roleClass = user.role === 'founder' ? 'badge-danger' :
+                    user.role === 'admin' ? 'badge-primary' : 'badge-secondary';
+
+                return `
+                    <div class="online-user-item">
+                        <img src="${user.avatar || 'https://ui-avatars.com/api/?name=User&background=666&color=fff'}" 
+                             class="online-user-avatar" alt="${user.username}">
+                        <div class="online-user-info">
+                            <div class="online-user-name">${user.username}</div>
+                            <div class="online-user-email">${user.email}</div>
+                        </div>
+                        <span class="badge ${roleClass}">${roleText}</span>
+                        <span class="online-indicator"></span>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('Online users yükleme hatası:', error);
+            const container = DOMHelper.get('online-users-list');
+            if (container) {
+                container.innerHTML = '<p class="text-muted text-danger">Hata oluştu!</p>';
+            }
+        }
+    }
+};
+
+// ============================================================================
+//    MEMBERS MODULE
+// ============================================================================
+
+const Members = {
+    allMembers: [],
+    filteredMembers: [],
+    onlineUserIds: [],
+    currentFilter: 'all',
+    searchQuery: '',
+
+    async loadMembers() {
+        try {
+            // Get all users
+            const usersSnap = await get(ref(db, 'users'));
+            if (!usersSnap.exists()) {
+                this.renderEmpty('Henüz üye yok.');
+                return;
+            }
+
+            // Get online status
+            const statusSnap = await get(ref(db, 'status'));
+            this.onlineUserIds = statusSnap.exists() ? Object.keys(statusSnap.val()) : [];
+
+            // Convert to array
+            const users = usersSnap.val();
+            this.allMembers = Object.entries(users).map(([uid, data]) => ({
+                uid,
+                ...data,
+                isOnline: this.onlineUserIds.includes(uid)
+            }));
+
+            // Sort by online status, then by role
+            this.allMembers.sort((a, b) => {
+                if (a.isOnline !== b.isOnline) return b.isOnline - a.isOnline;
+                const roleOrder = { founder: 0, admin: 1, member: 2 };
+                return (roleOrder[a.role] || 2) - (roleOrder[b.role] || 2);
+            });
+
+            // Update stats
+            DOMHelper.setText('members-total', this.allMembers.length);
+            DOMHelper.setText('members-online', this.onlineUserIds.length);
+
+            // Apply current filter
+            this.applyFilters();
+
+        } catch (error) {
+            console.error('Üyeler yükleme hatası:', error);
+            this.renderEmpty('Üyeler yüklenirken hata oluştu!');
+        }
+    },
+
+    applyFilters() {
+        let filtered = [...this.allMembers];
+
+        // Apply role filter
+        if (this.currentFilter !== 'all') {
+            if (this.currentFilter === 'online') {
+                filtered = filtered.filter(m => m.isOnline);
+            } else {
+                filtered = filtered.filter(m => m.role === this.currentFilter);
+            }
+        }
+
+        // Apply search filter
+        if (this.searchQuery) {
+            const query = this.searchQuery.toLowerCase();
+            filtered = filtered.filter(m =>
+                m.username.toLowerCase().includes(query) ||
+                m.email.toLowerCase().includes(query)
+            );
+        }
+
+        this.filteredMembers = filtered;
+        DOMHelper.setText('members-showing', filtered.length);
+        this.renderMembersList();
+    },
+
+    searchMembers() {
+        const input = DOMHelper.get('members-search');
+        if (!input) return;
+        this.searchQuery = input.value.trim();
+        this.applyFilters();
+    },
+
+    filterByRole(role) {
+        this.currentFilter = role;
+
+        // Update filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        const activeBtn = document.querySelector(`.filter-btn[data-role="${role}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        this.applyFilters();
+    },
+
+    renderMembersList() {
+        const container = DOMHelper.get('members-grid');
+        if (!container) return;
+
+        if (this.filteredMembers.length === 0) {
+            container.innerHTML = '<p class="text-muted">Üye bulunamadı.</p>';
+            return;
+        }
+
+        container.innerHTML = this.filteredMembers.map(member => {
+            const roleText = member.role === 'founder' ? 'Founder' :
+                member.role === 'admin' ? 'Admin' : 'Üye';
+            const roleClass = member.role === 'founder' ? 'badge-danger' :
+                member.role === 'admin' ? 'badge-primary' : 'badge-secondary';
+            const onlineClass = member.isOnline ? 'member-online' : 'member-offline';
+            const onlineText = member.isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+
+            return `
+                <div class="member-card ${onlineClass}">
+                    <div class="member-card-header">
+                        <img src="${member.avatar || 'https://ui-avatars.com/api/?name=User&background=666&color=fff'}" 
+                             class="member-avatar" alt="${member.username}">
+                        ${member.isOnline ? '<span class="member-online-badge"></span>' : ''}
+                    </div>
+                    <div class="member-card-body">
+                        <h3 class="member-name">${this.escapeHTML(member.username)}</h3>
+                        <p class="member-email">${this.escapeHTML(member.email)}</p>
+                        <div class="member-badges">
+                            <span class="badge ${roleClass}">${roleText}</span>
+                            <span class="badge badge-accent">LVL ${member.level || 1}</span>
+                        </div>
+                        <div class="member-status">
+                            <i class="ri-checkbox-blank-circle-fill ${member.isOnline ? 'text-success' : 'text-muted'}"></i>
+                            ${onlineText}
+                        </div>
+                    </div>
+                    <div class="member-card-footer">
+                        <div class="member-stat">
+                            <i class="ri-chat-3-line"></i>
+                            <span>${member.messageCount || 0} mesaj</span>
+                        </div>
+                        <div class="member-stat">
+                            <i class="ri-star-line"></i>
+                            <span>${member.points || 0} puan</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    renderEmpty(message) {
+        const container = DOMHelper.get('members-grid');
+        if (container) {
+            container.innerHTML = `<p class="text-muted">${message}</p>`;
+        }
+        DOMHelper.setText('members-total', '0');
+        DOMHelper.setText('members-online', '0');
+        DOMHelper.setText('members-showing', '0');
+    },
+
+    escapeHTML(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 };
 
@@ -1411,6 +1660,7 @@ const Game = {
             this.gameId = newGameRef.key;
 
             await set(newGameRef, {
+                gameType: gameType,
                 host: p.uid,
                 hostName: p.username,
                 status: 'waiting',
@@ -1419,6 +1669,11 @@ const Game = {
             });
 
             // Send invite to chat
+            const gameMessages = {
+                'hockey': 'Bir hava hokeyi maçı başlattı!',
+                'chess': 'Bir satranç maçı başlattı!'
+            };
+
             await push(ref(db, 'chats/global'), {
                 uid: p.uid,
                 name: p.username,
@@ -1427,7 +1682,7 @@ const Game = {
                 type: 'invite',
                 game: gameType,
                 gameId: this.gameId,
-                msg: 'Bir hava hokeyi maçı başlattı!'
+                msg: gameMessages[gameType] || 'Bir oyun başlattı!'
             });
 
             // Join as host
@@ -1483,7 +1738,22 @@ const Game = {
         }
     },
 
-    prepareGame(gameId, role) {
+    async prepareGame(gameId, role) {
+        // Check game type first
+        const gameRef = ref(db, `games/${gameId}`);
+        const snap = await get(gameRef);
+
+        if (!snap.exists()) return;
+
+        const gameData = snap.val();
+
+        // If it's a chess game, delegate to Chess module
+        if (gameData.gameType === 'chess') {
+            Chess.prepareGame(gameId, role);
+            return;
+        }
+
+        // Otherwise, it's hockey - continue with existing logic
         this.gameId = gameId;
         this.role = role;
         this.running = true;
@@ -2012,6 +2282,493 @@ const Game = {
 };
 
 // ============================================================================
+//    CHESS GAME
+// ============================================================================
+
+const Chess = {
+    gameId: null,
+    role: null, // 'white' or 'black'
+    playerId: null,
+    board: [],
+    selectedPiece: null,
+    currentTurn: 'white',
+    gameStatus: 'waiting',
+    moveHistory: [],
+    capturedPieces: { white: [], black: [] },
+
+    // Chess pieces Unicode symbols
+    pieces: {
+        white: { king: '♔', queen: '♕', rook: '♖', bishop: '♗', knight: '♘', pawn: '♙' },
+        black: { king: '♚', queen: '♛', rook: '♜', bishop: '♝', knight: '♞', pawn: '♟' }
+    },
+
+    initBoard() {
+        // Initialize 8x8 board
+        this.board = [];
+        for (let row = 0; row < 8; row++) {
+            this.board[row] = [];
+            for (let col = 0; col < 8; col++) {
+                this.board[row][col] = null;
+            }
+        }
+
+        // Place pieces
+        // Black pieces (top)
+        this.board[0] = [
+            { type: 'rook', color: 'black' },
+            { type: 'knight', color: 'black' },
+            { type: 'bishop', color: 'black' },
+            { type: 'queen', color: 'black' },
+            { type: 'king', color: 'black' },
+            { type: 'bishop', color: 'black' },
+            { type: 'knight', color: 'black' },
+            { type: 'rook', color: 'black' }
+        ];
+        for (let col = 0; col < 8; col++) {
+            this.board[1][col] = { type: 'pawn', color: 'black' };
+        }
+
+        // White pieces (bottom)
+        for (let col = 0; col < 8; col++) {
+            this.board[6][col] = { type: 'pawn', color: 'white' };
+        }
+        this.board[7] = [
+            { type: 'rook', color: 'white' },
+            { type: 'knight', color: 'white' },
+            { type: 'bishop', color: 'white' },
+            { type: 'queen', color: 'white' },
+            { type: 'king', color: 'white' },
+            { type: 'bishop', color: 'white' },
+            { type: 'knight', color: 'white' },
+            { type: 'rook', color: 'white' }
+        ];
+    },
+
+    renderBoard() {
+        const boardEl = document.getElementById('chess-board');
+        if (!boardEl) return;
+
+        boardEl.innerHTML = '';
+
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const square = document.createElement('div');
+                square.className = 'chess-square';
+                square.dataset.row = row;
+                square.dataset.col = col;
+
+                // Checkerboard pattern
+                if ((row + col) % 2 === 0) {
+                    square.classList.add('light');
+                } else {
+                    square.classList.add('dark');
+                }
+
+                const piece = this.board[row][col];
+                if (piece) {
+                    const pieceEl = document.createElement('div');
+                    pieceEl.className = `chess-piece ${piece.color}`;
+                    pieceEl.textContent = this.pieces[piece.color][piece.type];
+                    square.appendChild(pieceEl);
+                }
+
+                square.addEventListener('click', () => this.handleSquareClick(row, col));
+                boardEl.appendChild(square);
+            }
+        }
+    },
+
+    handleSquareClick(row, col) {
+        if (this.gameStatus !== 'playing') return;
+        if (this.currentTurn !== this.role) return;
+
+        const piece = this.board[row][col];
+
+        if (this.selectedPiece) {
+            // Try to move
+            if (this.isValidMove(this.selectedPiece.row, this.selectedPiece.col, row, col)) {
+                this.makeMove(this.selectedPiece.row, this.selectedPiece.col, row, col);
+                this.selectedPiece = null;
+                this.clearHighlights();
+            } else {
+                // Select different piece
+                if (piece && piece.color === this.role) {
+                    this.selectPiece(row, col);
+                } else {
+                    this.selectedPiece = null;
+                    this.clearHighlights();
+                }
+            }
+        } else {
+            // Select piece
+            if (piece && piece.color === this.role) {
+                this.selectPiece(row, col);
+            }
+        }
+    },
+
+    selectPiece(row, col) {
+        this.selectedPiece = { row, col };
+        this.clearHighlights();
+
+        const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (square) square.classList.add('selected');
+
+        // Highlight valid moves
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (this.isValidMove(row, col, r, c)) {
+                    const targetSquare = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (targetSquare) targetSquare.classList.add('valid-move');
+                }
+            }
+        }
+    },
+
+    clearHighlights() {
+        document.querySelectorAll('.chess-square').forEach(sq => {
+            sq.classList.remove('selected', 'valid-move');
+        });
+    },
+
+    isValidMove(fromRow, fromCol, toRow, toCol) {
+        const piece = this.board[fromRow][fromCol];
+        if (!piece) return false;
+
+        const target = this.board[toRow][toCol];
+        if (target && target.color === piece.color) return false;
+
+        const rowDiff = toRow - fromRow;
+        const colDiff = toCol - fromCol;
+
+        switch (piece.type) {
+            case 'pawn':
+                return this.isValidPawnMove(piece, fromRow, fromCol, toRow, toCol, rowDiff, colDiff);
+            case 'rook':
+                return this.isValidRookMove(fromRow, fromCol, toRow, toCol, rowDiff, colDiff);
+            case 'knight':
+                return Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 1 ||
+                    Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 2;
+            case 'bishop':
+                return this.isValidBishopMove(fromRow, fromCol, toRow, toCol, rowDiff, colDiff);
+            case 'queen':
+                return this.isValidRookMove(fromRow, fromCol, toRow, toCol, rowDiff, colDiff) ||
+                    this.isValidBishopMove(fromRow, fromCol, toRow, toCol, rowDiff, colDiff);
+            case 'king':
+                return Math.abs(rowDiff) <= 1 && Math.abs(colDiff) <= 1;
+            default:
+                return false;
+        }
+    },
+
+    isValidPawnMove(piece, fromRow, fromCol, toRow, toCol, rowDiff, colDiff) {
+        const direction = piece.color === 'white' ? -1 : 1;
+        const startRow = piece.color === 'white' ? 6 : 1;
+
+        // Move forward
+        if (colDiff === 0 && !this.board[toRow][toCol]) {
+            if (rowDiff === direction) return true;
+            if (fromRow === startRow && rowDiff === 2 * direction && !this.board[fromRow + direction][fromCol]) return true;
+        }
+
+        // Capture diagonally
+        if (Math.abs(colDiff) === 1 && rowDiff === direction && this.board[toRow][toCol]) {
+            return true;
+        }
+
+        return false;
+    },
+
+    isValidRookMove(fromRow, fromCol, toRow, toCol, rowDiff, colDiff) {
+        if (rowDiff !== 0 && colDiff !== 0) return false;
+        return this.isPathClear(fromRow, fromCol, toRow, toCol);
+    },
+
+    isValidBishopMove(fromRow, fromCol, toRow, toCol, rowDiff, colDiff) {
+        if (Math.abs(rowDiff) !== Math.abs(colDiff)) return false;
+        return this.isPathClear(fromRow, fromCol, toRow, toCol);
+    },
+
+    isPathClear(fromRow, fromCol, toRow, toCol) {
+        const rowStep = toRow > fromRow ? 1 : toRow < fromRow ? -1 : 0;
+        const colStep = toCol > fromCol ? 1 : toCol < fromCol ? -1 : 0;
+
+        let row = fromRow + rowStep;
+        let col = fromCol + colStep;
+
+        while (row !== toRow || col !== toCol) {
+            if (this.board[row][col]) return false;
+            row += rowStep;
+            col += colStep;
+        }
+
+        return true;
+    },
+
+    async makeMove(fromRow, fromCol, toRow, toCol) {
+        const piece = this.board[fromRow][fromCol];
+        const captured = this.board[toRow][toCol];
+
+        // Capture piece
+        if (captured) {
+            this.capturedPieces[this.role].push(captured);
+            this.updateCapturedPieces();
+        }
+
+        // Move piece
+        this.board[toRow][toCol] = piece;
+        this.board[fromRow][fromCol] = null;
+
+        // Record move
+        const move = {
+            from: { row: fromRow, col: fromCol },
+            to: { row: toRow, col: toCol },
+            piece: piece.type,
+            captured: captured ? captured.type : null
+        };
+        this.moveHistory.push(move);
+        this.updateMoveHistory();
+
+        // Switch turn
+        this.currentTurn = this.currentTurn === 'white' ? 'black' : 'white';
+        this.updateTurnIndicator();
+
+        // Sync to Firebase
+        await this.syncGameState();
+
+        // Re-render
+        this.renderBoard();
+
+        // Check for checkmate/stalemate
+        this.checkGameEnd();
+    },
+
+    updateCapturedPieces() {
+        const whiteEl = document.getElementById('captured-white');
+        const blackEl = document.getElementById('captured-black');
+
+        if (whiteEl) {
+            whiteEl.innerHTML = this.capturedPieces.white.map(p =>
+                `<span class="captured-piece">${this.pieces.white[p.type]}</span>`
+            ).join('');
+        }
+
+        if (blackEl) {
+            blackEl.innerHTML = this.capturedPieces.black.map(p =>
+                `<span class="captured-piece">${this.pieces.black[p.type]}</span>`
+            ).join('');
+        }
+    },
+
+    updateMoveHistory() {
+        const listEl = document.getElementById('chess-moves-list');
+        if (!listEl) return;
+
+        if (this.moveHistory.length === 0) {
+            listEl.innerHTML = '<p class="text-muted">Henüz hamle yapılmadı</p>';
+            return;
+        }
+
+        listEl.innerHTML = this.moveHistory.map((move, idx) => {
+            const moveNum = Math.floor(idx / 2) + 1;
+            const notation = this.getMoveNotation(move);
+            return `<div class="move-item">${moveNum}. ${notation}</div>`;
+        }).join('');
+
+        listEl.scrollTop = listEl.scrollHeight;
+    },
+
+    getMoveNotation(move) {
+        const cols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        const from = cols[move.from.col] + (8 - move.from.row);
+        const to = cols[move.to.col] + (8 - move.to.row);
+        const pieceSymbol = move.piece === 'pawn' ? '' : move.piece[0].toUpperCase();
+        const capture = move.captured ? 'x' : '-';
+        return `${pieceSymbol}${from}${capture}${to}`;
+    },
+
+    updateTurnIndicator() {
+        const turnEl = document.getElementById('chess-turn');
+        if (turnEl) {
+            turnEl.textContent = this.currentTurn === 'white' ? 'Beyazın Sırası' : 'Siyahın Sırası';
+            turnEl.className = `turn-indicator ${this.currentTurn}`;
+        }
+    },
+
+    checkGameEnd() {
+        // Simplified check - in real chess, this would check for checkmate/stalemate
+        // For now, just check if king is captured
+        let whiteKing = false;
+        let blackKing = false;
+
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const piece = this.board[row][col];
+                if (piece && piece.type === 'king') {
+                    if (piece.color === 'white') whiteKing = true;
+                    if (piece.color === 'black') blackKing = true;
+                }
+            }
+        }
+
+        if (!whiteKing) {
+            this.endGame('black');
+        } else if (!blackKing) {
+            this.endGame('white');
+        }
+    },
+
+    async endGame(winner) {
+        this.gameStatus = 'ended';
+
+        const resultEl = document.getElementById('chess-result');
+        const overlayEl = document.getElementById('chess-overlay');
+
+        if (resultEl && overlayEl) {
+            const winnerText = winner === 'white' ? 'Beyaz' : 'Siyah';
+            resultEl.innerHTML = `
+                <h2>${winner === this.role ? '🎉 Kazandın!' : '😢 Kaybettin!'}</h2>
+                <p>${winnerText} oyunu kazandı!</p>
+            `;
+            overlayEl.classList.remove('hidden');
+        }
+
+        // Update Firebase
+        await update(ref(db, `games/${this.gameId}`), {
+            status: 'ended',
+            winner: winner
+        });
+    },
+
+    async syncGameState() {
+        if (!this.gameId) return;
+
+        await update(ref(db, `games/${this.gameId}`), {
+            board: this.board,
+            currentTurn: this.currentTurn,
+            moveHistory: this.moveHistory,
+            capturedPieces: this.capturedPieces
+        });
+    },
+
+    prepareGame(gameId, role) {
+        this.gameId = gameId;
+        this.role = role;
+        this.playerId = Store.get('profile').uid;
+        this.gameStatus = 'playing';
+        this.currentTurn = 'white';
+        this.moveHistory = [];
+        this.capturedPieces = { white: [], black: [] };
+
+        // Initialize board
+        this.initBoard();
+
+        // Open modal
+        UI.openModal('chess-modal');
+
+        // Set player info
+        this.updatePlayerInfo();
+
+        // Render board
+        this.renderBoard();
+
+        // Start syncing
+        this.sync();
+    },
+
+    async updatePlayerInfo() {
+        const gameRef = ref(db, `games/${this.gameId}`);
+        const snap = await get(gameRef);
+
+        if (!snap.exists()) return;
+
+        const data = snap.val();
+
+        // Get user profiles
+        const hostSnap = await get(ref(db, `users/${data.host}`));
+        const clientSnap = data.client ? await get(ref(db, `users/${data.client}`)) : null;
+
+        const hostData = hostSnap.val();
+        const clientData = clientSnap ? clientSnap.val() : null;
+
+        // White is always host, black is client
+        document.getElementById('chess-white-name').textContent = hostData?.username || 'Oyuncu 1';
+        document.getElementById('chess-black-name').textContent = clientData?.username || 'Bekleniyor...';
+
+        if (hostData?.avatar) {
+            document.getElementById('chess-white-avatar').src = hostData.avatar;
+        }
+        if (clientData?.avatar) {
+            document.getElementById('chess-black-avatar').src = clientData.avatar;
+        }
+    },
+
+    sync() {
+        if (!this.gameId) return;
+
+        const gameRef = ref(db, `games/${this.gameId}`);
+
+        onValue(gameRef, (snap) => {
+            const data = snap.val();
+            if (!data) return;
+
+            // Update game state from Firebase
+            if (data.board) {
+                this.board = data.board;
+                this.renderBoard();
+            }
+
+            if (data.currentTurn) {
+                this.currentTurn = data.currentTurn;
+                this.updateTurnIndicator();
+            }
+
+            if (data.moveHistory) {
+                this.moveHistory = data.moveHistory;
+                this.updateMoveHistory();
+            }
+
+            if (data.capturedPieces) {
+                this.capturedPieces = data.capturedPieces;
+                this.updateCapturedPieces();
+            }
+
+            if (data.status === 'ended' && data.winner) {
+                this.endGame(data.winner);
+            }
+
+            this.updatePlayerInfo();
+        });
+    },
+
+    async quitGame() {
+        if (this.gameId) {
+            await set(ref(db, `games/${this.gameId}`), null);
+        }
+
+        this.gameId = null;
+        this.gameStatus = 'waiting';
+        UI.closeModal('chess-modal');
+    },
+
+    async resign() {
+        const confirm = window.confirm('Pes etmek istediğinizden emin misiniz?');
+        if (!confirm) return;
+
+        const winner = this.role === 'white' ? 'black' : 'white';
+        await this.endGame(winner);
+    },
+
+    async offerDraw() {
+        alert('Beraberlik teklifi özelliği yakında eklenecek!');
+    },
+
+    async requestRematch() {
+        alert('Tekrar oynama özelliği yakında eklenecek!');
+    }
+};
+
+// ============================================================================
 //    INITIALIZATION
 // ============================================================================
 
@@ -2023,7 +2780,9 @@ window.app = {
     profile: Profile,
     settings: Settings,
     founder: Founder,
-    game: Game
+    members: Members,
+    game: Game,
+    chess: Chess
 };
 
 document.addEventListener('DOMContentLoaded', () => {
