@@ -200,6 +200,15 @@
         <!-- PROFILE VIEW -->
         <section id="view-profile" class="view-section">
             <div class="profile-container">
+                <div class="profile-actions">
+                    <button class="btn btn-ghost" onclick="app.router.go('dashboard')">
+                        <i class="ri-arrow-left-line"></i> Geri Dön
+                    </button>
+                    <button class="btn btn-primary" onclick="app.ui.openModal('user-settings-modal')">
+                        <i class="ri-settings-4-line"></i> Kullanıcı Ayarları
+                    </button>
+                </div>
+
                 <div class="profile-header">
                     <img src="#" id="profile-avatar" class="profile-avatar" alt="Avatar">
                     <div class="profile-info">
@@ -212,14 +221,46 @@
                     </div>
                 </div>
 
-                <div class="profile-stats">
-                    <div class="profile-stat">
-                        <div class="profile-stat-value" id="profile-messages">0</div>
-                        <div class="profile-stat-label">Mesaj</div>
+                <div class="card">
+                    <h3 class="card-title">📊 İstatistikler</h3>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <i class="ri-chat-3-line stat-icon-sm"></i>
+                            <div class="profile-stat-value" id="profile-messages">0</div>
+                            <div class="profile-stat-label">Mesaj</div>
+                        </div>
+                        <div class="profile-stat">
+                            <i class="ri-calendar-line stat-icon-sm"></i>
+                            <div class="profile-stat-value" id="profile-joined">-</div>
+                            <div class="profile-stat-label">Katılma Tarihi</div>
+                        </div>
+                        <div class="profile-stat">
+                            <i class="ri-time-line stat-icon-sm"></i>
+                            <div class="profile-stat-value" id="profile-last-login">-</div>
+                            <div class="profile-stat-label">Son Giriş</div>
+                        </div>
                     </div>
-                    <div class="profile-stat">
-                        <div class="profile-stat-value" id="profile-joined">-</div>
-                        <div class="profile-stat-label">Katılma</div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">ℹ️ Hesap Bilgileri</h3>
+                    <div class="account-info">
+                        <div class="info-row">
+                            <span class="info-label">Kullanıcı ID:</span>
+                            <span class="info-value" id="profile-uid">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">E-posta:</span>
+                            <span class="info-value" id="profile-email-info">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Rol:</span>
+                            <span class="info-value" id="profile-role-info">Üye</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Hesap Durumu:</span>
+                            <span class="badge badge-success">Aktif</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -227,7 +268,115 @@
 
     </main>
 
+    <!-- FLOATING CHAT BUTTON -->
+    <button class="floating-chat-btn" onclick="app.ui.toggleFloatingChat()" id="floating-chat-btn">
+        <i class="ri-chat-3-line"></i>
+        <span class="chat-badge" id="chat-badge">0</span>
+    </button>
+
+    <!-- FLOATING CHAT WINDOW -->
+    <div class="floating-chat-window" id="floating-chat-window">
+        <div class="floating-chat-header">
+            <h4>💬 Global Chat</h4>
+            <button class="chat-close-btn" onclick="app.ui.toggleFloatingChat()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="floating-chat-messages" id="floating-chat-messages">
+            <!-- Messages will be inserted here -->
+        </div>
+        <form class="floating-chat-input-form" id="floating-chat-form">
+            <input type="text" id="floating-chat-input" class="chat-input" placeholder="Mesaj yaz..." maxlength="500"
+                autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="ri-send-plane-fill"></i>
+            </button>
+        </form>
+    </div>
+
     <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>Giriş Yap / Kayıt Ol</h3>
+            </div>
+            <form id="form-login" class="modal-body">
+                <div class="form-group">
+                    <label>E-posta</label>
+                    <input type="email" id="login-email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Şifre</label>
+                    <input type="password" id="login-pass" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Devam Et</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- USER SETTINGS MODAL -->
+    <div class="modal-overlay" id="user-settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Kullanıcı Ayarları</h3>
+                <button class="modal-close" onclick="app.ui.closeModal('user-settings-modal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <h4>👤 Profil Bilgileri</h4>
+                    <div class="form-group">
+                        <label>Kullanıcı Adı</label>
+                        <input type="text" id="settings-username" class="form-input" placeholder="Yeni kullanıcı adı">
+                        <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateUsername()">
+                            Kullanıcı Adını Güncelle
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h4>📧 E-posta Değişikliği</h4>
+                    <div class="form-group">
+                        <label>Yeni E-posta</label>
+                        <input type="email" id="settings-email" class="form-input" placeholder="yeni@email.com">
+                        <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateEmail()">
+                            E-posta Güncelle
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h4>🔒 Şifre Değişikliği</h4>
+                    <div class="form-group">
+                        <label>Mevcut Şifre</label>
+                        <input type="password" id="settings-current-pass" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Yeni Şifre</label>
+                        <input type="password" id="settings-new-pass" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Yeni Şifre (Tekrar)</label>
+                        <input type="password" id="settings-new-pass-confirm" class="form-input">
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="app.profile.updatePassword()">
+                        Şifreyi Güncelle
+                    </button>
+                </div>
+
+                <div class="settings-group">
+                    <h4>⚠️ Tehlikeli Bölge</h4>
+                    <p class="text-muted">Bu işlemler geri alınamaz!</p>
+                    <button class="btn btn-danger btn-sm" onclick="app.profile.deleteAccount()">
+                        Hesabı Sil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
     <div class="modal-overlay" id="auth-modal">
         <div class="modal-content modal-sm">
             <div class="modal-header">
