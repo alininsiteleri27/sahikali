@@ -337,52 +337,85 @@
 
                 <!-- VIEW: DASHBOARD -->
                 <section id="view-dashboard" class="view active-view">
-                    <!-- Dashboard Grid -->
-                    <div class="dashboard-grid">
-                        <div class="welcome-banner glass-panel fade-in-up">
-                            <div class="banner-text">
-                                <h1>Hoş Geldin, <span id="dash-username">Oyuncu</span>!</h1>
-                                <p>Nexus evrenine dönüşün muhteşem oldu. Günün görevleri seni bekliyor.</p>
-                                <button class="btn btn-primary" onclick="window.router.navigate('games')">Oynamaya
-                                    Başla</button>
+
+                    <!-- 1. Hero / Welcome Section -->
+                    <div class="dashboard-hero glass-panel fade-in-up">
+                        <div class="hero-content">
+                            <h1>Hoş Geldin, <span id="dash-username" class="text-gradient">Oyuncu</span></h1>
+                            <p class="hero-subtitle">Nexus Platformuna tekrar bağlandın. Bugün ne yapmak istersin?</p>
+
+                            <div class="hero-actions">
+                                <button class="btn btn-primary btn-lg pulse-anim"
+                                    onclick="window.router.navigate('games')">
+                                    <span class="btn-icon">🎮</span> Hemen Oyna
+                                </button>
+                                <button class="btn btn-secondary btn-lg" onclick="window.router.navigate('market')">
+                                    <span class="btn-icon">🛒</span> Market
+                                </button>
+                                <button class="btn btn-glass btn-lg" onclick="window.router.navigate('clan')">
+                                    <span class="btn-icon">🛡️</span> Klanım
+                                </button>
                             </div>
-                            <div class="banner-art"></div>
+                        </div>
+                        <div class="hero-decoration">
+                            <div class="floating-orb"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Main Grid Layout -->
+                    <div class="dashboard-main-grid">
+
+                        <!-- Left Column: Stats & Progress -->
+                        <div class="dash-col-left">
+                            <div class="stats-row">
+                                <div class="stat-card-mini glass-panel">
+                                    <div class="stat-icon-box">🏆</div>
+                                    <div>
+                                        <div class="stat-label">Sıralama</div>
+                                        <div class="stat-value" id="dash-rank">#--</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card-mini glass-panel">
+                                    <div class="stat-icon-box">💠</div>
+                                    <div>
+                                        <div class="stat-label">Puan</div>
+                                        <div class="stat-value" id="dash-points">0</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- News / Announcements Widget -->
+                            <div class="glass-panel dash-widget">
+                                <div class="widget-header">
+                                    <h3>📣 Duyurular</h3>
+                                </div>
+                                <div class="widget-body">
+                                    <div class="announcement-item">
+                                        <span class="tag tag-new">YENİ</span>
+                                        <p>Tetris turnuvası bu hafta sonu başlıyor! Büyük ödül 50.000 Nexus Puanı.</p>
+                                    </div>
+                                    <div class="announcement-item">
+                                        <span class="tag tag-update">GÜNCELLEME</span>
+                                        <p>Mayın Tarlası oyunu artık 2 kat daha fazla puan kazandırıyor.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="stats-card glass-panel fade-in-up" style="animation-delay: 0.1s;">
-                            <div class="stat-icon p-blue">🏆</div>
-                            <div class="stat-info">
-                                <h3>Sıralama</h3>
-                                <p id="dash-rank">#--</p>
+                        <!-- Right Column: Live Activity -->
+                        <div class="dash-col-right">
+                            <div class="glass-panel dash-widget full-height">
+                                <div class="widget-header">
+                                    <h3>⚡ Canlı Akış</h3>
+                                    <span class="live-dot"></span>
+                                </div>
+                                <div class="activity-list" id="global-activity-list">
+                                    <!-- Populated by JS -->
+                                    <div class="loading-spinner"></div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="stats-card glass-panel fade-in-up" style="animation-delay: 0.2s;">
-                            <div class="stat-icon p-purple">🎮</div>
-                            <div class="stat-info">
-                                <h3>Oyunlar</h3>
-                                <p id="dash-games-played">0</p>
-                            </div>
-                        </div>
-
-                        <div class="stats-card glass-panel fade-in-up" style="animation-delay: 0.3s;">
-                            <div class="stat-icon p-green">💠</div>
-                            <div class="stat-info">
-                                <h3>Puan</h3>
-                                <p id="dash-points">0</p>
-                            </div>
-                        </div>
-
-                        <!-- Recent Activity / News Feed -->
-                        <div class="news-feed glass-panel fade-in-up large-widget">
-                            <div class="panel-header">
-                                <h3>Topluluk Aktivitesi</h3>
-                            </div>
-                            <div class="activity-list" id="global-activity-list">
-                                <!-- Dynamic JS Injection -->
-                                <div class="empty-state">Henüz aktivite yok.</div>
-                            </div>
-                        </div>
                     </div>
                 </section>
 
