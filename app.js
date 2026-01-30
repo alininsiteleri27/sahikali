@@ -1611,14 +1611,9 @@ const Game = {
                 statusText.textContent = 'KAYBETTİN!';
             }
 
-            // Only Host sees Rematch button
-            if (isHost) {
-                DOMHelper.get('game-rematch-btn').classList.remove('hidden');
-                DOMHelper.get('game-rematch-btn').textContent = 'Tekrar Oyna';
-            } else {
-                DOMHelper.get('game-rematch-btn').classList.add('hidden');
-                statusText.textContent += ' (Host Bekleniyor)';
-            }
+            // NO REMATCH - One time game
+            DOMHelper.get('game-rematch-btn').classList.add('hidden');
+
         } else if (status === 'aborted') {
             overlay.classList.remove('hidden');
             countdown.textContent = '❌';
@@ -1702,8 +1697,12 @@ const Game = {
 
     async sendInput() {
         if (!this.gameId) return;
-        // Optimization: Throttle this in prod
-        // Here we rely on fast firebase writes
+
+        // Optimization: Throttle (20 FPS)
+        const now = Date.now();
+        if (this.lastInputSync && now - this.lastInputSync < 50) return;
+        this.lastInputSync = now;
+
         if (this.role === 'host') {
             update(ref(db, `games/${this.gameId}/state/p1`), { x: this.state.p1.x, y: this.state.p1.y });
         } else {
@@ -1756,11 +1755,14 @@ const Game = {
             this.checkPaddleCollision(p1, puck);
             this.checkPaddleCollision(p2, puck);
 
-            // Sync Puck state to Firebase (every frame is too much, doing it anyway for smooth local dev)
-            // In Cloud: update(ref, {state: this.state})
-            // Using throttling inside sendInput or separate loop is better
-            // For now, we update puck only on host loop end
-            update(ref(db, `games/${this.gameId}/state/puck`), this.state.puck);
+            // Sync Puck state to Firebase (Throttled)
+            const now = Date.now();
+            if (!this.lastPuckSync || now - this.lastPuckSync > 50) { // 20 updates per second
+                update(ref(db, `games/${this.gameId}/state/puck`), this.state.puck);
+                // Also sync P1 position regularly just in case
+                update(ref(db, `games/${this.gameId}/state/p1`), { x: this.state.p1.x, y: this.state.p1.y });
+                this.lastPuckSync = now;
+            }
         }
     },
 
