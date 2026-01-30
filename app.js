@@ -322,7 +322,6 @@ const Router = {
         // Update title
         const titles = {
             'dashboard': 'ANA SAYFA',
-            'chat': 'SOHBET',
             'profile': 'PROFİLİM'
         };
         DOMHelper.setText('page-title-text', titles[viewId] || 'SAHIKALI');
@@ -337,15 +336,7 @@ const Chat = {
     init() {
         this.listen();
 
-        const form = DOMHelper.get('chat-form');
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.send();
-            });
-        }
-
-        // Floating chat form
+        // Floating chat form only
         const floatingForm = DOMHelper.get('floating-chat-form');
         if (floatingForm) {
             floatingForm.addEventListener('submit', (e) => {
@@ -358,17 +349,7 @@ const Chat = {
     listen() {
         const q = query(ref(db, 'chats/global'), limitToLast(50));
         onValue(q, (snap) => {
-            // Main chat container
-            const container = DOMHelper.get('chat-messages');
-            if (container) {
-                container.innerHTML = '';
-                snap.forEach(child => {
-                    this.renderMessage(child.val(), container);
-                });
-                container.scrollTop = container.scrollHeight;
-            }
-
-            // Floating chat container
+            // Floating chat container only
             const floatingContainer = DOMHelper.get('floating-chat-messages');
             if (floatingContainer) {
                 floatingContainer.innerHTML = '';
@@ -401,31 +382,6 @@ const Chat = {
             </div>
         `;
         container.appendChild(div);
-    },
-
-    send() {
-        const input = DOMHelper.get('chat-msg-input');
-        if (!input) return;
-        const text = input.value.trim();
-        if (!text) return;
-
-        const p = Store.get('profile');
-        if (!p) return;
-
-        push(ref(db, 'chats/global'), {
-            uid: p.uid,
-            name: p.username,
-            msg: text,
-            avatar: p.avatar,
-            ts: serverTimestamp()
-        });
-
-        // Update message count
-        update(ref(db, `users/${p.uid}`), {
-            messageCount: (p.messageCount || 0) + 1
-        });
-
-        input.value = '';
     },
 
     sendFloating() {
@@ -617,6 +573,102 @@ const Profile = {
 };
 
 // ============================================================================
+//    SETTINGS & THEMES
+// ============================================================================
+
+const Settings = {
+    currentTheme: 'dark-cyber',
+
+    init() {
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark-cyber';
+        this.changeTheme(savedTheme);
+    },
+
+    changeTheme(themeName) {
+        // Remove all theme checks
+        document.querySelectorAll('.theme-check').forEach(check => {
+            check.classList.remove('active');
+        });
+
+        // Add active check to selected theme
+        const check = document.getElementById(`check-${themeName}`);
+        if (check) check.classList.add('active');
+
+        // Apply theme to HTML element
+        document.documentElement.setAttribute('data-theme', themeName);
+
+        // Save theme preference
+        localStorage.setItem('theme', themeName);
+        this.currentTheme = themeName;
+
+        console.log(`✨ Tema değiştirildi: ${themeName}`);
+    },
+
+    async sendComplaint() {
+        const typeSelect = DOMHelper.get('complaint-type');
+        const messageInput = DOMHelper.get('complaint-message');
+
+        if (!typeSelect || !messageInput) return;
+
+        const type = typeSelect.value;
+        const message = messageInput.value.trim();
+
+        if (!message) {
+            alert('Lütfen mesajınızı yazın!');
+            return;
+        }
+
+        const user = Store.get('user');
+        const profile = Store.get('profile');
+
+        if (!user || !profile) {
+            alert('Şikayet göndermek için giriş yapmalısınız!');
+            return;
+        }
+
+        try {
+            // Get type label
+            const typeLabels = {
+                'bug': '🐛 Hata Bildirimi',
+                'suggestion': '💡 Öneri',
+                'complaint': '⚠️ Şikayet',
+                'other': '📝 Diğer'
+            };
+
+            // Send complaint to database
+            const complaintData = {
+                type: type,
+                typeLabel: typeLabels[type],
+                message: message,
+                from: {
+                    uid: user.uid,
+                    username: profile.username,
+                    email: profile.email
+                },
+                timestamp: serverTimestamp(),
+                status: 'pending',
+                read: false
+            };
+
+            await push(ref(db, 'complaints'), complaintData);
+
+            alert('✅ Mesajınız başarıyla gönderildi! Kurucumuz en kısa sürede inceleyecektir.');
+
+            // Clear form
+            messageInput.value = '';
+            typeSelect.value = 'bug';
+
+            // Close modal
+            UI.closeModal('settings-modal');
+        } catch (error) {
+            console.error('Şikayet gönderme hatası:', error);
+            alert('❌ Mesaj gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+    }
+};
+
+// ============================================================================
 //    INITIALIZATION
 // ============================================================================
 
@@ -625,7 +677,8 @@ window.app = {
     ui: UI,
     router: Router,
     chat: Chat,
-    profile: Profile
+    profile: Profile,
+    settings: Settings
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -639,6 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 
     // Initialize
+    Settings.init();  // Initialize theme first
     Auth.init();
     Chat.init();
 
