@@ -104,15 +104,10 @@
                 <span>Ayarlar</span>
             </a>
 
-            <div class="nav-divider"></div>
-
-            <a href="#" class="nav-link text-danger" onclick="app.auth.logout()">
-                <i class="ri-logout-box-line"></i>
-                <span>Çıkış Yap</span>
-            </a>
+            <!-- Logout link removed from sidebar nav -->
         </nav>
 
-        <!-- USER CARD (Removed as requested, moved logout to nav) -->
+        <!-- USER CARD (Removed) -->
     </aside>
     </aside>
 
@@ -431,6 +426,12 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- LOGOUT BUTTON (Moved here as requested) -->
+                <button class="btn btn-danger w-full mt-4" style="padding: 1rem; border-radius: 0.75rem;"
+                    onclick="app.auth.logout()">
+                    <i class="ri-logout-box-line" style="margin-right: 0.5rem;"></i> Çıkış Yap
+                </button>
             </div>
         </section>
 
@@ -943,7 +944,74 @@
                 </div>
             </div>
         </div>
+        </div>
+        </div>
 
+        <!-- FLOATING CHAT -->
+        <button class="floating-chat-btn" onclick="app.ui.toggleFloatingChat()">
+            <i class="ri-message-2-line"></i>
+            <div class="chat-badge" id="chat-badge" style="display: none;">0</div>
+        </button>
+
+        <div class="floating-chat-window" id="floating-chat-window">
+            <!-- Header -->
+            <div class="floating-chat-header">
+                <div class="chat-tabs">
+                    <button class="chat-tab active" onclick="app.chat.switchTab('global')" id="tab-global">
+                        Genel
+                    </button>
+                    <button class="chat-tab" onclick="app.chat.switchTab('dm')" id="tab-dm">
+                        Mesajlar <span class="tab-badge hidden" id="dm-total-badge">0</span>
+                    </button>
+                </div>
+                <button class="chat-close-btn" onclick="app.ui.toggleFloatingChat()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+
+            <!-- Global Chat Section -->
+            <div class="chat-section active" id="section-global">
+                <div class="floating-chat-messages" id="floating-chat-messages">
+                    <!-- Messages will be loaded here -->
+                    <p class="text-muted text-center p-3">Sohbete bağlanılıyor...</p>
+                </div>
+                <form class="floating-chat-input-form" id="floating-chat-form">
+                    <input type="text" class="chat-input" placeholder="Mesaj yaz..." maxlength="200" required>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="ri-send-plane-fill"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- DM Section -->
+            <div class="chat-section" id="section-dm">
+                <!-- DM List View -->
+                <div class="dm-view" id="dm-list-view">
+                    <div class="dm-list" id="dm-list">
+                        <!-- DM List Items -->
+                    </div>
+                </div>
+
+                <!-- Active DM Chat View -->
+                <div class="dm-view hidden" id="dm-chat-view">
+                    <div class="dm-header">
+                        <button class="btn-icon" onclick="app.chat.closeDM()">
+                            <i class="ri-arrow-left-line"></i>
+                        </button>
+                        <span class="font-bold flex-1 text-center" id="dm-chat-username">Kullanıcı</span>
+                    </div>
+                    <div class="floating-chat-messages" id="dm-messages">
+                        <!-- DM Messages -->
+                    </div>
+                    <form class="floating-chat-input-form" id="dm-chat-form">
+                        <input type="text" class="chat-input" placeholder="Mesaj yaz..." maxlength="200" required>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="ri-send-plane-fill"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
         <script type="module" src="app.js"></script>
 </body>
 
