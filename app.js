@@ -1185,29 +1185,42 @@ class DataSystem {
     async loadLeaderboard() {
         const table = document.getElementById('leaderboard-body');
         table.innerHTML = '<tr><td colspan="4">Yükleniyor...</td></tr>';
+        try {
+            // Client-side sorting fallback to avoid "Index not defined" error
+            const snapshot = await get(ref(window.db, 'users'));
+            if (snapshot.exists()) {
+                const users = [];
+                snapshot.forEach(childSnap => {
+                    users.push(childSnap.val());
+                });
 
-        const q = query(ref(window.db, 'users'), orderByChild('points'), limitToLast(10));
-        const snapshot = await get(q);
+                // Sort by points descending
+                users.sort((a, b) => (b.points || 0) - (a.points || 0));
 
-        if (snapshot.exists()) {
-            const users = [];
-            snapshot.forEach(child => {
-                users.push(child.val());
-            });
-            users.reverse(); // Highest first
-
-            table.innerHTML = '';
-            users.forEach((u, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>#${index + 1}</td>
-                    <td><div style="display:flex;align-items:center;gap:10px"><img src="${u.avatar}" style="width:24px;border-radius:50%">${u.username}</div></td>
-                    <td>${u.stats?.gamesWon || 0}</td>
-                    <td>${u.points} 💠</td>
-                `;
-                table.appendChild(tr);
-            });
+                // Take top 100
+                this.renderLeaderboard(users.slice(0, 100));
+            } else {
+                this.renderLeaderboard([]);
+            }
+        } catch (error) {
+            console.error("Leaderboard Error:", error);
+            window.nexusUI.showToast("Sıralama yüklenemedi", 'error');
         }
+    }
+
+    renderLeaderboard(users) {
+        const table = document.getElementById('leaderboard-body');
+        table.innerHTML = '';
+        users.forEach((u, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${index + 1}</td>
+                <td><div style="display:flex;align-items:center;gap:10px"><img src="${u.avatar}" style="width:24px;border-radius:50%">${u.username}</div></td>
+                <td>${u.stats?.gamesWon || 0}</td>
+                <td>${u.points} 💠</td>
+            `;
+            table.appendChild(tr);
+        });
     }
 }
 
@@ -1245,6 +1258,8 @@ class MinesweeperGame {
 
         // Setup Grid
         this.gridEl = document.getElementById('mines-grid');
+        document.getElementById('mines-start-btn').onclick = () => this.startGame();
+        document.getElementById('mines-cashout-btn').onclick = () => this.cashOut();
     }
 
     startGame() {
@@ -1828,8 +1843,20 @@ window.clanSystem = new ClanSystem();
 window.musicSystem = new MusicSystem();
 
 // Hook Tetris Lanch
-const originalLaunch = window.gameSystem.launch;
+const originalLaunch = window.gameSystem ? window.gameSystem.launch : null;
+
+// Ensure Safe Launch
 window.gameSystem.launch = function (id) {
+    console.log("Launching Game:", id);
+
+    // Safety check for instances
+    if (id === 'mines' && !window.gameSystem.instances.mines) {
+        window.gameSystem.instances.mines = new MinesweeperGame(window.gameSystem);
+    }
+    if (id === 'tetris' && !window.gameSystem.instances.tetris) {
+        window.gameSystem.instances.tetris = new TetrisGame(window.gameSystem);
+    }
+
     if (id === 'tetris') {
         // Custom Launch Logic
         document.getElementById('game-overlay-container').classList.remove('hidden');
@@ -1838,28 +1865,24 @@ window.gameSystem.launch = function (id) {
         document.getElementById('game-stage-tetris').classList.remove('hidden');
         STATE.activeGame = 'tetris';
     } else {
-        // Call Original
-        // We need to re-bind 'this' if not using arrow function context properly or just use the instance
-        // But since we overwrote the instance method on prototype... simpler:
-        // We actually overwrote the instance method on the *object* in memory
-        // Better way:
-    }
-    // Re-implementing switch logic for cleanliness in this context as 'super' call is tricky in monkey-patch
-    if (id !== 'tetris') {
-        // Standard Launch (Copy from Module 5)
+        // Standard Launch
         document.getElementById('game-overlay-container').classList.remove('hidden');
         document.getElementById('game-overlay-container').style.display = 'flex';
+        // Hide all stages first
         document.querySelectorAll('.game-stage').forEach(el => el.classList.add('hidden'));
+
         const stage = document.getElementById(`game-stage-${id}`);
         if (stage) stage.classList.remove('hidden');
+        else console.error("Stage ID not found:", id);
 
         STATE.activeGame = id;
 
-        if (id === 'chess') window.gameSystem.instances.chess.start();
-        else if (id === '2048') window.gameSystem.instances.g2048.start();
-        else if (id === 'wheel') window.gameSystem.instances.wheel.draw();
-        else if (id === 'rps') window.gameSystem.instances.rps.reset();
-        else if (id === 'mines') window.gameSystem.instances.mines.startGame();
+        // Init specific logic
+        if (id === 'chess' && window.gameSystem.instances.chess) window.gameSystem.instances.chess.start();
+        else if (id === '2048' && window.gameSystem.instances.g2048) window.gameSystem.instances.g2048.start();
+        else if (id === 'wheel' && window.gameSystem.instances.wheel) window.gameSystem.instances.wheel.draw();
+        else if (id === 'rps' && window.gameSystem.instances.rps) window.gameSystem.instances.rps.reset();
+        else if (id === 'mines' && window.gameSystem.instances.mines) window.gameSystem.instances.mines.startGame();
     }
 };
 
