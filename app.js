@@ -1358,6 +1358,7 @@ const Game = {
     role: null, // 'host' or 'client'
     playerId: null,
     running: false,
+    countdownRunning: false,
     width: 400,
     height: 600,
     // Physics State
@@ -1485,6 +1486,7 @@ const Game = {
         this.gameId = gameId;
         this.role = role;
         this.running = true;
+        this.countdownRunning = false;
         this.playerId = Store.get('profile').uid;
 
         // Reset state
@@ -1521,18 +1523,24 @@ const Game = {
             DOMHelper.setText('game-p1-name', data.hostName);
             DOMHelper.setText('game-p2-name', data.clientName || 'Bekleniyor...');
 
+            // Get status from root level (more reliable)
+            const currentStatus = data.status || 'waiting';
+
             // Sync State
             if (data.state) {
                 // Determine which parts to sync based on role
                 // Client syncs everything from host except their own paddle
                 if (this.role === 'client') {
-                    this.state.puck = data.state.puck;
-                    this.state.p1 = data.state.p1;
+                    this.state.puck = data.state.puck || this.state.puck;
+                    this.state.p1 = data.state.p1 || this.state.p1;
                     // Dont overwrite local p2 input immediately to avoid jitter, 
                     // process physics on host
-                    this.state.p1.score = data.state.p1.score;
-                    this.state.p2.score = data.state.p2.score;
-                    this.state.status = data.state.status;
+                    if (data.state.p1) {
+                        this.state.p1.score = data.state.p1.score || 0;
+                    }
+                    if (data.state.p2) {
+                        this.state.p2.score = data.state.p2.score || 0;
+                    }
                 } else {
                     // Host syncs Client paddle
                     if (data.state.p2) {
@@ -1540,10 +1548,13 @@ const Game = {
                         this.state.p2.y = data.state.p2.y;
                     }
                 }
-
-                // Update UI based on status
-                this.updateUI(data.status);
             }
+
+            // Always sync status to local state
+            this.state.status = currentStatus;
+
+            // Update UI based on status
+            this.updateUI(currentStatus);
         });
     },
 
@@ -1586,6 +1597,10 @@ const Game = {
     },
 
     runCountdownAnim() {
+        // Prevent multiple countdowns
+        if (this.countdownRunning) return;
+        this.countdownRunning = true;
+
         const countdown = DOMHelper.get('game-countdown');
         let count = 3;
         countdown.textContent = count;
@@ -1595,9 +1610,18 @@ const Game = {
             if (count <= 0) {
                 clearInterval(int);
                 countdown.textContent = 'GO!';
-                if (this.role === 'host') {
-                    update(ref(db, `games/${this.gameId}/state`), { status: 'playing' });
-                }
+
+                // Start game after showing GO! for 500ms
+                setTimeout(() => {
+                    if (this.role === 'host') {
+                        // Update both status locations
+                        update(ref(db, `games/${this.gameId}`), {
+                            status: 'playing',
+                            'state/status': 'playing'
+                        });
+                    }
+                    this.countdownRunning = false;
+                }, 500);
             } else {
                 countdown.textContent = count;
             }
