@@ -4,512 +4,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Arena - Gerçek Zamanlı Topluluk & Oyun Platformu</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>NEXUVERSE - Ultimate Gaming Platform</title>
+    <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap"
         rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body data-theme="dark">
+<body>
 
-    <div id="splash-screen" class="active">
-        <div class="splash-content">
-            <div class="logo-animation">
-                <div class="hexagon-wrapper">
-                    <div class="hexagon"></div>
+    <!-- VIDEO BACKGROUND FX -->
+    <div class="bg-fx">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- GLOBAL NOTIFICATION CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- LOADING SCREEN -->
+    <div id="loader-screen">
+        <div class="loader-content">
+            <div class="spinner-box">
+                <div class="configure-border-1">
+                    <div class="configure-core"></div>
                 </div>
-                <div class="logo-text">NEXUS</div>
+                <div class="configure-border-2">
+                    <div class="configure-core"></div>
+                </div>
             </div>
-            <div class="loading-bar">
-                <div class="progress"></div>
-            </div>
-            <p class="loading-text">Sistemler Başlatılıyor...</p>
+            <h2 class="neon-text-pulse">NEXUVERSE</h2>
+            <p>Sistem Yükleniyor...</p>
         </div>
     </div>
 
-    <!-- Giriş Modal -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content auth-modal">
-            <div class="auth-container">
-                <div class="auth-left">
-                    <div class="auth-welcome">
-                        <h1>Nexus Arena'ya Hoş Geldiniz</h1>
-                        <p>Gerçek zamanlı oyunlar, canlı sohbet ve rekabetçi turnuvalar için en iyi platform.</p>
-                        <div class="auth-features">
-                            <div class="feature-item">
-                                <i class="fas fa-gamepad"></i>
-                                <span>Çoklu Oyun Modları</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-trophy"></i>
-                                <span>Liderlik Tabloları</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-comments"></i>
-                                <span>Canlı Sohbet</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="auth-right">
-                    <div class="auth-box">
-                        <h2>Giriş Yap</h2>
-                        <p class="auth-subtitle">Hesabınıza erişmek için giriş yapın</p>
-
-                        <div class="auth-tabs">
-                            <button class="auth-tab active" data-tab="login">Giriş</button>
-                            <button class="auth-tab" data-tab="register">Kayıt Ol</button>
-                        </div>
-
-                        <!-- Login Form -->
-                        <form id="login-form" class="auth-form active">
-                            <div class="form-group">
-                                <label for="login-email">E-posta</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-envelope"></i>
-                                    <input type="email" id="login-email" placeholder="ornek@email.com" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="login-password">Şifre</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-lock"></i>
-                                    <input type="password" id="login-password" placeholder="••••••••" required>
-                                    <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
-                                </div>
-                                <a href="#" class="forgot-password">Şifremi unuttum?</a>
-                            </div>
-                            <button type="submit" class="auth-submit">Giriş Yap</button>
-                        </form>
-
-                        <!-- Register Form -->
-                        <form id="register-form" class="auth-form">
-                            <div class="form-group">
-                                <label for="register-username">Kullanıcı Adı</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-user"></i>
-                                    <input type="text" id="register-username" placeholder="Kullanıcı adı" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-email">E-posta</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-envelope"></i>
-                                    <input type="email" id="register-email" placeholder="ornek@email.com" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-password">Şifre</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-lock"></i>
-                                    <input type="password" id="register-password" placeholder="En az 8 karakter"
-                                        required>
-                                    <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-password-confirm">Şifre Tekrar</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-lock"></i>
-                                    <input type="password" id="register-password-confirm"
-                                        placeholder="Şifrenizi doğrulayın" required>
-                                </div>
-                            </div>
-                            <div class="form-check">
-                                <input type="checkbox" id="terms-agreement" required>
-                                <label for="terms-agreement"><a href="#">Kullanım Koşulları</a>'nı kabul
-                                    ediyorum</label>
-                            </div>
-                            <button type="submit" class="auth-submit">Hesap Oluştur</button>
-                        </form>
-
-                        <div class="auth-separator">
-                            <span>veya şununla devam et</span>
-                        </div>
-
-                        <div class="social-login">
-                            <button type="button" class="btn-social google">
-                                <i class="fab fa-google"></i>
-                            </button>
-                            <button type="button" class="btn-social github">
-                                <i class="fab fa-github"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button class="modal-close"><i class="fas fa-times"></i></button>
-        </div>
-    </div>
-
-    <!-- App Container -->
-    <div id="app-container" style="display: none;">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <div class="logo-icon"><i class="fas fa-cube"></i></div>
-                    <span>NEXUS</span>
-                </div>
+    <!-- AUTHENTICATION VIEW (LOGIN/REGISTER) -->
+    <section id="auth-view" class="active-view">
+        <div class="auth-container glass-panel">
+            <div class="auth-header">
+                <h1>NEXUVERSE</h1>
+                <p>Geleceğin Topluluğuna Hoş Geldin</p>
             </div>
 
-            <div class="user-profile">
-                <div class="avatar-wrapper" id="user-avatar">
-                    <img src="https://ui-avatars.com/api/?name=Guest&background=7c3aed&color=fff" alt="User"
-                        class="avatar-img">
-                    <span class="avatar-status offline"></span>
-                </div>
-                <div class="user-info">
-                    <span class="user-name" id="username-display">Misafir</span>
-                    <span class="user-rank rank-member" id="user-rank">Üye</span>
-                </div>
-                <i class="fas fa-chevron-down dropdown-icon"></i>
-
-                <div class="profile-dropdown">
-                    <div class="dropdown-item" data-action="profile">
-                        <i class="fas fa-user-circle"></i> Profil
-                    </div>
-                    <div class="dropdown-item" data-action="settings">
-                        <i class="fas fa-cog"></i> Ayarlar
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <div class="dropdown-item logout-btn" data-action="logout">
-                        <i class="fas fa-sign-out-alt"></i> Çıkış Yap
-                    </div>
-                </div>
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login-form">Giriş Yap</button>
+                <button class="tab-btn" data-tab="register-form">Kayıt Ol</button>
             </div>
 
-            <ul class="nav-links">
-                <li class="nav-item active" data-page="dashboard">
-                    <a href="#">
-                        <i class="fas fa-home"></i>
-                        <span>Ana Sayfa</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-page="games">
-                    <a href="#">
-                        <i class="fas fa-gamepad"></i>
-                        <span>Oyunlar</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-page="chat">
-                    <a href="#">
-                        <i class="fas fa-comments"></i>
-                        <span>Sohbet</span>
-                        <span class="notification-indicator" style="display: none;">0</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-page="leaderboard">
-                    <a href="#">
-                        <i class="fas fa-trophy"></i>
-                        <span>Liderlik</span>
-                    </a>
-                </li>
-                <li class="nav-item" data-page="market">
-                    <a href="#">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Market</span>
-                    </a>
-                </li>
-            </ul>
-
-            <div class="sidebar-footer">
-                <div class="stat-card mini">
-                    <div class="stat-icon coins"><i class="fas fa-coins"></i></div>
-                    <div class="stat-value" id="stat-coins">0</div>
+            <!-- LOGIN FORM -->
+            <form id="login-form" class="auth-form active-form">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="login-email" placeholder="E-Posta Adresi" required autocomplete="off">
+                    <span class="input-border"></span>
                 </div>
-                <button id="theme-toggle" class="btn-icon">
-                    <i class="fas fa-moon"></i>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="login-password" placeholder="Şifre" required>
+                    <span class="input-border"></span>
+                </div>
+                <button type="submit" class="neon-btn primary-btn">
+                    <span>SİSTEME GİRİŞ</span>
+                    <i class="fas fa-arrow-right"></i>
                 </button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="register-form" class="auth-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="reg-username" placeholder="Kullanıcı Adı (Nick)" required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="reg-email" placeholder="E-Posta Adresi" required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="reg-password" placeholder="Şifre (Min 6 Karakter)" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-robot"></i>
+                    <select id="reg-avatar">
+                        <option value="avatar1.png">Cyber Punk 1</option>
+                        <option value="avatar2.png">Neon Ninja</option>
+                        <option value="avatar3.png">Tech Goddess</option>
+                        <option value="avatar4.png">Retro King</option>
+                    </select>
+                </div>
+                <button type="submit" class="neon-btn secondary-btn">
+                    <span>HESAP OLUŞTUR</span>
+                    <i class="fas fa-user-plus"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- MAIN APP INTERFACE (DASHBOARD) -->
+    <section id="app-view" class="hidden">
+
+        <!-- TOP NAVIGATION -->
+        <nav class="top-nav glass-panel">
+            <div class="nav-left">
+                <div class="brand-logo">NEXU<span class="highlight">VERSE</span></div>
+                <div class="user-status-pill">
+                    <div class="status-dot online"></div>
+                    <span id="global-online-count">1 Online</span>
+                </div>
+            </div>
+
+            <div class="nav-right">
+                <div class="currency-display" title="NexuCoin">
+                    <i class="fas fa-coins text-gold"></i>
+                    <span id="user-balance">0</span> NC
+                </div>
+                <div class="user-profile-menu">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Profile" id="nav-user-avatar">
+                    <span id="nav-user-name">Yükleniyor...</span>
+                    <span id="nav-user-role" class="role-badge member">ÜYE</span>
+                    <button id="logout-btn" class="icon-btn"><i class="fas fa-power-off"></i></button>
+                </div>
             </div>
         </nav>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="top-bar">
-                <div class="page-title">
-                    <i class="fas fa-home"></i> Ana Sayfa
-                </div>
-                <div class="top-actions">
-                    <div class="online-status">
-                        <span class="status-dot"></span>
-                        <span class="online-count">0 çevrimiçi</span>
-                    </div>
-                    <button id="fullscreen-toggle" class="btn-icon">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button id="notification-bell" class="btn-icon">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-count" style="display: none;">0</span>
-                    </button>
-                </div>
-            </header>
+        <div class="main-grid">
 
-            <div id="content-area">
-                <!-- Dashboard Page -->
-                <div id="dashboard-page" class="page active">
-                    <div class="welcome-banner">
-                        <div class="banner-content">
-                            <h1>Tekrar Hoş Geldin, <span id="welcome-username">Misafir</span>!</h1>
-                            <p>Bugün oynamak için harika bir gün. Turnuvalara katıl ve ödülleri topla.</p>
-                            <button class="btn-primary btn-game-play" onclick="launchGame('random')">Hemen Oyna</button>
-                        </div>
-                        <div class="banner-image">
-                            <!-- Hero image via CSS -->
-                        </div>
-                    </div>
+            <!-- LEFT SIDEBAR: MENU & GAMES -->
+            <aside class="sidebar-left glass-panel">
+                <div class="menu-section">
+                    <h3>ANA MENÜ</h3>
+                    <ul class="nav-links">
+                        <li class="active" data-page="dashboard"><i class="fas fa-home"></i> <span>Genel Bakış</span>
+                        </li>
+                        <li data-page="leaderboard"><i class="fas fa-trophy"></i> <span>Liderlik Tablosu</span></li>
+                        <li data-page="market"><i class="fas fa-shopping-cart"></i> <span>Market & Ekonomi</span></li>
+                        <li data-page="admin" id="admin-link" class="hidden"><i
+                                class="fas fa-shield-alt text-danger"></i> <span>Yönetim Paneli</span></li>
+                    </ul>
+                </div>
 
-                    <div class="stats-overview">
-                        <div class="stat-card">
-                            <div class="stat-icon coins"><i class="fas fa-coins"></i></div>
-                            <div class="stat-info">
-                                <h3>Jetonlar</h3>
-                                <p id="stat-coins-main">0</p>
+                <div class="menu-section">
+                    <h3>OYUN MERKEZİ</h3>
+                    <ul class="game-links">
+                        <li onclick="app.gameManager.launch('chess')"><i class="fas fa-chess"></i> <span>Satranç</span>
+                        </li>
+                        <li onclick="app.gameManager.launch('2048')"><i class="fas fa-th"></i> <span>2048</span></li>
+                        <li onclick="app.gameManager.launch('wheel')"><i class="fas fa-dharmachakra"></i>
+                            <span>Çarkıfelek</span></li>
+                        <li onclick="app.gameManager.launch('rps')"><i class="fas fa-hand-rock"></i> <span>Taş Kağıt
+                                Makas</span></li>
+                        <li onclick="app.gameManager.launch('coin')"><i class="fas fa-coins"></i> <span>Yazı Tura</span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- CENTER: DYNAMIC CONTENT AREA -->
+            <main id="main-content" class="content-area">
+
+                <!-- DEFAULT DASHBOARD CONTENT -->
+                <div id="page-dashboard" class="page-section active">
+                    <div class="hero-card glass-panel animated-entry">
+                        <h2>Hoş Geldin, <span id="hero-username">Gezgin</span>!</h2>
+                        <p>Nexuverse evreninde bugün ne yapmak istersin? Düellolar seni bekliyor.</p>
+                        <div class="hero-stats">
+                            <div class="stat-box">
+                                <i class="fas fa-bolt text-primary"></i>
+                                <h3>Kazanma Oranı</h3>
+                                <span>%0</span>
                             </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon wins"><i class="fas fa-trophy"></i></div>
-                            <div class="stat-info">
-                                <h3>Galibiyetler</h3>
-                                <p id="stat-wins">0</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon rank"><i class="fas fa-chart-line"></i></div>
-                            <div class="stat-info">
+                            <div class="stat-box">
+                                <i class="fas fa-medal text-gold"></i>
                                 <h3>Sıralama</h3>
-                                <p id="stat-rank">#999</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon streak"><i class="fas fa-fire"></i></div>
-                            <div class="stat-info">
-                                <h3>Seri</h3>
-                                <p id="stat-streak">0</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h2 class="section-title">Popüler Oyunlar</h2>
-                    <div class="games-grid">
-                        <div class="game-card" data-game="chess">
-                            <div class="game-image chess-bg">
-                                <i class="fas fa-chess-king"></i>
-                            </div>
-                            <div class="game-info">
-                                <h3>Satranç</h3>
-                                <p>Strateji ve zeka oyunu</p>
-                                <button class="btn-play btn-game-play">Oyna</button>
-                            </div>
-                        </div>
-                        <div class="game-card" data-game="2048">
-                            <div class="game-image puzzle-bg">
-                                <i class="fas fa-th-large"></i>
-                            </div>
-                            <div class="game-info">
-                                <h3>2048</h3>
-                                <p>Sayıları birleştir</p>
-                                <button class="btn-play btn-game-play">Oyna</button>
-                            </div>
-                        </div>
-                        <div class="game-card" data-game="rps">
-                            <div class="game-image rps-bg">
-                                <i class="fas fa-hand-scissors"></i>
-                            </div>
-                            <div class="game-info">
-                                <h3>Taş Kağıt Makas</h3>
-                                <p>Klasik şans oyunu</p>
-                                <button class="btn-play btn-game-play">Oyna</button>
-                            </div>
-                        </div>
-                        <div class="game-card" data-game="coin">
-                            <div class="game-image coin-bg">
-                                <i class="fas fa-donate"></i>
-                            </div>
-                            <div class="game-info">
-                                <h3>Yazı Tura</h3>
-                                <p>Hızlı şans testi</p>
-                                <button class="btn-play btn-game-play">Oyna</button>
-                            </div>
-                        </div>
-                        <div class="game-card" data-game="wheel">
-                            <div class="game-image wheel-bg">
-                                <i class="fas fa-chart-pie"></i>
-                            </div>
-                            <div class="game-info">
-                                <h3>Çarkıfelek</h3>
-                                <p>Günlük ödülleri topla</p>
-                                <button class="btn-play btn-game-play">Oyna</button>
+                                <span>#---</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Games Page -->
-                <div id="games-page" class="page">
-                    <h2 class="section-title">Tüm Oyunlar</h2>
-                    <!-- Oyunlar grid'i buraya dinamik veya statik olarak eklenebilir -->
-                    <div class="games-grid" id="all-games-grid">
-                        <!-- JS ile doldurulacak veya dashboard kopyası -->
+                <!-- GAME CONTAINER MOUNT POINT -->
+                <div id="game-container" class="page-section hidden">
+                    <div class="game-header">
+                        <button onclick="app.ui.navigate('dashboard')" class="back-btn"><i
+                                class="fas fa-arrow-left"></i> Çıkış</button>
+                        <h2 id="active-game-title">Oyun</h2>
+                    </div>
+                    <div id="game-canvas-area" class="glass-panel">
+                        <!-- Oyun Kanvası buraya dinamik yüklenecek -->
+                        <div class="placeholder-text">Oyun Yükleniyor...</div>
                     </div>
                 </div>
 
-                <!-- Chat Page -->
-                <div id="chat-page" class="page">
-                    <div class="chat-container">
-                        <div class="chat-sidebar">
-                            <div class="chat-header">
-                                <h3>Sohbet Odaları</h3>
-                            </div>
-                            <ul class="chat-rooms" id="chat-rooms-list">
-                                <li class="chat-room active" data-room="general">
-                                    <i class="fas fa-hashtag"></i> Genel Sohbet
-                                </li>
-                                <li class="chat-room" data-room="games">
-                                    <i class="fas fa-gamepad"></i> Oyun Odası
-                                </li>
-                                <li class="chat-room" data-room="support">
-                                    <i class="fas fa-headset"></i> Destek
-                                </li>
-                            </ul>
-                            <div class="online-users-panel">
-                                <h4>Çevrimiçi (<span class="online-count-mini">0</span>)</h4>
-                                <div class="online-users-list">
-                                    <!-- Kullanıcılar -->
-                                </div>
-                            </div>
+                <!-- ADMIN PANEL -->
+                <div id="page-admin" class="page-section hidden">
+                    <div class="admin-dashboard glass-panel">
+                        <h2><i class="fas fa-user-shield"></i> SİSTEM YÖNETİMİ</h2>
+                        <div class="admin-tabs">
+                            <button class="active">Kullanıcılar</button>
+                            <button>Sohbet Logları</button>
+                            <button>Sistem Ayarları</button>
                         </div>
-                        <div class="chat-main">
-                            <div class="chat-messages" id="chat-messages">
-                                <div class="message system">
-                                    <p>Sohbet odasına hoş geldiniz!</p>
-                                </div>
-                            </div>
-                            <div class="chat-input-area">
-                                <input type="text" id="chat-input" placeholder="Bir mesaj yaz...">
-                                <button id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
-                            </div>
+                        <div id="admin-content-area">
+                            <!-- JS ile doldurulacak -->
                         </div>
                     </div>
                 </div>
 
-                <!-- Leaderboard Page -->
-                <div id="leaderboard-page" class="page">
-                    <div class="leaderboard-container">
-                        <div class="leaderboard-header">
-                            <h2>Liderlik Tablosu</h2>
-                            <div class="leaderboard-filters">
-                                <button class="leaderboard-filter active" data-filter="all">Genel</button>
-                                <button class="leaderboard-filter" data-filter="wins">Galibiyet</button>
-                                <button class="leaderboard-filter" data-filter="coins">Zenginlik</button>
-                                <button class="leaderboard-filter" data-filter="streak">Seri</button>
-                            </div>
-                        </div>
-                        <table class="leaderboard-table">
-                            <thead>
-                                <tr>
-                                    <th>Sıra</th>
-                                    <th>Oyuncu</th>
-                                    <th>Puan/Değer</th>
-                                    <th>Rütbe</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaderboard-body">
-                                <!-- JS ile doldurulacak -->
-                            </tbody>
-                        </table>
-                        <div class="pagination">
-                            <button id="leaderboard-prev"><i class="fas fa-chevron-left"></i></button>
-                            <span id="leaderboard-page-num">1</span>
-                            <button id="leaderboard-next"><i class="fas fa-chevron-right"></i></button>
-                        </div>
+            </main>
+
+            <!-- RIGHT SIDEBAR: CHAT & SOCIAL -->
+            <aside class="sidebar-right glass-panel">
+
+                <!-- CHAT TABS -->
+                <div class="chat-tabs">
+                    <button class="chat-tab active" data-target="global-chat">GENEL</button>
+                    <button class="chat-tab" data-target="dm-list">DM <span id="dm-badge"
+                            class="badge hidden">0</span></button>
+                </div>
+
+                <!-- GLOBAL CHAT SECTION -->
+                <div id="global-chat" class="chat-section active">
+                    <div class="chat-messages" id="global-messages">
+                        <!-- Mesajlar buraya gelecek -->
+                        <div class="system-message">Sohbete bağlandı...</div>
+                    </div>
+                    <form id="global-chat-form" class="chat-input-area">
+                        <input type="text" id="global-input" placeholder="Mesaj yaz..." autocomplete="off">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+
+                <!-- DM SECTION (LIST OF CONVERSATIONS) -->
+                <div id="dm-list" class="chat-section hidden">
+                    <button class="new-dm-btn">+ Yeni Mesaj</button>
+                    <div id="dm-conversations-container">
+                        <!-- DM Listesi buraya -->
                     </div>
                 </div>
 
-                <!-- Market Page -->
-                <div id="market-page" class="page">
-                    <div class="market-container">
-                        <h2>Market</h2>
-                        <p>Çok yakında! Kazandığınız jetonlarla özel eşyalar alın.</p>
-                        <i class="fas fa-store fa-5x" style="opacity: 0.2; margin-top: 2rem;"></i>
+                <!-- DM ACTIVE CONVERSATION (Hidden default) -->
+                <div id="dm-active-view" class="hidden">
+                    <div class="dm-header">
+                        <button id="back-to-dm-list"><i class="fas fa-arrow-left"></i></button>
+                        <span id="dm-recipient-name">Kullanıcı</span>
                     </div>
+                    <div class="chat-messages" id="dm-messages"></div>
+                    <form id="dm-chat-form" class="chat-input-area">
+                        <input type="text" id="dm-input" placeholder="Özel mesaj..." autocomplete="off">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
                 </div>
 
-                <!-- Profile Page -->
-                <div id="profile-page" class="page">
-                    <div class="profile-container">
-                        <h2>Profilim</h2>
-                        <div class="profile-card">
-                            <div class="profile-header">
-                                <div class="profile-avatar-large">
-                                    <img src="" alt="Avatar" id="profile-avatar-img">
-                                </div>
-                                <div class="profile-details">
-                                    <h3 id="profile-username">Kullanıcı</h3>
-                                    <p id="profile-email">email@example.com</p>
-                                    <span class="user-rank" id="profile-rank">Üye</span>
-                                </div>
-                            </div>
-                            <div class="profile-stats">
-                                <!-- Stats here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            </aside>
 
-            </div>
-        </main>
+        </div>
+    </section>
 
-        <!-- Right Sidebar (Social) -->
-        <aside class="sidebar-right">
-            <div class="sidebar-header">
-                <h3>Arkadaşlar</h3>
-                <button id="toggle-chat-sidebar" class="btn-icon small"><i class="fas fa-chevron-right"></i></button>
-            </div>
-
-            <div class="friends-list" id="online-friends-list">
-                <!-- Arkadaşlar buraya -->
-                <div class="empty-state">
-                    <p>Çevrimiçi arkadaş yok</p>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <h3>Aktif Oyunlar</h3>
-                <div class="active-games-list" id="active-games-list">
-                    <!-- Aktif oyunlar -->
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <h3>Son Mesajlar</h3>
-                <div class="chat-preview" id="general-chat-preview">
-                    <!-- Sohbet önizleme -->
-                </div>
-            </div>
-        </aside>
-    </div>
-
-    <!-- Bildirim Modalı -->
-    <div id="notifications-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Bildirimler</h3>
-                <button class="modal-close"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="notifications-list" id="notifications-list">
-                    <!-- Bildirimler -->
-                </div>
-            </div>
+    <!-- MODALS -->
+    <div id="modal-overlay" class="hidden">
+        <div class="modal-content glass-panel" id="generic-modal">
+            <span class="close-modal">&times;</span>
+            <div id="modal-body"></div>
         </div>
     </div>
 
-    <!-- External JavaScript -->
+    <!-- MAIN APP SCRIPT -->
     <script type="module" src="app.js"></script>
 </body>
 
