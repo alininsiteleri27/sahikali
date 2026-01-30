@@ -1950,8 +1950,8 @@ body.modal-open {
     border: 2px solid var(--primary);
     border-radius: 1rem;
     padding: 1rem;
-    width: 95%;
-    max-width: 450px;
+    width: 100%;
+    max-width: 420px;
     box-shadow: 0 0 50px rgba(0, 198, 255, 0.2);
     display: flex;
     flex-direction: column;
@@ -1965,14 +1965,24 @@ body.modal-open {
     align-items: center;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border-color);
+    gap: 0.5rem;
 }
 
 .player-score {
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 600;
+    flex: 1;
+    min-width: 0;
+}
+
+.player-score span:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .player-score .score {
@@ -1990,11 +2000,12 @@ body.modal-open {
 }
 
 .game-timer {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--warning);
     text-align: center;
-    width: 120px;
+    width: auto;
+    flex-shrink: 0;
 }
 
 .canvas-wrapper {
@@ -2027,6 +2038,7 @@ body.modal-open {
     background: rgba(0, 0, 0, 0.7);
     pointer-events: none;
     z-index: 10;
+    padding: 1rem;
 }
 
 .game-overlay.hidden {
@@ -2034,24 +2046,28 @@ body.modal-open {
 }
 
 .countdown {
-    font-size: 5rem;
+    font-size: 3rem;
     font-weight: 900;
     color: #fff;
     text-shadow: 0 0 20px var(--primary);
     animation: pulse 1s infinite;
+    text-align: center;
+    word-wrap: break-word;
+    max-width: 100%;
 }
 
 .game-controls-hint {
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
+    line-height: 1.4;
 }
 
 /* Chat Invite Card */
 .invite-card {
-    background: linear-gradient(135deg, rgba(0, 198, 255, 0.1), rgba(174, 0, 255, 0.1));
-    border: 1px solid var(--primary);
-    border-radius: 0.5rem;
+    background: linear-gradient(135deg, rgba(0, 198, 255, 0.15), rgba(174, 0, 255, 0.15));
+    border: 2px solid var(--primary);
+    border-radius: 0.75rem;
     padding: 1rem;
     margin-top: 0.5rem;
     text-align: center;
@@ -2059,39 +2075,148 @@ body.modal-open {
 
 .invite-title {
     font-weight: 700;
+    font-size: 1.1rem;
     color: var(--primary);
     margin-bottom: 0.5rem;
     display: block;
 }
 
 .invite-vs {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 900;
     color: #fff;
     margin: 0.5rem 0;
     display: block;
+    text-shadow: 0 0 10px var(--primary);
 }
 
 .btn-game-join {
     background: var(--success);
     color: #000;
     border: none;
-    padding: 0.5rem 1.5rem;
+    padding: 0.75rem 2rem;
     border-radius: 2rem;
     font-weight: 700;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s;
+    margin-top: 0.5rem;
 }
 
 .btn-game-join:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 15px var(--success);
+    box-shadow: 0 0 20px var(--success);
 }
 
 /* Re-enable pointer events for buttons in overlay */
-/* Re-enable pointer events for buttons in overlay */
 .game-overlay button {
     pointer-events: auto;
+}
+
+/* VS Button */
+.btn-vs {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 900;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
+    letter-spacing: 1px;
+}
+
+.btn-vs:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5);
+    background: linear-gradient(135deg, #ee5a6f, #ff6b6b);
+}
+
+/* Game Selection Modal */
+.game-select-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.game-select-card {
+    background: var(--bg-surface);
+    border: 2px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.game-select-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 198, 255, 0.3);
+}
+
+.game-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.game-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.game-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Mobile Game Responsiveness */
+@media (max-width: 768px) {
+    .game-container {
+        max-width: 100%;
+        padding: 0.75rem;
+    }
+
+    .game-header {
+        font-size: 0.85rem;
+    }
+
+    .player-score {
+        font-size: 0.65rem;
+    }
+
+    .player-score .score {
+        font-size: 1.2rem;
+    }
+
+    .game-timer {
+        font-size: 0.7rem;
+    }
+
+    .countdown {
+        font-size: 2rem;
+    }
+
+    .game-controls-hint {
+        font-size: 0.7rem;
+    }
+
+    .invite-title {
+        font-size: 0.95rem;
+    }
+
+    .invite-vs {
+        font-size: 1.5rem;
+    }
+
+    .btn-game-join {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
 }
 
 /* ============================================================================
