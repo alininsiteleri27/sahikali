@@ -375,6 +375,24 @@ const UI = {
                 if (m.classList.contains('active')) this.close(id);
                 else this.open(id);
             }
+        },
+        openModal(id) {
+            this.modal.open(id);
+        },
+        closeModal(id) {
+            this.modal.close(id);
+        },
+        toggleSidebar() {
+            const sidebar = DOMHelper.get('app-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-hidden');
+            }
+        },
+        toggleNotif() {
+            const notifPanel = DOMHelper.get('notif-panel');
+            if (notifPanel) {
+                notifPanel.classList.toggle('active');
+            }
         }
     },
 
@@ -387,7 +405,11 @@ const UI = {
         if (!p) return;
 
         DOMHelper.setText('header-balance', this.formatNumber(p.points));
-        DOMHelper.setText('header-lvl', `LVL ${p.level}`);
+        // header-lvl elementi yoksa oluşturma
+        const headerLvl = DOMHelper.get('header-lvl');
+        if (headerLvl) {
+            DOMHelper.setText('header-lvl', `LVL ${p.level}`);
+        }
 
         DOMHelper.setText('sb-username', p.username);
         DOMHelper.setText('sb-level', `LVL ${p.level}`);
@@ -1041,6 +1063,22 @@ const NotificationManager = {
         const uid = Store.get('user')?.uid;
         if (!uid) return;
         update(ref(db, `notifications/${uid}/${id}`), { read: true });
+    },
+
+    markAllRead() {
+        const uid = Store.get('user')?.uid;
+        if (!uid) return;
+
+        const notifRef = ref(db, `notifications/${uid}`);
+        onValue(notifRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const updates = {};
+                snapshot.forEach((child) => {
+                    updates[`${child.key}/read`] = true;
+                });
+                update(notifRef, updates);
+            }
+        }, { onlyOnce: true });
     },
 
     send(userId, type, title, message) {
