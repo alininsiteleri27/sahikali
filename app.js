@@ -1228,5 +1228,672 @@ window.gameSystem.flipCoin = () => {
     }, 100);
 };
 
-console.log("NEXUS Full Systems Loaded.");
+
+/* ==========================================
+   MODULE 8: MINESWEEPER GAME LOGIC
+   ========================================== */
+class MinesweeperGame {
+    constructor(system) {
+        this.system = system;
+        this.bet = 10;
+        this.gridSize = 25; // 5x5
+        this.minesCount = 5;
+        this.minesMap = [];
+        this.revealedCount = 0;
+        this.active = false;
+        this.multiplier = 1.0;
+
+        // Setup Grid
+        this.gridEl = document.getElementById('mines-grid');
+    }
+
+    startGame() {
+        // Economy Check
+        const betInput = document.getElementById('mines-bet');
+        this.bet = parseInt(betInput.value);
+
+        if (STATE.userData.points < this.bet) {
+            this.system.ui.showToast("Yetersiz Bakiye!", 'error');
+            return;
+        }
+
+        // Deduct Bet
+        const newPoints = STATE.userData.points - this.bet;
+        update(ref(window.db, `users/${STATE.currentUser.uid}`), { points: newPoints });
+        document.getElementById('user-points').textContent = newPoints;
+
+        this.active = true;
+        this.revealedCount = 0;
+        this.multiplier = 1.0;
+        this.updateStatus();
+        this.generateGrid();
+
+        this.system.ui.showToast("Mayın Tarlası Başladı! Bol Şans.", 'info');
+    }
+
+    generateGrid() {
+        this.minesMap = Array(this.gridSize).fill(false);
+        // Place Random Mines
+        let placed = 0;
+        while (placed < this.minesCount) {
+            const idx = Math.floor(Math.random() * this.gridSize);
+            if (!this.minesMap[idx]) {
+                this.minesMap[idx] = true;
+                placed++;
+            }
+        }
+
+        this.gridEl.innerHTML = '';
+        for (let i = 0; i < this.gridSize; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'mine-cell';
+            cell.dataset.idx = i;
+            cell.onclick = () => this.clickCell(i, cell);
+            this.gridEl.appendChild(cell);
+        }
+    }
+
+    clickCell(i, cell) {
+        if (!this.active || cell.classList.contains('revealed')) return;
+
+        cell.classList.add('revealed');
+
+        if (this.minesMap[i]) {
+            // BOOM!
+            cell.classList.add('exploded');
+            cell.textContent = '💣';
+            this.gameOver(false);
+        } else {
+            // Safe
+            cell.classList.add('safe');
+            cell.textContent = '💎';
+            this.revealedCount++;
+            this.multiplier *= 1.2; // Increase Logic
+            this.updateStatus();
+            this.system.ui.playSound('click');
+        }
+    }
+
+    cashOut() {
+        if (!this.active) return;
+        if (this.revealedCount === 0) {
+            this.system.ui.showToast("En az bir elmas bulmalısın!", 'warning');
+            return;
+        }
+
+        const winAmount = Math.floor(this.bet * this.multiplier);
+        this.system.rewardPlayer(winAmount, `Mayın Tarlası (x${this.multiplier.toFixed(2)})`);
+        this.gameOver(true);
+    }
+
+    gameOver(win) {
+        this.active = false;
+        // Reveal all
+        const cells = this.gridEl.children;
+        for (let i = 0; i < this.gridSize; i++) {
+            const cell = cells[i];
+            if (this.minesMap[i]) {
+                cell.classList.add('revealed');
+                if (!cell.classList.contains('exploded')) cell.textContent = '💣';
+            }
+        }
+
+        if (!win) {
+            this.system.ui.playSound('error');
+            this.system.ui.showToast("Oyun Bitti! Mayına bastın.", 'error');
+        }
+    }
+
+    updateStatus() {
+        document.getElementById('mines-status').textContent = `Çarpan: x${this.multiplier.toFixed(2)} | Kazanç: ${Math.floor(this.bet * this.multiplier)}`;
+    }
+}
+
+/* ==========================================
+   MODULE 9: MARKET SYSTEM
+   ========================================== */
+class MarketSystem {
+    constructor() {
+        this.items = [
+            { id: 'frame_neon', name: 'Neon Çerçeve', price: 500, icon: '🖼️' },
+            { id: 'color_gold', name: 'Altın İsim', price: 1000, icon: '👑' },
+            { id: 'title_master', name: 'Ünvan: Usta', price: 2000, icon: '🎓' }
+        ];
+        this.init();
+    }
+
+    init() {
+        const grid = document.getElementById('market-items-grid');
+        if (!grid) return;
+
+        this.items.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'market-item';
+            el.innerHTML = `
+                <div class="item-preview">${item.icon}</div>
+                <div class="item-info">
+                    <h4>${item.name}</h4>
+                    <div class="item-price">${item.price} 💠</div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="window.marketSystem.buy('${item.id}', ${item.price})">SATIN AL</button>
+            `;
+            grid.appendChild(el);
+        });
+    }
+
+    async buy(itemId, price) {
+        if (STATE.userData.points < price) {
+            window.nexusUI.showToast("Yetersiz Puan!", 'error');
+            return;
+        }
+
+        // Transaction
+        const updates = {};
+        updates[`users/${STATE.currentUser.uid}/points`] = STATE.userData.points - price;
+        updates[`users/${STATE.currentUser.uid}/inventory/${itemId}`] = true;
+
+        try {
+            await update(ref(window.db), updates);
+            window.nexusUI.showToast("Satın alım başarılı!", 'success');
+            window.nexusUI.playSound('success');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+}
+
+
+/* ==========================================
+   MODULE 11: TETRIS GAME ENGINE (ADVANCED)
+   ========================================== */
+class TetrisGame {
+    constructor(system) {
+        this.system = system;
+        this.grid = []; // 20x10
+        this.score = 0;
+        this.lines = 0;
+        this.level = 1;
+        this.gameOver = false;
+        this.paused = false;
+
+        this.currentPiece = null;
+        this.ghostPiece = null;
+        this.nextPieceType = null;
+
+        this.dropInterval = 1000;
+        this.lastTime = 0;
+        this.animationId = null;
+
+        this.colors = {
+            'I': 'type-I', 'O': 'type-O', 'T': 'type-T',
+            'S': 'type-S', 'Z': 'type-Z', 'J': 'type-J', 'L': 'type-L'
+        };
+
+        this.tetrominoes = {
+            'I': [[1, 1, 1, 1]],
+            'J': [[1, 0, 0], [1, 1, 1]],
+            'L': [[0, 0, 1], [1, 1, 1]],
+            'O': [[1, 1], [1, 1]],
+            'S': [[0, 1, 1], [1, 1, 0]],
+            'T': [[0, 1, 0], [1, 1, 1]],
+            'Z': [[1, 1, 0], [0, 1, 1]]
+        };
+    }
+
+    start() {
+        document.getElementById('tetris-msg-overlay').style.display = 'none';
+        this.reset();
+        this.spawnPiece();
+        this.loop();
+    }
+
+    reset() {
+        // Create Empty Grid
+        this.grid = Array.from({ length: 20 }, () => Array(10).fill(0));
+        this.score = 0;
+        this.lines = 0;
+        this.level = 1;
+        this.gameOver = false;
+        this.updateStats();
+        this.renderGrid();
+    }
+
+    spawnPiece() {
+        const types = 'IJLOSTZ';
+        const type = this.nextPieceType || types[Math.floor(Math.random() * types.length)];
+        this.nextPieceType = types[Math.floor(Math.random() * types.length)];
+
+        this.currentPiece = {
+            matrix: this.tetrominoes[type],
+            pos: { x: 3, y: 0 },
+            type: type
+        };
+
+        // Check Game Over immediately
+        if (this.collide(this.grid, this.currentPiece)) {
+            this.gameOver = true;
+            this.system.ui.showToast("Oyun Bitti! Skor: " + this.score, 'error');
+            document.getElementById('tetris-msg-overlay').style.display = 'flex';
+            document.getElementById('tetris-msg-title').textContent = "OYUN BİTTİ";
+            cancelAnimationFrame(this.animationId);
+        }
+
+        this.renderNext();
+    }
+
+    collide(arena, player) {
+        const [m, o] = [player.matrix, player.pos];
+        for (let y = 0; y < m.length; ++y) {
+            for (let x = 0; x < m[y].length; ++x) {
+                if (m[y][x] !== 0 &&
+                    (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    merge(arena, player) {
+        player.matrix.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value !== 0) {
+                    arena[y + player.pos.y][x + player.pos.x] = player.type;
+                }
+            });
+        });
+    }
+
+    rotate(matrix, dir) {
+        for (let y = 0; y < matrix.length; ++y) {
+            for (let x = 0; x < y; ++x) {
+                [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+            }
+        }
+        if (dir > 0) matrix.forEach(row => row.reverse());
+        else matrix.reverse();
+    }
+
+    playerDrop() {
+        this.currentPiece.pos.y++;
+        if (this.collide(this.grid, this.currentPiece)) {
+            this.currentPiece.pos.y--;
+            this.merge(this.grid, this.currentPiece);
+            this.arenaSweep();
+            this.spawnPiece();
+        }
+        this.lastTime = 0; // Reset Timer
+    }
+
+    playerMove(dir) {
+        this.currentPiece.pos.x += dir;
+        if (this.collide(this.grid, this.currentPiece)) {
+            this.currentPiece.pos.x -= dir;
+        }
+    }
+
+    playerRotate(dir) {
+        const pos = this.currentPiece.pos.x;
+        let offset = 1;
+        this.rotate(this.currentPiece.matrix, dir);
+        while (this.collide(this.grid, this.currentPiece)) {
+            this.currentPiece.pos.x += offset;
+            offset = -(offset + (offset > 0 ? 1 : -1));
+            if (offset > this.currentPiece.matrix[0].length) {
+                this.rotate(this.currentPiece.matrix, -dir);
+                this.currentPiece.pos.x = pos;
+                return;
+            }
+        }
+    }
+
+    arenaSweep() {
+        let rowCount = 0;
+        outer: for (let y = this.grid.length - 1; y > 0; --y) {
+            for (let x = 0; x < this.grid[y].length; ++x) {
+                if (this.grid[y][x] === 0) {
+                    continue outer;
+                }
+            }
+            const row = this.grid.splice(y, 1)[0].fill(0);
+            this.grid.unshift(row);
+            ++y;
+            rowCount++;
+        }
+
+        if (rowCount > 0) {
+            this.score += rowCount * 100 * this.level;
+            this.lines += rowCount;
+            this.level = Math.floor(this.lines / 10) + 1;
+            this.dropInterval = Math.max(100, 1000 - (this.level * 50));
+            this.updateStats();
+            this.system.ui.playSound('success'); // Line clear sound
+        }
+    }
+
+    loop(time = 0) {
+        if (this.paused || this.gameOver || STATE.activeGame !== 'tetris') {
+            cancelAnimationFrame(this.animationId);
+            return;
+        }
+
+        const deltaTime = time - this.lastTime;
+        this.lastTime = time;
+
+        this.dropCounter = (this.dropCounter || 0) + deltaTime;
+        if (this.dropCounter > this.dropInterval) {
+            this.playerDrop();
+            this.dropCounter = 0;
+        }
+
+        this.renderGrid();
+        this.animationId = requestAnimationFrame(this.loop.bind(this));
+    }
+
+    renderGrid() {
+        const container = document.getElementById('tetris-grid');
+        container.innerHTML = ''; // Inefficient but simple for DOM tetris
+
+        // Render Static Grid
+        for (let y = 0; y < 20; y++) {
+            for (let x = 0; x < 10; x++) {
+                const val = this.grid[y][x];
+                this.createCell(x, y, val, container);
+            }
+        }
+
+        // Render Active Piece
+        if (this.currentPiece) {
+            this.currentPiece.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        this.createCell(x + this.currentPiece.pos.x, y + this.currentPiece.pos.y, this.currentPiece.type, container, true);
+                    }
+                });
+            });
+        }
+    }
+
+    createCell(x, y, type, container, isActive = false) {
+        const cell = document.createElement('div');
+        cell.className = 't-cell';
+        cell.style.gridColumnStart = x + 1;
+        cell.style.gridRowStart = y + 1;
+
+        if (type !== 0) {
+            cell.classList.add('filled');
+            cell.classList.add(this.colors[type]);
+        }
+        container.appendChild(cell);
+    }
+
+    renderNext() {
+        // Render Preview
+    }
+
+    updateStats() {
+        document.getElementById('tetris-score').textContent = this.score;
+        document.getElementById('tetris-level').textContent = this.level;
+        document.getElementById('tetris-lines').textContent = this.lines;
+    }
+}
+
+// Key Listener for Tetris
+document.addEventListener('keydown', event => {
+    if (STATE.activeGame !== 'tetris') return;
+    const game = window.gameSystem.instances.tetris;
+    if (!game || game.gameOver) return;
+
+    if (event.key === 'ArrowLeft') game.playerMove(-1);
+    else if (event.key === 'ArrowRight') game.playerMove(1);
+    else if (event.key === 'ArrowDown') game.playerDrop();
+    else if (event.key === 'ArrowUp') game.playerRotate(1);
+});
+
+
+/* ==========================================
+   MODULE 12: CLAN & GUILD SYSTEM
+   ========================================== */
+class ClanSystem {
+    constructor() {
+        // Init
+    }
+
+    async createClan(name, tag) {
+        if (STATE.userData.points < 5000) {
+            window.nexusUI.showToast("Klan kurmak için 5000 Puan gerekli!", 'error');
+            return;
+        }
+
+        const clanId = 'clan_' + Date.now();
+        const clanData = {
+            id: clanId,
+            name: name,
+            tag: tag.toUpperCase(),
+            owner: STATE.currentUser.uid,
+            level: 1,
+            points: 0,
+            members: {
+                [STATE.currentUser.uid]: { role: 'leader', joinedAt: serverTimestamp() }
+            },
+            createdAt: serverTimestamp()
+        };
+
+        // Multi-path update
+        const updates = {};
+        updates[`clans/${clanId}`] = clanData;
+        updates[`users/${STATE.currentUser.uid}/clanId`] = clanId;
+        updates[`users/${STATE.currentUser.uid}/points`] = STATE.userData.points - 5000;
+
+        await update(ref(window.db), updates);
+        window.nexusUI.showToast(` [${tag}] ${name} Klanı Kuruldu!`, 'success');
+        this.openClanModal();
+    }
+
+    async openClanModal() {
+        const modal = document.getElementById('clan-modal');
+        modal.classList.remove('hidden');
+        const body = document.getElementById('clan-modal-body');
+
+        // Check if user has clan
+        if (STATE.userData.clanId) {
+            // Show Clan Dashboard
+            const clanRef = child(ref(window.db), `clans/${STATE.userData.clanId}`);
+            const snap = await get(clanRef);
+            const clan = snap.val();
+
+            body.innerHTML = `
+                <div class="clan-dashboard">
+                    <div class="clan-sidebar">
+                        <div class="clan-banner">
+                            <div class="clan-avatar-large">${clan.tag}</div>
+                            <div class="clan-info-text">
+                                <h1>${clan.name} <span class="clan-level-badge">LVL ${clan.level}</span></h1>
+                            </div>
+                        </div>
+                        <div class="clan-menu-item active">🏠 Genel Bakış</div>
+                        <div class="clan-menu-item">👥 Üyeler (${Object.keys(clan.members).length})</div>
+                        <div class="clan-menu-item">⚔️ Klan Savaşları</div>
+                        <div class="clan-menu-item">🏦 Banka (${clan.points} P)</div>
+                    </div>
+                    <div class="clan-content">
+                        <h3>Klan Duyurusu</h3>
+                        <div class="glass-panel" style="padding:15px; margin-bottom:20px; font-style:italic;">
+                            "${clan.notice || 'Henüz bir duyuru yok.'}"
+                        </div>
+                        <!-- Member List Simulation -->
+                    </div>
+                </div>
+             `;
+        } else {
+            // Show Create / Join
+            body.innerHTML = `
+                <div style="text-align:center; padding: 50px;">
+                    <h2>Bir Klana Ait Değilsin</h2>
+                    <p>Güçlü olmak için birlik olmalısın.</p>
+                    <div style="margin-top:30px; display:flex; gap:20px; justify-content:center;">
+                        <button class="btn btn-primary btn-lg" onclick="document.getElementById('create-clan-form').style.display='block'">Klan Kur (5000 P)</button>
+                        <button class="btn btn-secondary btn-lg">Klan Bul</button>
+                    </div>
+                    
+                    <div id="create-clan-form" style="display:none; margin-top:30px; max-width:400px; margin-left:auto; margin-right:auto;">
+                        <input type="text" id="new-clan-name" placeholder="Klan Adı" class="game-input" style="margin-bottom:10px;">
+                        <input type="text" id="new-clan-tag" placeholder="TAG (3 Harf)" class="game-input" maxlength="3" style="margin-bottom:10px;">
+                        <button class="btn btn-success btn-block" onclick="window.clanSystem.createClan(document.getElementById('new-clan-name').value, document.getElementById('new-clan-tag').value)">ONAYLA VE ÖDE</button>
+                    </div>
+                </div>
+             `;
+        }
+    }
+
+    closeModal() {
+        document.getElementById('clan-modal').classList.add('hidden');
+    }
+}
+
+/* ==========================================
+   MODULE 13: GLOBAL MUSIC PLAYER
+   ========================================== */
+class MusicSystem {
+    constructor() {
+        this.trackList = [
+            { name: "Neon Nights - Synthwave Mix", url: "assets/music/track1.mp3" },
+            { name: "Cyber City - Deep Bass", url: "assets/music/track2.mp3" },
+            { name: "Galactic Voyage - LoFi", url: "assets/music/track3.mp3" }
+        ];
+        this.currentTrackIdx = 0;
+        this.isPlaying = false;
+        // In real app, Audio object would be here
+        // this.audio = new Audio();
+
+        this.ui = {
+            player: document.getElementById('nexus-music-player'),
+            trackName: document.getElementById('music-track-name'),
+            playBtn: document.getElementById('music-play-btn')
+        };
+    }
+
+    toggle() {
+        this.ui.player.classList.toggle('collapsed');
+    }
+
+    playPause() {
+        this.isPlaying = !this.isPlaying;
+        this.ui.playBtn.textContent = this.isPlaying ? '⏸' : '▶';
+        // Mock Play
+        if (this.isPlaying) {
+            window.nexusUI.showToast("Müzik Başlatıldı: " + this.trackList[this.currentTrackIdx].name, 'info');
+            this.startVisualizer();
+        } else {
+            this.stopVisualizer();
+        }
+    }
+
+    next() {
+        this.currentTrackIdx = (this.currentTrackIdx + 1) % this.trackList.length;
+        this.updateTrackInfo();
+    }
+
+    prev() {
+        this.currentTrackIdx = (this.currentTrackIdx - 1 + this.trackList.length) % this.trackList.length;
+        this.updateTrackInfo();
+    }
+
+    updateTrackInfo() {
+        this.ui.trackName.textContent = this.trackList[this.currentTrackIdx].name;
+        if (this.isPlaying) window.nexusUI.showToast("Çalıyor: " + this.trackList[this.currentTrackIdx].name, 'info');
+    }
+
+    startVisualizer() {
+        // Activate CSS Animations on bars
+        document.querySelectorAll('.visualizer .bar').forEach(bar => {
+            bar.style.animationPlayState = 'running';
+        });
+    }
+
+    stopVisualizer() {
+        document.querySelectorAll('.visualizer .bar').forEach(bar => {
+            bar.style.animationPlayState = 'paused';
+        });
+    }
+
+    setVolume(val) {
+        // this.audio.volume = val / 100;
+    }
+}
+
+// Final Hooks and Initialization using window namespace for easy console access
+window.gameSystem.instances.tetris = new TetrisGame(window.gameSystem);
+window.clanSystem = new ClanSystem();
+window.musicSystem = new MusicSystem();
+
+// Hook Tetris Lanch
+const originalLaunch = window.gameSystem.launch;
+window.gameSystem.launch = function (id) {
+    if (id === 'tetris') {
+        // Custom Launch Logic
+        document.getElementById('game-overlay-container').classList.remove('hidden');
+        document.getElementById('game-overlay-container').style.display = 'flex';
+        document.querySelectorAll('.game-stage').forEach(el => el.classList.add('hidden'));
+        document.getElementById('game-stage-tetris').classList.remove('hidden');
+        STATE.activeGame = 'tetris';
+    } else {
+        // Call Original
+        // We need to re-bind 'this' if not using arrow function context properly or just use the instance
+        // But since we overwrote the instance method on prototype... simpler:
+        // We actually overwrote the instance method on the *object* in memory
+        // Better way:
+    }
+    // Re-implementing switch logic for cleanliness in this context as 'super' call is tricky in monkey-patch
+    if (id !== 'tetris') {
+        // Standard Launch (Copy from Module 5)
+        document.getElementById('game-overlay-container').classList.remove('hidden');
+        document.getElementById('game-overlay-container').style.display = 'flex';
+        document.querySelectorAll('.game-stage').forEach(el => el.classList.add('hidden'));
+        const stage = document.getElementById(`game-stage-${id}`);
+        if (stage) stage.classList.remove('hidden');
+
+        STATE.activeGame = id;
+
+        if (id === 'chess') window.gameSystem.instances.chess.start();
+        else if (id === '2048') window.gameSystem.instances.g2048.start();
+        else if (id === 'wheel') window.gameSystem.instances.wheel.draw();
+        else if (id === 'rps') window.gameSystem.instances.rps.reset();
+        else if (id === 'mines') window.gameSystem.instances.mines.startGame();
+    }
+};
+
+/* ==========================================
+   MODULE 14: SOCIAL FEED (DASHBOARD)
+   ========================================== */
+// Inject Feed Logic
+setTimeout(() => {
+    const feed = document.getElementById('global-activity-list');
+    if (feed) {
+        const activities = [
+            { type: 'game', text: "Mehmet satrançta kazandı! (+50P)", time: "2dk önce" },
+            { type: 'clan', text: "[TR] Anadolu Klanı seviye atladı!", time: "5dk önce" },
+            { type: 'market', text: "Ahmet 'Neon Çerçeve' satın aldı.", time: "10dk önce" },
+            { type: 'chat', text: "Sohbet odası rekor kırdı: 154 Online", time: "1sa önce" }
+        ];
+
+        feed.innerHTML = '';
+        activities.forEach(act => {
+            const div = document.createElement('div');
+            div.className = 'activity-item';
+            div.innerHTML = `
+                <div class="user-avatar-sm" style="background:#333; display:flex; align-items:center; justify-content:center;">📢</div>
+                <div>
+                    <div style="font-size:0.9rem; color:#fff;">${act.text}</div>
+                    <div style="font-size:0.7rem; color:#666;">${act.time}</div>
+                </div>
+             `;
+            feed.appendChild(div);
+        });
+    }
+}, 2000);
+
+console.log("NEXUS ULTRA: All Modules Loaded (Tetris, Clans, Music, Feed). Ready.");
+
+
 
