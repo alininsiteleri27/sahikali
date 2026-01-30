@@ -69,150 +69,98 @@ const STATE = {
    ========================================================================== */
 class UIController {
     constructor() {
-        this.loader = document.getElementById('app-loader');
-        this.toastContainer = document.getElementById('toast-container');
-        this.sidebar = document.getElementById('sidebar');
+        this.toastsContainer = document.getElementById('toast-container');
+        this.loader = document.getElementById('global-loader');
         this.audioContext = null;
-        this.sounds = {};
-
-        this.initListeners();
-    }
-
-    initListeners() {
-        // Sidebar Toggle for Mobile
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-
-        [sidebarToggle, mobileMenuBtn].forEach(btn => {
-            if (btn) btn.addEventListener('click', () => {
-                this.sidebar.classList.toggle('open');
-            });
-        });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768 &&
-                !this.sidebar.contains(e.target) &&
-                !mobileMenuBtn.contains(e.target) &&
-                this.sidebar.classList.contains('open')) {
-                this.sidebar.classList.remove('open');
-            }
-        });
     }
 
     // --- Loading Screen Management ---
-    hideLoader() {
-        if (this.loader.classList.contains('active')) {
-            this.loader.style.opacity = '0';
-            setTimeout(() => {
-                this.loader.classList.remove('active');
-                this.loader.style.display = 'none';
-            }, 500);
-        }
+    showLoader() {
+        if (this.loader) this.loader.classList.remove('hidden');
     }
 
-    showLoader(message = "Yükleniyor...") {
-        document.getElementById('loading-text').textContent = message;
-        this.loader.style.display = 'flex';
-        this.loader.style.opacity = '1';
-        this.loader.classList.add('active');
+    hideLoader() {
+        if (this.loader) this.loader.classList.add('hidden');
     }
 
     // --- Toast Notification System ---
-    showToast(message, type = 'info', duration = 4000) {
-        // Types: info, success, error, warning
+    showToast(message, type = 'info') {
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type} fade-in-up`;
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
 
-        let icon = 'ℹ️';
-        if (type === 'success') icon = '✅';
-        if (type === 'error') icon = '🛑';
-        if (type === 'warning') icon = '⚠️';
+        if (this.toastsContainer) this.toastsContainer.appendChild(toast);
 
-        toast.innerHTML = `
-            <div class="toast-content">
-                <span class="toast-icon">${icon}</span>
-                <span class="toast-msg">${message}</span>
-            </div>
-            <div class="toast-progress"></div>
-        `;
+        // Sound Effect
+        if (type === 'error') this.playSound('error');
+        else if (type === 'success') this.playSound('success');
+        else this.playSound('msg');
 
-        // Inject Styles dynamically if not present (Self-contained)
-        if (!document.getElementById('toast-styles')) {
-            const style = document.createElement('style');
-            style.id = 'toast-styles';
-            style.textContent = `
-                .toast-container { position: fixed; top: 20px; right: 20px; z-index: var(--z-toast); display: flex; flex-direction: column; gap: 10px; }
-                .toast { min-width: 300px; padding: 16px; background: rgba(20, 20, 25, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); color: white; position: relative; overflow: hidden; }
-                .toast-success { border-left: 4px solid var(--c-success); }
-                .toast-error { border-left: 4px solid var(--c-error); }
-                .toast-content { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; }
-                .toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: rgba(255,255,255,0.2); width: 100%; animation: toastTimer ${duration}ms linear forwards; }
-                @keyframes toastTimer { from { width: 100%; } to { width: 0%; } }
-            `;
-            document.head.appendChild(style);
-        }
+        // Animation Entrance
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        });
 
-        this.toastContainer.appendChild(toast);
-        this.playSound(type === 'error' ? 'error' : 'notification');
-
+        // Auto remove
         setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateX(50px)';
+            toast.style.transform = 'translateY(20px)';
             setTimeout(() => toast.remove(), 300);
-        }, duration);
+        }, 3000);
     }
 
     // --- Audio System ---
     initAudio() {
-        // Browser requires interaction before playing audio
-        if (!this.audioContext) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.audioContext = new AudioContext();
-            // In a real app, we would load buffers here. For now, we use simulated beeps/synthetic sounds or placeholder logic
+        if (!this.audioContext && (window.AudioContext || window.webkitAudioContext)) {
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.warn("Audio blocked");
+            }
         }
     }
 
     playSound(type) {
         if (!STATE.audioEnabled) return;
-        // Simple synthetic sounds for demo purposes (No external assets required)
-        if (this.audioContext) {
-            // Setup Oscillator
+
+        this.initAudio(); // Try to init if not ready
+
+        if (!this.audioContext) return;
+
+        // Auto-resume logic (browser policy)
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume().catch(() => { });
+        }
+
+        const sounds = {
+            'click': [400, 50, 'sine'],
+            'success': [600, 100, 'square'],
+            'error': [150, 200, 'sawtooth'],
+            'join': [300, 150, 'triangle'],
+            'msg': [800, 50, 'sine']
+        };
+
+        const sound = sounds[type];
+        if (sound) this.playTone(...sound);
+    }
+
+    playTone(freq, duration, type) {
+        try {
             const osc = this.audioContext.createOscillator();
             const gain = this.audioContext.createGain();
+            osc.frequency.value = freq;
+            osc.type = type;
             osc.connect(gain);
             gain.connect(this.audioContext.destination);
-
-            const now = this.audioContext.currentTime;
-
-            if (type === 'click') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.1);
-            } else if (type === 'success') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.linearRampToValueAtTime(600, now + 0.1);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            } else if (type === 'error') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            }
+            osc.start();
+            setTimeout(() => osc.stop(), duration / 1000);
+        } catch (e) {
+            // Ignore
         }
     }
 }
+
 
 /* ==========================================================================
    MODULE 2: AUTHENTICATION MANAGER
@@ -667,6 +615,106 @@ class ChatSystem {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    }
+}
+
+
+/* ==========================================
+   MODULE 2: UI CONTROLLER (Loaders, Toasts, Audio)
+   ========================================== */
+class UIController {
+    constructor() {
+        this.toastsContainer = document.getElementById('toast-container');
+        this.loader = document.getElementById('global-loader');
+        this.audioContext = null;
+    }
+
+    // --- Core UI Methods ---
+
+    showLoader() {
+        if (this.loader) this.loader.classList.remove('hidden');
+    }
+
+    hideLoader() {
+        if (this.loader) this.loader.classList.add('hidden');
+    }
+
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+
+        if (this.toastsContainer) this.toastsContainer.appendChild(toast);
+
+        // Sound Effect
+        if (type === 'error') this.playSound('error');
+        else if (type === 'success') this.playSound('success');
+        else this.playSound('msg');
+
+        // Animation Entrance
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        });
+
+        // Auto remove
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // --- Audio System ---
+
+    // Helper to safely init audio
+    initAudio() {
+        if (!this.audioContext && (window.AudioContext || window.webkitAudioContext)) {
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                // Context blocked
+            }
+        }
+    }
+
+    playSound(type) {
+        if (!STATE.audioEnabled) return;
+
+        this.initAudio(); // Try to init if not ready
+
+        if (!this.audioContext) return;
+
+        // Auto-resume logic (browser policy)
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume().catch(() => { });
+        }
+
+        const sounds = {
+            'click': [400, 50, 'sine'],
+            'success': [600, 100, 'square'],
+            'error': [150, 200, 'sawtooth'],
+            'join': [300, 150, 'triangle'],
+            'msg': [800, 50, 'sine']
+        };
+
+        const sound = sounds[type];
+        if (sound) this.playTone(...sound);
+    }
+
+    playTone(freq, duration, type) {
+        try {
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            osc.frequency.value = freq;
+            osc.type = type;
+            osc.connect(gain);
+            gain.connect(this.audioContext.destination);
+            osc.start();
+            setTimeout(() => osc.stop(), duration / 1000);
+        } catch (e) {
+            // Ignore audio errors
+        }
     }
 }
 
@@ -1772,9 +1820,9 @@ class ClanSystem {
 class MusicSystem {
     constructor() {
         this.trackList = [
-            { name: "Neon Nights - Synthwave Mix", url: "assets/music/track1.mp3" },
-            { name: "Cyber City - Deep Bass", url: "assets/music/track2.mp3" },
-            { name: "Galactic Voyage - LoFi", url: "assets/music/track3.mp3" }
+            { name: "Neon Nights - Synthwave Mix", url: "#" },
+            { name: "Cyber City - Deep Bass", url: "#" },
+            { name: "Galactic Voyage - LoFi", url: "#" }
         ];
         this.currentTrackIdx = 0;
         this.isPlaying = false;
