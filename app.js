@@ -482,7 +482,9 @@ class ChatManager {
             msgs.reverse(); // Show oldest at top
 
             msgs.forEach(msg => {
-                this.renderMessage(container, msg, msg.uid === STATE.currentUser.uid);
+                // Güvenlik: Kullanıcı çıkış yapmışsa hata verme
+                const isMine = STATE.currentUser ? (msg.uid === STATE.currentUser.uid) : false;
+                this.renderMessage(container, msg, isMine);
             });
 
             container.scrollTop = container.scrollHeight;
