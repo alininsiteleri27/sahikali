@@ -145,31 +145,11 @@ textarea {
     display: flex;
     flex-direction: column;
     z-index: 1000;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
 .app-sidebar.collapsed {
-    width: 70px;
-}
-
-.app-sidebar.collapsed .sidebar-logo,
-.app-sidebar.collapsed .nav-link span,
-.app-sidebar.collapsed .user-mini-info,
-.app-sidebar.collapsed .btn {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.app-sidebar.collapsed .nav-link {
-    justify-content: center;
-}
-
-.app-sidebar.collapsed .user-mini-card {
-    justify-content: center;
-}
-
-.app-sidebar.collapsed .user-avatar-sm {
-    margin: 0;
+    transform: translateX(-100%);
 }
 
 .app-header {
@@ -189,7 +169,7 @@ textarea {
 }
 
 body.sidebar-collapsed .app-header {
-    left: 70px;
+    left: 0;
 }
 
 .app-main {
@@ -201,7 +181,7 @@ body.sidebar-collapsed .app-header {
 }
 
 body.sidebar-collapsed .app-main {
-    margin-left: 70px;
+    margin-left: 0;
 }
 
 /* ============================================================================
@@ -981,26 +961,13 @@ body.sidebar-collapsed .app-main {
         transform: translateX(0);
     }
 
-    .app-sidebar.collapsed {
-        width: var(--sidebar-width);
-        transform: translateX(-100%);
-    }
-
     .app-header {
-        left: 0;
-    }
-
-    body.sidebar-collapsed .app-header {
         left: 0;
     }
 
     .app-main {
         margin-left: 0;
         padding: 1rem;
-    }
-
-    body.sidebar-collapsed .app-main {
-        margin-left: 0;
     }
 
     .stats-grid {
