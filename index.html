@@ -4,712 +4,512 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Arena - Ger�ek Zamanl� Topluluk & Oyun Platformu</title>
+    <title>Nexus Arena - Gerçek Zamanlı Topluluk & Oyun Platformu</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/x-icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>??</text></svg>">
 </head>
 
-<body>
-    <!-- Ana Y�kleyici (Splash Screen) -->
-    <div id="splash-screen" class="splash-screen active">
+<body data-theme="dark">
+
+    <div id="splash-screen" class="active">
         <div class="splash-content">
-            <div class="logo-container">
-                <div class="logo-icon">
-                    <i class="fas fa-gamepad"></i>
+            <div class="logo-animation">
+                <div class="hexagon-wrapper">
+                    <div class="hexagon"></div>
                 </div>
-                <h1 class="logo-text">
-                    <span class="logo-part-1">NEXUS</span>
-                    <span class="logo-part-2">ARENA</span>
-                </h1>
+                <div class="logo-text">NEXUS</div>
             </div>
-            <div class="loading-bar-container">
-                <div class="loading-bar">
-                    <div class="loading-progress"></div>
-                </div>
-                <p class="loading-text">Sistemler ba�lat�l�yor...</p>
+            <div class="loading-bar">
+                <div class="progress"></div>
             </div>
-            <div class="splash-tagline">
-                <p>Ger�ek Zamanl� Topluluk & Oyun Platformu</p>
-            </div>
+            <p class="loading-text">Sistemler Başlatılıyor...</p>
         </div>
     </div>
 
-    <!-- Ana Uygulama Konteyneri -->
-    <div id="app-container" class="app-container">
-        <!-- �st Navigasyon Bar -->
-        <header class="main-header">
-            <div class="header-left">
-                <div class="logo-small">
-                    <i class="fas fa-gamepad"></i>
+    <!-- Giriş Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="auth-container">
+                <div class="auth-left">
+                    <div class="auth-welcome">
+                        <h1>Nexus Arena'ya Hoş Geldiniz</h1>
+                        <p>Gerçek zamanlı oyunlar, canlı sohbet ve rekabetçi turnuvalar için en iyi platform.</p>
+                        <div class="auth-features">
+                            <div class="feature-item">
+                                <i class="fas fa-gamepad"></i>
+                                <span>Çoklu Oyun Modları</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-trophy"></i>
+                                <span>Liderlik Tabloları</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-comments"></i>
+                                <span>Canlı Sohbet</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="auth-right">
+                    <div class="auth-box">
+                        <h2>Giriş Yap</h2>
+                        <p class="auth-subtitle">Hesabınıza erişmek için giriş yapın</p>
+
+                        <div class="auth-tabs">
+                            <button class="auth-tab active" data-tab="login">Giriş</button>
+                            <button class="auth-tab" data-tab="register">Kayıt Ol</button>
+                        </div>
+
+                        <!-- Login Form -->
+                        <form id="login-form" class="auth-form active">
+                            <div class="form-group">
+                                <label for="login-email">E-posta</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="login-email" placeholder="ornek@email.com" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Şifre</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" id="login-password" placeholder="••••••••" required>
+                                    <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+                                </div>
+                                <a href="#" class="forgot-password">Şifremi unuttum?</a>
+                            </div>
+                            <button type="submit" class="auth-submit">Giriş Yap</button>
+                        </form>
+
+                        <!-- Register Form -->
+                        <form id="register-form" class="auth-form">
+                            <div class="form-group">
+                                <label for="register-username">Kullanıcı Adı</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="register-username" placeholder="Kullanıcı adı" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-email">E-posta</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="register-email" placeholder="ornek@email.com" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Şifre</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" id="register-password" placeholder="En az 8 karakter"
+                                        required>
+                                    <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password-confirm">Şifre Tekrar</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" id="register-password-confirm"
+                                        placeholder="Şifrenizi doğrulayın" required>
+                                </div>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="terms-agreement" required>
+                                <label for="terms-agreement"><a href="#">Kullanım Koşulları</a>'nı kabul
+                                    ediyorum</label>
+                            </div>
+                            <button type="submit" class="auth-submit">Hesap Oluştur</button>
+                        </form>
+
+                        <div class="auth-separator">
+                            <span>veya şununla devam et</span>
+                        </div>
+
+                        <div class="social-login">
+                            <button type="button" class="btn-social google">
+                                <i class="fab fa-google"></i>
+                            </button>
+                            <button type="button" class="btn-social github">
+                                <i class="fab fa-github"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="modal-close"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" style="display: none;">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon"><i class="fas fa-cube"></i></div>
                     <span>NEXUS</span>
                 </div>
-
-                <nav class="main-nav">
-                    <ul class="nav-list">
-                        <li class="nav-item active" data-page="dashboard">
-                            <i class="fas fa-home"></i>
-                            <span>Ana Sayfa</span>
-                        </li>
-                        <li class="nav-item" data-page="games">
-                            <i class="fas fa-chess-board"></i>
-                            <span>Oyunlar</span>
-                        </li>
-                        <li class="nav-item" data-page="chat">
-                            <i class="fas fa-comments"></i>
-                            <span>Sohbet</span>
-                            <span class="nav-badge">3</span>
-                        </li>
-                        <li class="nav-item" data-page="leaderboard">
-                            <i class="fas fa-trophy"></i>
-                            <span>Liderlik</span>
-                        </li>
-                        <li class="nav-item" data-page="market">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>Market</span>
-                        </li>
-                        <li class="nav-item" data-page="duel">
-                            <i class="fas fa-crosshairs"></i>
-                            <span>D�ello</span>
-                            <span class="nav-badge duel-pending">1</span>
-                        </li>
-                    </ul>
-                </nav>
             </div>
 
-            <div class="header-center">
-                <div class="search-container">
-                    <i class="fas fa-search"></i>
-                    <input type="text" class="search-input" placeholder="Kullan�c� ara, oyun bul...">
+            <div class="user-profile">
+                <div class="avatar-wrapper" id="user-avatar">
+                    <img src="https://ui-avatars.com/api/?name=Guest&background=7c3aed&color=fff" alt="User"
+                        class="avatar-img">
+                    <span class="avatar-status offline"></span>
+                </div>
+                <div class="user-info">
+                    <span class="user-name" id="username-display">Misafir</span>
+                    <span class="user-rank rank-member" id="user-rank">Üye</span>
+                </div>
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+
+                <div class="profile-dropdown">
+                    <div class="dropdown-item" data-action="profile">
+                        <i class="fas fa-user-circle"></i> Profil
+                    </div>
+                    <div class="dropdown-item" data-action="settings">
+                        <i class="fas fa-cog"></i> Ayarlar
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item logout-btn" data-action="logout">
+                        <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+                    </div>
                 </div>
             </div>
 
-            <div class="header-right">
-                <div class="user-profile">
-                    <div class="avatar-container" id="user-avatar">
-                        <img src="https://ui-avatars.com/api/?name=Guest&background=7c3aed&color=fff" alt="Avatar"
-                            class="avatar-img">
-                        <div class="avatar-status offline"></div>
-                    </div>
-                    <div class="user-info">
-                        <span class="username" id="username-display">Misafir</span>
-                        <span class="user-rank" id="user-rank">�ye</span>
-                    </div>
-                    <i class="fas fa-chevron-down dropdown-arrow"></i>
-
-                    <!-- Kullan�c� Dropdown Men�s� -->
-                    <div class="user-dropdown">
-                        <div class="dropdown-section">
-                            <div class="dropdown-item" data-action="profile">
-                                <i class="fas fa-user"></i>
-                                <span>Profilim</span>
-                            </div>
-                            <div class="dropdown-item" data-action="friends">
-                                <i class="fas fa-user-friends"></i>
-                                <span>Arkada�lar</span>
-                                <span class="dropdown-badge">5</span>
-                            </div>
-                            <div class="dropdown-item" data-action="notifications">
-                                <i class="fas fa-bell"></i>
-                                <span>Bildirimler</span>
-                                <span class="dropdown-badge notification-count">12</span>
-                            </div>
-                            <div class="dropdown-item" data-action="settings">
-                                <i class="fas fa-cog"></i>
-                                <span>Ayarlar</span>
-                            </div>
-                        </div>
-
-                        <div class="dropdown-section">
-                            <div class="dropdown-item" data-action="inventory">
-                                <i class="fas fa-box-open"></i>
-                                <span>Envanter</span>
-                            </div>
-                            <div class="dropdown-item" data-action="achievements">
-                                <i class="fas fa-medal"></i>
-                                <span>Ba�ar�lar</span>
-                            </div>
-                            <div class="dropdown-item" data-action="stats">
-                                <i class="fas fa-chart-line"></i>
-                                <span>�statistikler</span>
-                            </div>
-                        </div>
-
-                        <div class="dropdown-section">
-                            <div class="dropdown-item logout-btn" data-action="logout">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>��k�� Yap</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="header-actions">
-                    <button class="btn-icon" id="theme-toggle" title="Tema De�i�tir">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button class="btn-icon" id="fullscreen-toggle" title="Tam Ekran">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <button class="btn-notification" id="notification-bell">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-indicator">12</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <!-- Ana ��erik Alan� -->
-        <main class="main-content">
-            <!-- Dashboard Sayfas� -->
-            <section id="dashboard-page" class="page active">
-                <div class="page-header">
-                    <h2 class="page-title">
+            <ul class="nav-links">
+                <li class="nav-item active" data-page="dashboard">
+                    <a href="#">
                         <i class="fas fa-home"></i>
-                        Ho� Geldiniz, <span id="welcome-username">Misafir</span>
-                    </h2>
-                    <div class="page-actions">
-                        <button class="btn-primary" id="quick-play-btn">
-                            <i class="fas fa-play-circle"></i>
-                            H�zl� Oyna
-                        </button>
-                        <button class="btn-secondary" id="create-room-btn">
-                            <i class="fas fa-plus-circle"></i>
-                            Oda Olu�tur
-                        </button>
-                    </div>
+                        <span>Ana Sayfa</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-page="games">
+                    <a href="#">
+                        <i class="fas fa-gamepad"></i>
+                        <span>Oyunlar</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-page="chat">
+                    <a href="#">
+                        <i class="fas fa-comments"></i>
+                        <span>Sohbet</span>
+                        <span class="notification-indicator" style="display: none;">0</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-page="leaderboard">
+                    <a href="#">
+                        <i class="fas fa-trophy"></i>
+                        <span>Liderlik</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-page="market">
+                    <a href="#">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Market</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="stat-card mini">
+                    <div class="stat-icon coins"><i class="fas fa-coins"></i></div>
+                    <div class="stat-value" id="stat-coins">0</div>
                 </div>
-
-                <div class="dashboard-grid">
-                    <!-- �statistik Kartlar� -->
-                    <div class="stats-container">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-fire"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 class="stat-value" id="stat-streak">0</h3>
-                                <p class="stat-label">G�nl�k Seri</p>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-coins"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 class="stat-value" id="stat-coins">0</h3>
-                                <p class="stat-label">Nexus Coin</p>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-trophy"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 class="stat-value" id="stat-wins">0</h3>
-                                <p class="stat-label">Galibiyet</p>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-ranking-star"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 class="stat-value" id="stat-rank">#999</h3>
-                                <p class="stat-label">Global S�ralama</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Aktif Oyunlar -->
-                    <div class="section-card">
-                        <div class="section-header">
-                            <h3><i class="fas fa-clock"></i> Aktif Oyunlar</h3>
-                            <a href="#" class="view-all">T�m�n� G�r</a>
-                        </div>
-                        <div class="active-games-container" id="active-games-list">
-                            <!-- Aktif oyunlar dinamik olarak eklenecek -->
-                            <div class="empty-state">
-                                <i class="fas fa-gamepad"></i>
-                                <p>Aktif oyununuz bulunmuyor</p>
-                                <button class="btn-text" id="find-game-btn">Oyun Bul</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- �evrimi�i Arkada�lar -->
-                    <div class="section-card">
-                        <div class="section-header">
-                            <h3><i class="fas fa-user-friends"></i> �evrimi�i Arkada�lar</h3>
-                            <span class="online-count">0 �evrimi�i</span>
-                        </div>
-                        <div class="friends-container" id="online-friends-list">
-                            <!-- �evrimi�i arkada�lar dinamik olarak eklenecek -->
-                            <div class="empty-state">
-                                <i class="fas fa-user-plus"></i>
-                                <p>�evrimi�i arkada��n�z bulunmuyor</p>
-                                <button class="btn-text" id="add-friends-btn">Arkada� Ekle</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- H�zl� Oyunlar Grid -->
-                    <div class="section-card wide-card">
-                        <div class="section-header">
-                            <h3><i class="fas fa-bolt"></i> H�zl� Ba�lay�n</h3>
-                            <p class="section-subtitle">En pop�ler oyunlara an�nda kat�l�n</p>
-                        </div>
-                        <div class="quick-games-grid">
-                            <div class="game-card" data-game="chess">
-                                <div class="game-icon">
-                                    <i class="fas fa-chess-king"></i>
-                                </div>
-                                <h4>Satran�</h4>
-                                <p class="game-stats">1.2k aktif oyuncu</p>
-                                <button class="btn-game-play">OYNA</button>
-                            </div>
-
-                            <div class="game-card" data-game="2048">
-                                <div class="game-icon">
-                                    <i class="fas fa-th-large"></i>
-                                </div>
-                                <h4>2048</h4>
-                                <p class="game-stats">845 aktif oyuncu</p>
-                                <button class="btn-game-play">OYNA</button>
-                            </div>
-
-                            <div class="game-card" data-game="wheel">
-                                <div class="game-icon">
-                                    <i class="fas fa-sync-alt"></i>
-                                </div>
-                                <h4>�ark�felek</h4>
-                                <p class="game-stats">567 aktif oyuncu</p>
-                                <button class="btn-game-play">OYNA</button>
-                            </div>
-
-                            <div class="game-card" data-game="rps">
-                                <div class="game-icon">
-                                    <i class="fas fa-hand-scissors"></i>
-                                </div>
-                                <h4>Ta�-Ka��t-Makas</h4>
-                                <p class="game-stats">2.3k aktif oyuncu</p>
-                                <button class="btn-game-play">OYNA</button>
-                            </div>
-
-                            <div class="game-card" data-game="coin">
-                                <div class="game-icon">
-                                    <i class="fas fa-coins"></i>
-                                </div>
-                                <h4>Yaz�-Tura</h4>
-                                <p class="game-stats">432 aktif oyuncu</p>
-                                <button class="btn-game-play">OYNA</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Topluluk Duyurular� -->
-                    <div class="section-card">
-                        <div class="section-header">
-                            <h3><i class="fas fa-bullhorn"></i> Duyurular</h3>
-                            <div class="announcement-controls">
-                                <button class="btn-icon small" id="prev-announcement">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <button class="btn-icon small" id="next-announcement">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="announcements-container">
-                            <div class="announcement active">
-                                <div class="announcement-badge">
-                                    <i class="fas fa-info-circle"></i>
-                                    <span>Bilgilendirme</span>
-                                </div>
-                                <h4 class="announcement-title">Yeni D�ello Sistemi Aktif!</h4>
-                                <p class="announcement-content">
-                                    Arkada�lar�n�z� d�elloya davet edin ve Nexus Coin kazan�n. Yeni bahis sistemi ile
-                                    daha heyecanl� oyunlar sizi bekliyor.
-                                </p>
-                                <div class="announcement-footer">
-                                    <span class="announcement-date">30 Oca 2026</span>
-                                    <a href="#" class="announcement-link">Detaylar</a>
-                                </div>
-                            </div>
-
-                            <div class="announcement">
-                                <div class="announcement-badge">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>�nemli</span>
-                                </div>
-                                <h4 class="announcement-title">Bak�m �al��mas�</h4>
-                                <p class="announcement-content">
-                                    1 �ubat 2026, 03:00 - 05:00 saatleri aras�nda sunucu bak�m �al��mam�z olacakt�r. Bu
-                                    s�re zarf�nda platforma eri�im sa�lanamayacakt�r.
-                                </p>
-                                <div class="announcement-footer">
-                                    <span class="announcement-date">29 Oca 2026</span>
-                                    <a href="#" class="announcement-link">Detaylar</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Di�er sayfalar buraya eklenecek -->
-            <section id="games-page" class="page"></section>
-            <section id="chat-page" class="page"></section>
-            <section id="leaderboard-page" class="page"></section>
-            <section id="market-page" class="page"></section>
-            <section id="duel-page" class="page"></section>
-        </main>
-
-        <!-- Sa� Kenar �ubu�u (Chat Preview) -->
-        <aside class="sidebar-right">
-            <div class="sidebar-header">
-                <h3><i class="fas fa-comment-dots"></i> Sohbet</h3>
-                <button class="btn-icon" id="toggle-chat-sidebar">
-                    <i class="fas fa-chevron-right"></i>
+                <button id="theme-toggle" class="btn-icon">
+                    <i class="fas fa-moon"></i>
                 </button>
             </div>
+        </nav>
 
-            <div class="chat-sidebar-content">
-                <!-- Genel Sohbet �nizleme -->
-                <div class="chat-room-preview">
-                    <div class="chat-room-header">
-                        <div class="chat-room-info">
-                            <i class="fas fa-globe"></i>
-                            <h4>Genel Sohbet</h4>
-                        </div>
-                        <span class="online-count">1.2k �evrimi�i</span>
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="page-title">
+                    <i class="fas fa-home"></i> Ana Sayfa
+                </div>
+                <div class="top-actions">
+                    <div class="online-status">
+                        <span class="status-dot"></span>
+                        <span class="online-count">0 çevrimiçi</span>
                     </div>
+                    <button id="fullscreen-toggle" class="btn-icon">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button id="notification-bell" class="btn-icon">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-count" style="display: none;">0</span>
+                    </button>
+                </div>
+            </header>
 
-                    <div class="chat-preview-messages" id="general-chat-preview">
-                        <!-- Mesaj �nizlemeleri dinamik olarak eklenecek -->
-                        <div class="chat-message-preview">
-                            <div class="message-avatar">
-                                <img src="https://ui-avatars.com/api/?name=Player1&background=3b82f6&color=fff"
-                                    alt="Avatar">
-                            </div>
-                            <div class="message-preview-content">
-                                <div class="message-preview-header">
-                                    <span class="message-sender">Player1</span>
-                                    <span class="message-time">2 dk �nce</span>
-                                </div>
-                                <p class="message-preview-text">Satran� oynamak isteyen var m�?</p>
-                            </div>
+            <div id="content-area">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <div class="welcome-banner">
+                        <div class="banner-content">
+                            <h1>Tekrar Hoş Geldin, <span id="welcome-username">Misafir</span>!</h1>
+                            <p>Bugün oynamak için harika bir gün. Turnuvalara katıl ve ödülleri topla.</p>
+                            <button class="btn-primary btn-game-play" onclick="launchGame('random')">Hemen Oyna</button>
                         </div>
-
-                        <div class="chat-message-preview">
-                            <div class="message-avatar">
-                                <img src="https://ui-avatars.com/api/?name=Player2&background=10b981&color=fff"
-                                    alt="Avatar">
-                            </div>
-                            <div class="message-preview-content">
-                                <div class="message-preview-header">
-                                    <span class="message-sender">Player2</span>
-                                    <span class="message-time">5 dk �nce</span>
-                                </div>
-                                <p class="message-preview-text">Yeni 2048 rekoru k�rd�m! 8192</p>
-                            </div>
+                        <div class="banner-image">
+                            <!-- Hero image via CSS -->
                         </div>
                     </div>
 
-                    <div class="chat-room-actions">
-                        <input type="text" class="chat-preview-input" placeholder="Mesaj yaz...">
-                        <button class="btn-icon">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+                    <div class="stats-overview">
+                        <div class="stat-card">
+                            <div class="stat-icon coins"><i class="fas fa-coins"></i></div>
+                            <div class="stat-info">
+                                <h3>Jetonlar</h3>
+                                <p id="stat-coins-main">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon wins"><i class="fas fa-trophy"></i></div>
+                            <div class="stat-info">
+                                <h3>Galibiyetler</h3>
+                                <p id="stat-wins">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon rank"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-info">
+                                <h3>Sıralama</h3>
+                                <p id="stat-rank">#999</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon streak"><i class="fas fa-fire"></i></div>
+                            <div class="stat-info">
+                                <h3>Seri</h3>
+                                <p id="stat-streak">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="section-title">Popüler Oyunlar</h2>
+                    <div class="games-grid">
+                        <div class="game-card" data-game="chess">
+                            <div class="game-image chess-bg">
+                                <i class="fas fa-chess-king"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>Satranç</h3>
+                                <p>Strateji ve zeka oyunu</p>
+                                <button class="btn-play btn-game-play">Oyna</button>
+                            </div>
+                        </div>
+                        <div class="game-card" data-game="2048">
+                            <div class="game-image puzzle-bg">
+                                <i class="fas fa-th-large"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>2048</h3>
+                                <p>Sayıları birleştir</p>
+                                <button class="btn-play btn-game-play">Oyna</button>
+                            </div>
+                        </div>
+                        <div class="game-card" data-game="rps">
+                            <div class="game-image rps-bg">
+                                <i class="fas fa-hand-scissors"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>Taş Kağıt Makas</h3>
+                                <p>Klasik şans oyunu</p>
+                                <button class="btn-play btn-game-play">Oyna</button>
+                            </div>
+                        </div>
+                        <div class="game-card" data-game="coin">
+                            <div class="game-image coin-bg">
+                                <i class="fas fa-donate"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>Yazı Tura</h3>
+                                <p>Hızlı şans testi</p>
+                                <button class="btn-play btn-game-play">Oyna</button>
+                            </div>
+                        </div>
+                        <div class="game-card" data-game="wheel">
+                            <div class="game-image wheel-bg">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>Çarkıfelek</h3>
+                                <p>Günlük ödülleri topla</p>
+                                <button class="btn-play btn-game-play">Oyna</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- �zel Mesajlar -->
-                <div class="dm-section">
-                    <div class="dm-section-header">
-                        <h4><i class="fas fa-envelope"></i> �zel Mesajlar</h4>
-                        <button class="btn-icon small" id="new-dm-btn">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                <!-- Games Page -->
+                <div id="games-page" class="page">
+                    <h2 class="section-title">Tüm Oyunlar</h2>
+                    <!-- Oyunlar grid'i buraya dinamik veya statik olarak eklenebilir -->
+                    <div class="games-grid" id="all-games-grid">
+                        <!-- JS ile doldurulacak veya dashboard kopyası -->
                     </div>
+                </div>
 
-                    <div class="dm-list" id="dm-list-preview">
-                        <!-- DM �nizlemeleri dinamik olarak eklenecek -->
-                        <div class="dm-preview unread">
-                            <div class="dm-avatar">
-                                <img src="https://ui-avatars.com/api/?name=Alex&background=ef4444&color=fff"
-                                    alt="Avatar">
-                                <span class="dm-status online"></span>
+                <!-- Chat Page -->
+                <div id="chat-page" class="page">
+                    <div class="chat-container">
+                        <div class="chat-sidebar">
+                            <div class="chat-header">
+                                <h3>Sohbet Odaları</h3>
                             </div>
-                            <div class="dm-info">
-                                <div class="dm-header">
-                                    <span class="dm-sender">Alex</span>
-                                    <span class="dm-time">1 dk �nce</span>
+                            <ul class="chat-rooms" id="chat-rooms-list">
+                                <li class="chat-room active" data-room="general">
+                                    <i class="fas fa-hashtag"></i> Genel Sohbet
+                                </li>
+                                <li class="chat-room" data-room="games">
+                                    <i class="fas fa-gamepad"></i> Oyun Odası
+                                </li>
+                                <li class="chat-room" data-room="support">
+                                    <i class="fas fa-headset"></i> Destek
+                                </li>
+                            </ul>
+                            <div class="online-users-panel">
+                                <h4>Çevrimiçi (<span class="online-count-mini">0</span>)</h4>
+                                <div class="online-users-list">
+                                    <!-- Kullanıcılar -->
                                 </div>
-                                <p class="dm-preview-text">D�ello davetimi kabul eder misin?</p>
                             </div>
-                            <span class="dm-unread-indicator">3</span>
                         </div>
-
-                        <div class="dm-preview">
-                            <div class="dm-avatar">
-                                <img src="https://ui-avatars.com/api/?name=Sam&background=8b5cf6&color=fff"
-                                    alt="Avatar">
-                                <span class="dm-status idle"></span>
-                            </div>
-                            <div class="dm-info">
-                                <div class="dm-header">
-                                    <span class="dm-sender">Sam</span>
-                                    <span class="dm-time">1 sa �nce</span>
+                        <div class="chat-main">
+                            <div class="chat-messages" id="chat-messages">
+                                <div class="message system">
+                                    <p>Sohbet odasına hoş geldiniz!</p>
                                 </div>
-                                <p class="dm-preview-text">Yar�n oynayal�m m�?</p>
+                            </div>
+                            <div class="chat-input-area">
+                                <input type="text" id="chat-input" placeholder="Bir mesaj yaz...">
+                                <button id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- �evrimi�i Kullan�c�lar -->
-                <div class="online-users-section">
-                    <div class="online-users-header">
-                        <h4><i class="fas fa-users"></i> �evrimi�i Kullan�c�lar</h4>
-                        <span class="online-count-mini">42</span>
-                    </div>
-
-                    <div class="online-users-list">
-                        <!-- �evrimi�i kullan�c�lar dinamik olarak eklenecek -->
-                        <div class="online-user">
-                            <div class="user-avatar-mini">
-                                <img src="https://ui-avatars.com/api/?name=User1&background=3b82f6&color=fff"
-                                    alt="Avatar">
-                                <span class="user-status-mini online"></span>
+                <!-- Leaderboard Page -->
+                <div id="leaderboard-page" class="page">
+                    <div class="leaderboard-container">
+                        <div class="leaderboard-header">
+                            <h2>Liderlik Tablosu</h2>
+                            <div class="leaderboard-filters">
+                                <button class="leaderboard-filter active" data-filter="all">Genel</button>
+                                <button class="leaderboard-filter" data-filter="wins">Galibiyet</button>
+                                <button class="leaderboard-filter" data-filter="coins">Zenginlik</button>
+                                <button class="leaderboard-filter" data-filter="streak">Seri</button>
                             </div>
-                            <span class="username-mini">User1</span>
                         </div>
-
-                        <div class="online-user">
-                            <div class="user-avatar-mini">
-                                <img src="https://ui-avatars.com/api/?name=User2&background=10b981&color=fff"
-                                    alt="Avatar">
-                                <span class="user-status-mini online"></span>
-                            </div>
-                            <span class="username-mini">User2</span>
-                        </div>
-
-                        <div class="online-user">
-                            <div class="user-avatar-mini">
-                                <img src="https://ui-avatars.com/api/?name=Admin&background=f59e0b&color=fff"
-                                    alt="Avatar">
-                                <span class="user-status-mini online"></span>
-                                <span class="user-badge-mini admin">A</span>
-                            </div>
-                            <span class="username-mini">Admin</span>
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Sıra</th>
+                                    <th>Oyuncu</th>
+                                    <th>Puan/Değer</th>
+                                    <th>Rütbe</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body">
+                                <!-- JS ile doldurulacak -->
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button id="leaderboard-prev"><i class="fas fa-chevron-left"></i></button>
+                            <span id="leaderboard-page-num">1</span>
+                            <button id="leaderboard-next"><i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Market Page -->
+                <div id="market-page" class="page">
+                    <div class="market-container">
+                        <h2>Market</h2>
+                        <p>Çok yakında! Kazandığınız jetonlarla özel eşyalar alın.</p>
+                        <i class="fas fa-store fa-5x" style="opacity: 0.2; margin-top: 2rem;"></i>
+                    </div>
+                </div>
+
+                <!-- Profile Page -->
+                <div id="profile-page" class="page">
+                    <div class="profile-container">
+                        <h2>Profilim</h2>
+                        <div class="profile-card">
+                            <div class="profile-header">
+                                <div class="profile-avatar-large">
+                                    <img src="" alt="Avatar" id="profile-avatar-img">
+                                </div>
+                                <div class="profile-details">
+                                    <h3 id="profile-username">Kullanıcı</h3>
+                                    <p id="profile-email">email@example.com</p>
+                                    <span class="user-rank" id="profile-rank">Üye</span>
+                                </div>
+                            </div>
+                            <div class="profile-stats">
+                                <!-- Stats here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Right Sidebar (Social) -->
+        <aside class="sidebar-right">
+            <div class="sidebar-header">
+                <h3>Arkadaşlar</h3>
+                <button id="toggle-chat-sidebar" class="btn-icon small"><i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <div class="friends-list" id="online-friends-list">
+                <!-- Arkadaşlar buraya -->
+                <div class="empty-state">
+                    <p>Çevrimiçi arkadaş yok</p>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Aktif Oyunlar</h3>
+                <div class="active-games-list" id="active-games-list">
+                    <!-- Aktif oyunlar -->
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Son Mesajlar</h3>
+                <div class="chat-preview" id="general-chat-preview">
+                    <!-- Sohbet önizleme -->
                 </div>
             </div>
         </aside>
-
-        <!-- Alt �ubuk (Bottom Bar - Mobil) -->
-        <footer class="bottom-bar">
-            <div class="bottom-nav">
-                <div class="bottom-nav-item active" data-page="dashboard">
-                    <i class="fas fa-home"></i>
-                    <span>Ana Sayfa</span>
-                </div>
-                <div class="bottom-nav-item" data-page="games">
-                    <i class="fas fa-gamepad"></i>
-                    <span>Oyunlar</span>
-                </div>
-                <div class="bottom-nav-item" data-page="chat">
-                    <i class="fas fa-comments"></i>
-                    <span>Sohbet</span>
-                    <span class="bottom-badge">3</span>
-                </div>
-                <div class="bottom-nav-item" data-page="duel">
-                    <i class="fas fa-crosshairs"></i>
-                    <span>D�ello</span>
-                </div>
-                <div class="bottom-nav-item" data-page="profile">
-                    <i class="fas fa-user"></i>
-                    <span>Profil</span>
-                </div>
-            </div>
-        </footer>
     </div>
 
-    <!-- MODALLAR -->
-
-    <!-- Giri� Modal� -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content auth-modal">
-            <div class="modal-header">
-                <h2>
-                    <i class="fas fa-gamepad"></i>
-                    Nexus Arena'ya Ho� Geldiniz
-                </h2>
-                <button class="modal-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <div class="auth-tabs">
-                    <button class="auth-tab active" data-tab="login">Giri� Yap</button>
-                    <button class="auth-tab" data-tab="register">Kay�t Ol</button>
-                </div>
-
-                <!-- Giri� Formu -->
-                <form id="login-form" class="auth-form active">
-                    <div class="form-group">
-                        <label for="login-email">
-                            <i class="fas fa-envelope"></i>
-                            E-posta
-                        </label>
-                        <input type="email" id="login-email" placeholder="ornek@email.com" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="login-password">
-                            <i class="fas fa-lock"></i>
-                            �ifre
-                        </label>
-                        <div class="password-input-container">
-                            <input type="password" id="login-password" placeholder="�ifrenizi girin" required>
-                            <button type="button" class="toggle-password">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-options">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="remember-me">
-                            <span>Beni hat�rla</span>
-                        </label>
-                        <a href="#" class="forgot-password">�ifremi unuttum</a>
-                    </div>
-
-                    <button type="submit" class="btn-primary auth-submit">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Giri� Yap
-                    </button>
-
-                    <div class="auth-divider">
-                        <span>veya</span>
-                    </div>
-
-                    <div class="social-auth">
-                        <button type="button" class="btn-social google">
-                            <i class="fab fa-google"></i>
-                            Google ile giri� yap
-                        </button>
-                        <button type="button" class="btn-social github">
-                            <i class="fab fa-github"></i>
-                            GitHub ile giri� yap
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Kay�t Formu -->
-                <form id="register-form" class="auth-form">
-                    <div class="form-group">
-                        <label for="register-username">
-                            <i class="fas fa-user"></i>
-                            Kullan�c� Ad�
-                        </label>
-                        <input type="text" id="register-username" placeholder="Kullan�c� ad�n�z" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-email">
-                            <i class="fas fa-envelope"></i>
-                            E-posta
-                        </label>
-                        <input type="email" id="register-email" placeholder="ornek@email.com" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-password">
-                            <i class="fas fa-lock"></i>
-                            �ifre
-                        </label>
-                        <div class="password-input-container">
-                            <input type="password" id="register-password" placeholder="En az 8 karakter" required>
-                            <button type="button" class="toggle-password">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-password-confirm">
-                            <i class="fas fa-lock"></i>
-                            �ifre Tekrar
-                        </label>
-                        <div class="password-input-container">
-                            <input type="password" id="register-password-confirm" placeholder="�ifrenizi tekrar girin"
-                                required>
-                            <button type="button" class="toggle-password">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-options">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="terms-agreement" required>
-                            <span>
-                                <a href="#">Kullan�m Ko�ullar�</a> ve
-                                <a href="#">Gizlilik Politikas�</a>'n� kabul ediyorum
-                            </span>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="btn-primary auth-submit">
-                        <i class="fas fa-user-plus"></i>
-                        Hesap Olu�tur
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bildirimler Modal� -->
+    <!-- Bildirim Modalı -->
     <div id="notifications-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-bell"></i> Bildirimler</h2>
-                <div class="modal-actions">
-                    <button class="btn-text" id="mark-all-read">
-                        <i class="fas fa-check-double"></i>
-                        T�m�n� okundu i�aretle
-                    </button>
-                    <button class="modal-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+                <h3>Bildirimler</h3>
+                <button class="modal-close"><i class="fas fa-times"></i></button>
             </div>
-
             <div class="modal-body">
                 <div class="notifications-list" id="notifications-list">
-                    <!-- Bildirimler dinamik olarak eklenecek -->
+                    <!-- Bildirimler -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sistem Uyar�lar� i�in daha fazla modal buraya eklenecek -->
-
-    <!-- Firebase SDK ve Uygulama JS -->
+    <!-- External JavaScript -->
     <script type="module" src="app.js"></script>
 </body>
 
