@@ -4,7 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS | Next-Gen Community & Gaming Platform</title>
+    <title>NEXUS | Ultimate Game Platform</title>
+    <!-- Favicon: Using a gamepad emoji as data URI to prevent 404s -->
+    <link rel="icon" href="https://ui-avatars.com/api/?name=NX&background=00f2ff&color=fff&rounded=true"
+        type="image/x-icon">
+
     <meta name="description"
         content="Dünyanın en gelişmiş gerçek zamanlı topluluk ve oyun platformu. Arkadaşlarınızla oyun oynayın, sohbet edin ve rütbenizi yükseltin.">
 
@@ -722,7 +726,7 @@
                                     <label>Mayın Sayısı (1-24)</label>
                                     <input type="number" id="mines-count" class="game-input" value="3" max="24" min="1">
                                 </div>
-                                <button class="btn btn-success btn-block btn-lg"
+                                <button id="mines-start-btn" class="btn btn-success btn-block btn-lg"
                                     onclick="window.gameSystem.instances.mines.startGame()">BAŞLAT</button>
                                 <button class="btn btn-warning btn-block btn-lg" id="mines-cashout-btn" disabled
                                     onclick="window.gameSystem.instances.mines.cashOut()">NAKİT ÇEK</button>
