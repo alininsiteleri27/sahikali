@@ -136,40 +136,59 @@ class AuthManager {
 
         // Listen to Auth State Changes
         onAuthStateChanged(auth, async (user) => {
+            console.log("🔥 Auth State Changed:", user ? "USER DETECTED" : "NO USER");
+
             if (user) {
                 // User signed in
-                console.log("Auth: User detected", user.uid);
+                console.log("👤 User UID:", user.uid);
                 STATE.currentUser = user;
 
-                // Fetch extended user data from Realtime DB
-                const snapshot = await get(child(ref(db), `users/${user.uid}`));
+                try {
+                    console.log("⏳ Fetching User Data from DB...");
+                    // Fetch extended user data from Realtime DB
+                    const snapshot = await get(child(ref(db), `users/${user.uid}`));
+                    console.log("📦 DB Snapshot Exists:", snapshot.exists());
 
-                if (snapshot.exists()) {
-                    STATE.userData = snapshot.val();
+                    if (snapshot.exists()) {
+                        STATE.userData = snapshot.val();
+                        console.log("✅ User Data Loaded:", STATE.userData);
 
-                    // CHECK FOR BAN
-                    if (STATE.userData.isBanned) {
-                        this.forceLogout("Hesabınız yasaklanmıştır.");
-                        return;
+                        // CHECK FOR BAN
+                        if (STATE.userData.isBanned) {
+                            this.forceLogout("Hesabınız yasaklanmıştır.");
+                            return;
+                        }
+
+                        // Update Last Login (Fire and forget, don't await)
+                        update(ref(db, `users/${user.uid}`), {
+                            lastLogin: serverTimestamp(),
+                            isOnline: true
+                        }).catch(e => console.error("Update Error:", e));
+
+                        this.completeLoginFlow();
+                    } else {
+                        console.log("⚠️ Profile missing in DB, Creating new...");
+                        // Profile missing in DB (Rare edge case, self-heal)
+                        await this.createDatabaseEntry(user, "Üye");
+                        this.completeLoginFlow();
                     }
-
-                    // Update Last Login
-                    update(ref(db, `users/${user.uid}`), {
-                        lastLogin: serverTimestamp(),
-                        isOnline: true
-                    });
-
-                    // Setup Disconnect Hook (Set isOnline false on close)
-                    // Note: onDisconnect is tricky in modular SDK, we handle it via presence system later
-
-                    this.completeLoginFlow();
-                } else {
-                    // Profile missing in DB (Rare edge case, self-heal)
-                    this.createDatabaseEntry(user, "Üye");
+                } catch (error) {
+                    console.error("🚨 CRITICAL DATA LOAD ERROR:", error);
+                    // Fallback to minimal user state so app still opens
+                    STATE.userData = {
+                        username: user.displayName || "Kurtarılan Hesap",
+                        email: user.email,
+                        role: 'member',
+                        points: 0,
+                        avatar: `https://ui-avatars.com/api/?name=User`,
+                        stats: { gamesPlayed: 0 }
+                    };
+                    window.nexusUI.showToast("Profil yüklenirken hata oluştu, geçici modda açılıyor.", 'warning');
                     this.completeLoginFlow();
                 }
             } else {
                 // User signed out
+                console.log("👋 User Signed Out");
                 STATE.currentUser = null;
                 STATE.userData = null;
                 this.showAuthScreen();
