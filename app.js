@@ -1,19 +1,12 @@
-/* =========================================================================
-   NEXUS PLATFORM - ULTIMATE CORE MODULE (V6.0 ALPHA)
-   ARCHITECT: ANTIGRAVITY
-   CODENAME: PROJECT_TITAN_X
-   BUILD: PRODUCTION
-   ========================================================================= */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
     getAuth, onAuthStateChanged, signInWithEmailAndPassword,
     createUserWithEmailAndPassword, signOut, updateProfile,
-    sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup
+    sendPasswordResetEmail, GoogleAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
     getDatabase, ref, set, get, update, push, onValue, remove,
-    serverTimestamp, query, limitToLast, orderByChild, startAt
+    serverTimestamp, query, limitToLast, orderByChild, startAt, onDisconnect
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const CONFIG = {
@@ -34,16 +27,56 @@ const CONFIG = {
         MAX_LEVEL: 100
     },
     SYSTEM: {
-        VERSION: '6.0.0',
+        VERSION: '6.0.1-PATCH',
         ENV: 'PROD',
         MAINTENANCE: false,
-        DEBUG: false
+        DEBUG: true
     }
 };
 
 const app = initializeApp(CONFIG.FIREBASE);
 const auth = getAuth(app);
 const db = getDatabase(app);
+
+class DOMHelper {
+    static get(id) {
+        const el = document.getElementById(id);
+        if (!el && CONFIG.SYSTEM.DEBUG) {
+            console.warn(`[DOM] Element not found: #${id}`);
+        }
+        return el;
+    }
+
+    static setHTML(id, html) {
+        const el = this.get(id);
+        if (el) el.innerHTML = html;
+    }
+
+    static setText(id, text) {
+        const el = this.get(id);
+        if (el) el.innerText = text;
+    }
+
+    static on(id, event, handler) {
+        const el = this.get(id);
+        if (el) el.addEventListener(event, handler);
+    }
+
+    static show(id) {
+        const el = this.get(id);
+        if (el) el.classList.remove('hidden');
+    }
+
+    static hide(id) {
+        const el = this.get(id);
+        if (el) el.classList.add('hidden');
+    }
+
+    static val(id) {
+        const el = this.get(id);
+        return el ? el.value : '';
+    }
+}
 
 class StateManager {
     constructor() {
@@ -120,7 +153,6 @@ class AudioEngine {
         this.masterGain.gain.value = Store.get('settings').audio.master;
     }
 
-    // Advanced Synthesizer
     playTone(freq, type = 'sine', duration = 0.1, vol = 0.1, slide = 0) {
         if (!this.enabled || this.ctx.state === 'suspended') this.ctx.resume();
 
@@ -143,7 +175,6 @@ class AudioEngine {
         osc.stop(this.ctx.currentTime + duration);
     }
 
-    // Effect Library
     sfx = {
         click: () => this.playTone(800, 'sine', 0.05, 0.05),
         hover: () => this.playTone(400, 'triangle', 0.03, 0.02),
@@ -174,7 +205,6 @@ class AudioEngine {
             osc.stop(now + 0.1);
         },
         explosion: () => {
-            // White noise burst
             const bufferSize = this.ctx.sampleRate * 0.5;
             const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
             const data = buffer.getChannelData(0);
@@ -290,7 +320,9 @@ class ParticleSystem {
 
 const UI = {
     toast(msg, type = 'info', duration = 3000) {
-        const container = document.getElementById('toast-wrapper') || this.createToastWrapper();
+        let container = document.getElementById('toast-wrapper');
+        if (!container) container = this.createToastWrapper();
+
         const el = document.createElement('div');
         el.className = `toast toast-${type}`;
         el.innerHTML = `
@@ -303,7 +335,6 @@ const UI = {
 
         requestAnimationFrame(() => el.classList.add('show'));
 
-        // Sound
         if (type === 'error') AudioFX.sfx.error();
         else if (type === 'success') AudioFX.sfx.success();
         else AudioFX.sfx.click();
@@ -324,7 +355,7 @@ const UI = {
 
     modal: {
         open(id) {
-            const m = document.getElementById(id);
+            const m = DOMHelper.get(id);
             if (m) {
                 m.classList.add('active');
                 Store.commit('activeModal', id);
@@ -332,50 +363,54 @@ const UI = {
             }
         },
         close(id) {
-            const m = document.getElementById(id);
+            const m = DOMHelper.get(id);
             if (m) {
                 m.classList.remove('active');
                 Store.commit('activeModal', null);
+            }
+        },
+        toggle(id) {
+            const m = DOMHelper.get(id);
+            if (m) {
+                if (m.classList.contains('active')) this.close(id);
+                else this.open(id);
             }
         }
     },
 
     formatNumber(num) {
-        return new Intl.NumberFormat('tr-TR').format(num);
+        return new Intl.NumberFormat('tr-TR').format(Math.floor(num || 0));
     },
 
     updateDOM() {
         const p = Store.get('profile');
         if (!p) return;
 
-        // Header
-        this.safeHTML('header-balance', this.formatNumber(p.points));
-        this.safeHTML('header-lvl', `LVL ${p.level}`);
+        DOMHelper.setText('header-balance', this.formatNumber(p.points));
+        DOMHelper.setText('header-lvl', `LVL ${p.level}`);
 
-        // Sidebar
-        this.safeHTML('sb-user', p.username);
-        this.safeHTML('sb-role', p.role.toUpperCase());
-        const sbImg = document.getElementById('sb-avatar');
+        DOMHelper.setText('sb-username', p.username);
+        DOMHelper.setText('sb-level', `LVL ${p.level}`);
+
+        const sbImg = DOMHelper.get('sb-avatar');
         if (sbImg) sbImg.src = p.avatar || `https://ui-avatars.com/api/?name=${p.username}&background=random`;
 
-        // Profile Page
-        if (Store.get('activeView') === 'profile') {
-            this.safeHTML('pf-name', p.username);
-            this.safeHTML('pf-id', `ID: ${p.uid.substring(0, 8)}`);
-            this.safeHTML('pf-stats-wins', this.formatNumber(p.stats.wins || 0));
-            this.safeHTML('pf-stats-games', this.formatNumber(p.stats.games || 0));
+        if (Store.get('activeView') === 'dashboard') {
+            DOMHelper.setText('dash-username', p.username);
+            DOMHelper.setText('dash-wins', this.formatNumber(p.points));
+            DOMHelper.setText('dash-games', p.stats?.games || 0);
         }
 
-        // Apply Theme
-        document.documentElement.style.setProperty('--c-primary-500',
-            Store.get('settings').theme.color === 'cyan' ? '#00f2ff' :
-                Store.get('settings').theme.color === 'purple' ? '#ae00ff' : '#00ff9d'
-        );
-    },
+        if (Store.get('activeView') === 'profile') {
+            DOMHelper.setText('pf-name', p.username);
+            DOMHelper.setText('pf-id', `ID: ${p.uid.substring(0, 8)}`);
+            DOMHelper.setText('pf-lvl', p.level);
+            DOMHelper.setText('pf-stat-games', this.formatNumber(p.stats?.games || 0));
+            DOMHelper.setText('pf-stat-high', this.formatNumber(p.stats?.maxWin || 0));
 
-    safeHTML(id, html) {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = html;
+            const pfImg = DOMHelper.get('pf-avatar');
+            if (pfImg) pfImg.src = p.avatar || `https://ui-avatars.com/api/?name=${p.username}&background=random&size=128`;
+        }
     }
 };
 
@@ -392,13 +427,16 @@ const Auth = {
             }
         });
 
-        document.getElementById('form-login').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.login(
-                document.getElementById('login-email').value,
-                document.getElementById('login-pass').value
-            );
-        });
+        const form = DOMHelper.get('form-login');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.login(
+                    DOMHelper.val('login-email'),
+                    DOMHelper.val('login-pass')
+                );
+            });
+        }
     },
 
     async login(email, pass) {
@@ -446,21 +484,35 @@ const Auth = {
         onValue(ref(db, `users/${uid}`), (snap) => {
             const data = snap.val();
             if (data) {
-                Store.commit('profile', data);
+                Store.commit('profile', { ...data, uid: uid });
                 UI.updateDOM();
             }
         });
 
-        // Online Presence
         const presenceRef = ref(db, `status/${uid}`);
         const connectedRef = ref(db, '.info/connected');
         onValue(connectedRef, (snap) => {
             if (snap.val() === true) {
                 const con = push(presenceRef);
-                con.onDisconnect().remove();
+                onDisconnect(con).remove();
                 set(con, { state: 'online', last_changed: serverTimestamp() });
+
+                DOMHelper.setText('online-counter', '1'); // Fallback
             }
         });
+
+        // Count Online
+        onValue(ref(db, 'status'), (snap) => {
+            if (snap.exists()) {
+                const count = Object.keys(snap.val()).length;
+                DOMHelper.setText('online-counter', count);
+            }
+        });
+    },
+
+    logout() {
+        signOut(auth);
+        window.location.reload();
     }
 };
 
@@ -474,8 +526,12 @@ const GameEngine = {
         multiplier: 1.0,
 
         start() {
-            const bet = parseInt(document.getElementById('m-bet').value);
-            const mines = parseInt(document.getElementById('m-mines').value);
+            const betInput = DOMHelper.val('m-bet-inp');
+            const bet = parseInt(betInput || 100);
+
+            const minesInput = DOMHelper.val('m-mines-rng');
+            const mines = parseInt(minesInput || 3);
+
             const p = Store.get('profile');
 
             if (bet > p.points) return UI.toast('Bakiye Yetersiz', 'error');
@@ -490,7 +546,6 @@ const GameEngine = {
             this.revealed = new Array(25).fill(false);
             this.grid = new Array(25).fill(0);
 
-            // Plant Mines
             let placed = 0;
             while (placed < mines) {
                 let r = Math.floor(Math.random() * 25);
@@ -501,12 +556,13 @@ const GameEngine = {
             }
 
             this.render();
-            document.getElementById('m-controls-start').classList.add('hidden');
-            document.getElementById('m-controls-cashout').classList.remove('hidden');
+            DOMHelper.hide('btn-m-play');
+            DOMHelper.show('btn-m-cashout');
         },
 
         render() {
-            const container = document.getElementById('m-grid-container');
+            const container = DOMHelper.get('m-grid-target');
+            if (!container) return;
             container.innerHTML = '';
 
             for (let i = 0; i < 25; i++) {
@@ -517,7 +573,7 @@ const GameEngine = {
                     if (this.grid[i] === 1) tile.classList.add('bomb');
                     else tile.classList.add('gem');
                 } else {
-                    tile.onclick = () => this.click(i);
+                    tile.onclick = () => this.click(i, tile);
                 }
                 container.appendChild(tile);
             }
@@ -529,7 +585,6 @@ const GameEngine = {
             this.revealed[i] = true;
 
             if (this.grid[i] === 1) {
-                // LOST
                 AudioFX.sfx.explosion();
                 AudioFX.sfx.error();
                 this.active = false;
@@ -537,16 +592,14 @@ const GameEngine = {
                 UI.toast('PATLADIN!', 'error');
                 this.resetUI();
             } else {
-                // GEM
                 AudioFX.sfx.success();
 
-                // Calculate Multiplier
                 const safeTotal = 25 - this.mines;
                 const revealedSafe = this.revealed.filter((r, idx) => r && this.grid[idx] === 0).length;
                 this.multiplier = this.calcMulti(revealedSafe, this.mines);
 
                 const win = Math.floor(this.bet * this.multiplier);
-                document.getElementById('m-cashout-val').innerText = UI.formatNumber(win);
+                DOMHelper.setText('gm-win-amount', UI.formatNumber(win));
 
                 this.render();
 
@@ -555,7 +608,6 @@ const GameEngine = {
         },
 
         calcMulti(hits, mines) {
-            // Simple exponential growth logic
             let m = 1.0;
             for (let i = 0; i < hits; i++) m *= (25 - i) / (25 - i - mines);
             return m;
@@ -579,8 +631,8 @@ const GameEngine = {
 
         resetUI() {
             setTimeout(() => {
-                document.getElementById('m-controls-start').classList.remove('hidden');
-                document.getElementById('m-controls-cashout').classList.add('hidden');
+                DOMHelper.show('btn-m-play');
+                DOMHelper.hide('btn-m-cashout');
             }, 2000);
         }
     },
@@ -601,7 +653,8 @@ const GameEngine = {
         spin() {
             if (this.spinning) return;
 
-            const bet = parseInt(document.getElementById('s-bet').value);
+            const betInput = DOMHelper.val('s-bet');
+            const bet = parseInt(betInput || 50);
             const p = Store.get('profile');
 
             if (bet > p.points) return UI.toast('Bakiye Yetersiz');
@@ -610,16 +663,21 @@ const GameEngine = {
             this.spinning = true;
             AudioFX.sfx.spin();
 
-            // Animate Reels
             [1, 2, 3].forEach((id, idx) => {
-                const el = document.getElementById(`reel-${id}`);
-                el.classList.add('blur-spin');
+                const el = DOMHelper.get(`rs-${id}`);
+                // Mock spin animation
+                el.innerHTML = this.symbols.map(s => `<div class="reel-item">${s.icon}</div>`).join('') +
+                    this.symbols.map(s => `<div class="reel-item">${s.icon}</div>`).join('');
+
+                el.style.transition = `transform ${1000 + idx * 500}ms cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
+                el.style.transform = 'translateY(-1000px)';
 
                 setTimeout(() => {
                     const result = this.symbols[Math.floor(Math.random() * this.symbols.length)];
                     this.reels[idx] = result;
-                    el.classList.remove('blur-spin');
-                    el.innerHTML = `<div class="reel-symbol text-6xl">${result.icon}</div>`;
+                    el.style.transition = 'none';
+                    el.style.transform = 'translateY(0)';
+                    el.innerHTML = `<div class="reel-item">${result.icon}</div>`;
                     AudioFX.sfx.click();
                 }, 1000 + (idx * 500));
             });
@@ -633,41 +691,27 @@ const GameEngine = {
         checkWin(bet) {
             const [r1, r2, r3] = this.reels;
             let win = 0;
+            // Guard against empty reels if error
+            if (!r1 || !r2 || !r3) return;
 
             if (r1.id === r2.id && r2.id === r3.id) {
                 win = bet * r1.val;
                 UI.toast(`JACKPOT! ${r1.icon} x3 (+${win})`, 'success');
                 AudioFX.sfx.win();
             } else if (r1.id === r2.id || r2.id === r3.id || r1.id === r3.id) {
-                // Pair
                 win = Math.floor(bet * 1.5);
                 UI.toast('İkili Eşleşme! (+' + win + ')');
+            } else {
+                UI.toast('Kazanamadın.', 'info');
             }
 
             if (win > 0) GameEngine.tx(win);
         }
     },
 
-    Roulette: {
-        currentBet: {},
-        spinning: false,
-        history: [],
-
-        addBet(spot, amount) {
-            if (this.currentBet[spot]) this.currentBet[spot] += amount;
-            else this.currentBet[spot] = amount;
-            UI.toast(`Bahis: ${spot} +${amount}`);
-        },
-
-        spin() {
-            if (this.spinning) return;
-            // Logic similar to slots but updates wheel rotation
-            // ...
-        }
-    },
-
-    // Core Transaction Handler
     tx(amount) {
+        if (!Store.get('user')) return;
+
         const uid = Store.get('user').uid;
         const p = Store.get('profile');
         const updates = {
@@ -679,7 +723,6 @@ const GameEngine = {
             updates['stats/wins'] = (p.stats.wins || 0) + 1;
             if (amount > (p.stats.maxWin || 0)) updates['stats/maxWin'] = amount;
 
-            // Add Experience
             updates.xp = (p.xp || 0) + Math.floor(amount / 10);
             if (updates.xp >= (p.level * CONFIG.GAME.LEVEL_XP_BASE)) {
                 updates.level = (p.level || 1) + 1;
@@ -697,16 +740,19 @@ const Chat = {
     init() {
         this.listen();
 
-        document.getElementById('chat-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.send();
-        });
+        const form = DOMHelper.get('chat-form');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.send();
+            });
+        }
     },
 
     listen() {
         const q = query(ref(db, 'chats/global'), limitToLast(50));
         onValue(q, (snap) => {
-            const container = document.getElementById('chat-feed');
+            const container = DOMHelper.get('chat-messages');
             if (!container) return;
             container.innerHTML = '';
 
@@ -718,11 +764,11 @@ const Chat = {
     },
 
     send() {
-        const input = document.getElementById('chat-input');
+        const input = DOMHelper.get('chat-msg-input');
+        if (!input) return;
         const text = input.value.trim();
         if (!text) return;
 
-        // Command Processor
         if (text.startsWith('/')) {
             this.processCommand(text);
             input.value = '';
@@ -730,6 +776,8 @@ const Chat = {
         }
 
         const p = Store.get('profile');
+        if (!p) return UI.toast('Giriş Yapmalısın', 'error');
+
         push(ref(db, 'chats/global'), {
             uid: p.uid,
             name: p.username,
@@ -744,20 +792,15 @@ const Chat = {
     renderMessage(data, container) {
         const isMe = Store.get('user')?.uid === data.uid;
         const div = document.createElement('div');
-        div.className = `chat-msg ${isMe ? 'mine' : 'other'} fade-in`;
-
-        // Define role badges
-        let badge = '';
-        if (data.role === 'founder') badge = '<span class="badge badge-warning text-[10px] ml-2">KURUCU</span>';
-        else if (data.role === 'admin') badge = '<span class="badge badge-danger text-[10px] ml-2">YÖNETİCİ</span>';
+        div.className = `msg-row ${isMe ? 'mine' : ''} fade-in`;
 
         div.innerHTML = `
+            <img src="https://ui-avatars.com/api/?name=${data.name}&background=random" class="msg-avatar">
             <div class="msg-content">
-                <div class="msg-header text-xs text-gray-400 mb-1 flex items-center">
-                    <span class="font-bold cursor-pointer hover:text-primary transition">${data.name}</span>
-                    ${badge}
+                <div class="msg-header">
+                    <span class="msg-user ${data.role}">${data.name}</span>
                 </div>
-                <div class="msg-text break-words">${this.escapeHtml(data.msg)}</div>
+                <div class="msg-text">${this.escapeHtml(data.msg)}</div>
             </div>
         `;
         container.appendChild(div);
@@ -768,16 +811,14 @@ const Chat = {
 
         switch (command.toLowerCase()) {
             case '/clear':
-                document.getElementById('chat-feed').innerHTML = '';
-                UI.toast('Sohbet temizlendi (Yerel)');
+                const c = DOMHelper.get('chat-messages');
+                if (c) c.innerHTML = '';
+                UI.toast('Sohbet temizlendi');
                 break;
             case '/roll':
                 const max = args[0] || 100;
                 const roll = Math.floor(Math.random() * max) + 1;
                 this.sendSystem(`${Store.get('profile').username} zar attı: ${roll} (1-${max})`);
-                break;
-            case '/give':
-                // Admin Only check would go here in cloud functions
                 break;
             default:
                 UI.toast('Bilinmeyen komut', 'error');
@@ -787,7 +828,7 @@ const Chat = {
     sendSystem(msg) {
         push(ref(db, 'chats/global'), {
             uid: 'SYSTEM',
-            name: 'SİSTEM BOTU',
+            name: 'SİSTEM',
             msg: msg,
             role: 'mod',
             ts: serverTimestamp()
@@ -795,109 +836,89 @@ const Chat = {
     },
 
     escapeHtml(text) {
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-};
-
-const Market = {
-    // Inventory and Shop Logic
-    items: [
-        { id: 'neon_red', name: 'Kızıl Neon', price: 5000, type: 'color' },
-        { id: 'neon_gold', name: 'Altın İsim', price: 50000, type: 'color' },
-        { id: 'xp_boost', name: 'XP Takviyesi', price: 1000, type: 'consumable' }
-    ],
-
-    buy(itemId) {
-        const item = this.items.find(i => i.id === itemId);
-        const p = Store.get('profile');
-
-        if (p.points < item.price) return UI.toast('Yetersiz Bakiye', 'error');
-
-        // Deduct
-        const updates = { points: p.points - item.price };
-        updates[`inventory/${itemId}`] = true;
-
-        update(ref(db, `users/${p.uid}`), updates)
-            .then(() => UI.toast(`${item.name} satın alındı!`))
-            .catch(e => UI.toast(e.message, 'error'));
+        return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
     }
 };
 
 const Router = {
-    routes: {
-        'dashboard': 'view-dashboard',
-        'games': 'view-games',
-        'market': 'view-market',
-        'profile': 'view-profile',
-        'chat': 'view-chat',
-        'admin': 'view-admin'
-    },
+    go(viewId) {
+        Store.commit('activeView', viewId);
 
-    go(route) {
-        Store.commit('activeView', route);
-
-        // Hide all views
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        const target = DOMHelper.get(`view-${viewId}`);
+        if (target) target.classList.add('active');
 
-        // Show target
-        const target = document.getElementById(this.routes[route]);
-        if (target) {
-            target.classList.add('active');
-            window.scrollTo(0, 0);
-        }
-
-        // Update active nav
         document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-        const nav = document.querySelector(`[data-link="${route}"]`);
+        const nav = document.querySelector(`.nav-link[data-page="${viewId}"]`);
         if (nav) nav.classList.add('active');
 
-        // Dynamic Header
-        document.getElementById('page-title').innerText = route.toUpperCase();
+        const titles = {
+            'dashboard': 'KOMUTA MERKEZİ',
+            'games': 'OYUN ARENASI',
+            'market': 'PAZAR YERİ',
+            'chat': 'İLETİŞİM',
+            'profile': 'PROFİL'
+        }
+        DOMHelper.setText('page-title-text', titles[viewId] || 'SİSTEM');
 
         AudioFX.sfx.hover();
+        UI.updateDOM();
     }
 };
 
-// Initialization Block
 document.addEventListener('DOMContentLoaded', () => {
-    console.log(`[SYSTEM] SAHIKALI CORE v${CONFIG.SYSTEM.VERSION} INIT...`);
-
-    // Init Modules
     Auth.init();
     Chat.init();
+    new ParticleSystem('particle-canvas');
 
-    // Particle Engine
-    new ParticleSystem('bg-canvas');
-
-    // Attach Globals for HTML interaction
     window.app = {
         router: Router,
-        game: GameEngine,
-        market: Market,
+        game: {
+            launch(id) {
+                UI.modal.open('game-modal');
+                DOMHelper.setText('gm-title', id.toUpperCase());
+                DOMHelper.setText('gm-win-amount', '0');
+
+                const stage = DOMHelper.get('game-stage');
+                if (stage) stage.innerHTML = '';
+
+                if (id === 'mines') {
+                    const tpl = DOMHelper.get('tpl-mines').content.cloneNode(true);
+                    stage.appendChild(tpl);
+                    GameEngine.Mines.resetUI();
+                } else if (id === 'slots') {
+                    const tpl = DOMHelper.get('tpl-slots').content.cloneNode(true);
+                    stage.appendChild(tpl);
+                    DOMHelper.setHTML('rs-1', '<div class="reel-item">7️⃣</div>');
+                    DOMHelper.setHTML('rs-2', '<div class="reel-item">7️⃣</div>');
+                    DOMHelper.setHTML('rs-3', '<div class="reel-item">7️⃣</div>');
+                } else if (id === 'roulette') {
+                    const tpl = DOMHelper.get('tpl-roulette').content.cloneNode(true);
+                    stage.appendChild(tpl);
+                }
+            },
+            close() {
+                UI.modal.close('game-modal');
+            },
+            mines: GameEngine.Mines,
+            slots: GameEngine.Slots,
+            roulette: {
+                bet(t) { UI.toast('Bahis Alındı: ' + t); },
+                spin() { UI.toast('Dönüyor...'); },
+                setChip(v) { UI.toast('Jeton: ' + v); }
+            }
+        },
         ui: UI,
-        auth: Auth,
-        store: Store
+        auth: Auth
     };
 
-    // Remove Loader
     setTimeout(() => {
-        document.getElementById('loader').style.opacity = '0';
-        setTimeout(() => document.getElementById('loader').remove(), 500);
+        const loader = DOMHelper.get('loader-overlay');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 500);
+        }
     }, 1500);
 
-    // Initial View
     Router.go('dashboard');
 });
-
-// Admin Panel Logic Stub
-const Admin = {
-    banUser(uid) {
-        update(ref(db, `users/${uid}`), { banned: true });
-        UI.toast(`Kullanıcı ${uid} yasaklandı.`);
-    },
-    broadcast(msg) {
-        Chat.sendSystem(`[DUYURU] ${msg}`);
-    }
-};
-
-window.admin = Admin;
