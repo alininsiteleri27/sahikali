@@ -1835,6 +1835,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Settings.init();  // Initialize theme first
     Auth.init();
     Chat.init();
+    Game.init();
 
     // Avatar URL input listener for live preview
     const avatarUrlInput = DOMHelper.get('settings-avatar-url');
