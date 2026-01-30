@@ -459,7 +459,7 @@ const Chat = {
                     <div class="invite-card">
                         <span class="invite-title">🏑 HAVA HOKEYİ</span>
                         <span class="invite-vs">VS</span>
-                        <button class="btn-game-join" onclick="Game.joinGame('${msg.gameId}')">
+                        <button class="btn-game-join" onclick="app.game.joinGame('${msg.gameId}')">
                             KABUL ET
                         </button>
                     </div>
@@ -1389,7 +1389,14 @@ const Game = {
         this.loop = this.loop.bind(this);
     },
 
-    async sendInvite() {
+    openGameMenu() {
+        UI.openModal('game-select-modal');
+    },
+
+    async sendInvite(gameType = 'hockey') {
+        // Close game menu first
+        UI.closeModal('game-select-modal');
+
         const p = Store.get('profile');
         if (!p) {
             alert('Önce giriş yapmalısın!');
@@ -1416,7 +1423,7 @@ const Game = {
                 avatar: p.avatar,
                 ts: serverTimestamp(),
                 type: 'invite',
-                game: 'hockey',
+                game: gameType,
                 gameId: this.gameId,
                 msg: 'Bir hava hokeyi maçı başlattı!'
             });
@@ -1550,8 +1557,8 @@ const Game = {
 
         if (status === 'waiting') {
             overlay.classList.remove('hidden');
-            countdown.textContent = 'BEKLENİYOR';
-            statusText.textContent = 'BEKLENİYOR...';
+            countdown.textContent = '⏳';
+            statusText.textContent = 'RAKIP BEKLENİYOR';
         } else if (status === 'countdown') {
             overlay.classList.remove('hidden');
             statusText.textContent = 'HAZIRLAN!';
@@ -1561,7 +1568,7 @@ const Game = {
             // Need interval? No, let's just use CSS anim or js timeout
             // This runs on every sync tick, so be careful not to restart anim
             const prev = countdown.textContent;
-            if (prev === 'BEKLENİYOR') {
+            if (prev === '⏳') {
                 this.runCountdownAnim();
             }
 
@@ -1571,9 +1578,9 @@ const Game = {
             DOMHelper.get('game-rematch-btn').classList.add('hidden');
         } else if (status === 'finished') {
             overlay.classList.remove('hidden');
-            const winner = this.state.p1.score >= 3 ? 'OYUNCU 1' : 'OYUNCU 2';
+            const winner = this.state.p1.score >= 3 ? 'P1' : 'P2';
             countdown.textContent = `${winner} KAZANDI!`;
-            statusText.textContent = 'OYUN BİTTİ';
+            statusText.textContent = 'BİTTİ';
             DOMHelper.get('game-rematch-btn').classList.remove('hidden');
         }
     },
