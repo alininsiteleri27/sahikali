@@ -190,22 +190,21 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- MAIN APPLICATION CONTAINER                 -->
+    <!-- MAIN APPLICATION CONTAINER (3-COLUMN LAYOUT) -->
     <!-- ========================================== -->
     <div id="app-container" class="app-layout hidden">
 
-        <!-- SIDEBAR NAVIGATION -->
+        <!-- 1. LEFT SIDEBAR -->
         <nav id="sidebar" class="sidebar glass-panel">
-            <div class="sidebar-header">
-                <div class="logo-area">
-                    <span class="logo-icon">💠</span>
-                    <span class="logo-full">NEXUS</span>
+            <div class="sidebar-header" onclick="window.router.navigate('settings')" style="cursor: pointer;"
+                title="Profil Ayarları">
+                <div class="user-profile-widget">
+                    <img src="https://ui-avatars.com/api/?name=User" id="user-avatar-img" class="sidebar-avatar">
+                    <div class="user-text">
+                        <span class="u-name" id="user-name">Yükleniyor...</span>
+                        <span class="u-role" id="user-role-badge">...</span>
+                    </div>
                 </div>
-                <button id="sidebar-toggle" class="icon-btn mobile-only">
-                    <svg viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-                    </svg>
-                </button>
             </div>
 
             <div class="sidebar-content">
@@ -214,58 +213,33 @@
                     <ul class="nav-list">
                         <li class="nav-item active" data-view="dashboard">
                             <a href="#" class="nav-link">
-                                <span class="nav-icon"><svg viewBox="0 0 24 24">
-                                        <path fill="currentColor"
-                                            d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
-                                    </svg></span>
-                                <span>Ana Sayfa</span>
+                                <span class="nav-icon">🏠</span> <span>Ana Sayfa</span>
                             </a>
                         </li>
                         <li class="nav-item" data-view="games">
                             <a href="#" class="nav-link">
-                                <span class="nav-icon"><svg viewBox="0 0 24 24">
-                                        <path fill="currentColor"
-                                            d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-                                    </svg></span>
-                                <span>Oyun Merkezi</span>
-                            </a>
-                        </li>
-                        <li class="nav-item" data-view="chat">
-                            <a href="#" class="nav-link">
-                                <span class="nav-icon"><svg viewBox="0 0 24 24">
-                                        <path fill="currentColor"
-                                            d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z" />
-                                    </svg></span>
-                                <span>Canlı Sohbet</span>
-                                <span class="badge" id="global-chat-badge">0</span>
-                            </a>
-                        </li>
-                        <li class="nav-item" data-view="messages">
-                            <a href="#" class="nav-link">
-                                <span class="nav-icon"><svg viewBox="0 0 24 24">
-                                        <path fill="currentColor"
-                                            d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                                    </svg></span>
-                                <span>Özel Mesajlar</span>
-                                <span class="badge hidden" id="dm-badge"></span>
+                                <span class="nav-icon">🎮</span> <span>Oyunlar</span>
                             </a>
                         </li>
                         <li class="nav-item" data-view="market">
                             <a href="#" class="nav-link">
-                                <span class="nav-icon"><svg viewBox="0 0 24 24">
-                                        <path fill="currentColor"
-                                            d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-                                    </svg></span>
-                                <span>Market</span>
+                                <span class="nav-icon">🛒</span> <span>Market</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" data-view="clan">
+                            <a href="#" class="nav-link">
+                                <span class="nav-icon">🛡️</span> <span>Klanım</span>
                             </a>
                         </li>
                         <li class="nav-item" data-view="leaderboard">
                             <a href="#" class="nav-link">
-                                <span class="nav-icon"><svg viewBox="0 0 24 24">
-                                        <path fill="currentColor"
-                                            d="M16 11V3H8v6H2v12h20V11h-6zm-6-6h4v14h-4V5zm-6 6h4v8H4v-8zm16 8h-4v-6h4v6z" />
-                                    </svg></span>
-                                <span>Lider Tablosu</span>
+                                <span class="nav-icon">🏆</span> <span>Sıralama</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" data-view="messages">
+                            <a href="#" class="nav-link">
+                                <span class="nav-icon">💬</span> <span>Mesajlar</span>
+                                <span class="badge hidden" id="dm-badge"></span>
                             </a>
                         </li>
                     </ul>
@@ -276,11 +250,7 @@
                     <ul class="nav-list">
                         <li class="nav-item" data-view="admin">
                             <a href="#" class="nav-link nav-link-admin">
-                                <span class="nav-icon"><svg viewBox="0 0 24 24">
-                                        <path fill="currentColor"
-                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3 3.1-3 1.71 0 3.1 1.29 3.1 3v2z" />
-                                    </svg></span>
-                                <span>Panel</span>
+                                <span class="nav-icon">⚙️</span> <span>Panel</span>
                             </a>
                         </li>
                     </ul>
@@ -289,320 +259,55 @@
 
             <div class="sidebar-footer">
                 <button id="logout-btn" class="logout-btn">
-                    <svg viewBox="0 0 24 24">
-                        <path fill="currentColor"
-                            d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-                    </svg>
-                    <span>Çıkış Yap</span>
+                    <span class="icon">🚪</span> Çıkış Yap
                 </button>
             </div>
         </nav>
 
-        <!-- MAIN CONTENT WRAPPER -->
+        <!-- 2. MAIN CONTENT AREA -->
         <main class="main-content">
-
-            <!-- TOP BAR -->
-            <header class="topbar glass-panel">
-                <div class="topbar-left">
-                    <button id="mobile-menu-btn" class="icon-btn mobile-only">☰</button>
-                    <h2 id="page-title" class="page-title">Ana Sayfa</h2>
+            <!-- Top Header -->
+            <header class="top-header glass-panel">
+                <div class="header-left">
+                    <h2 id="page-title">Ana Sayfa</h2>
                 </div>
-
-                <div class="topbar-right">
-                    <!-- Economy Display -->
-                    <div class="economy-widget" title="Nexus Puanı">
-                        <span class="currency-icon">💠</span>
-                        <span class="currency-amount" id="user-points">0</span>
-                    </div>
-
-                    <!-- User Profile Dropdown -->
-                    <div class="user-profile-menu">
-                        <div class="profile-trigger" id="profile-dropdown-btn">
-                            <div class="avatar-container">
-                                <img src="https://ui-avatars.com/api/?name=User&background=random" alt="Avatar"
-                                    id="user-avatar-img">
-                                <span class="status-indicator online"></span>
-                            </div>
-                            <div class="user-info-mini mobile-hidden">
-                                <span class="username" id="user-name">Yükleniyor...</span>
-                                <span class="user-role" id="user-role-badge">Üye</span>
-                            </div>
-                        </div>
+                <div class="header-right">
+                    <div class="economy-pill">
+                        <span class="icon">💠</span>
+                        <span id="user-points">0</span>
                     </div>
                 </div>
             </header>
 
-            <!-- DYNAMIC VIEW CONTAINER -->
+            <!-- Dynamic Views -->
             <div id="views-container" class="views-wrapper">
 
-                <!-- VIEW: DASHBOARD -->
+                <!-- DASHBOARD VIEW -->
                 <section id="view-dashboard" class="view active-view">
-
-                    <!-- 1. Hero / Welcome Section -->
-                    <div class="dashboard-hero glass-panel fade-in-up">
-                        <div class="hero-content">
-                            <h1>Hoş Geldin, <span id="dash-username" class="text-gradient">Oyuncu</span></h1>
-                            <p class="hero-subtitle">Nexus Platformuna tekrar bağlandın. Bugün ne yapmak istersin?</p>
-
-                            <div class="hero-actions">
-                                <button class="btn btn-primary btn-lg pulse-anim"
-                                    onclick="window.router.navigate('games')">
-                                    <span class="btn-icon">🎮</span> Hemen Oyna
-                                </button>
-                                <button class="btn btn-secondary btn-lg" onclick="window.router.navigate('market')">
-                                    <span class="btn-icon">🛒</span> Market
-                                </button>
-                                <button class="btn btn-glass btn-lg" onclick="window.router.navigate('clan')">
-                                    <span class="btn-icon">🛡️</span> Klanım
-                                </button>
-                            </div>
-                        </div>
-                        <div class="hero-decoration">
-                            <div class="floating-orb"></div>
+                    <div class="hero-banner glass-panel">
+                        <h1>Hoş Geldin, <span id="dash-username" class="highlight">Oyuncu</span>!</h1>
+                        <p>Bugün Nexus dünyasında neler yapmak istersin?</p>
+                        <div class="hero-btns">
+                            <button class="btn btn-primary" onclick="window.router.navigate('games')">Oyun Oyna</button>
+                            <button class="btn btn-glass" onclick="window.router.navigate('market')">Market</button>
                         </div>
                     </div>
 
-                    <!-- 2. Main Grid Layout -->
-                    <div class="dashboard-main-grid">
-
-                        <!-- Left Column: Stats & Progress -->
-                        <div class="dash-col-left">
-                            <div class="stats-row">
-                                <div class="stat-card-mini glass-panel">
-                                    <div class="stat-icon-box">🏆</div>
-                                    <div>
-                                        <div class="stat-label">Sıralama</div>
-                                        <div class="stat-value" id="dash-rank">#--</div>
-                                    </div>
-                                </div>
-                                <div class="stat-card-mini glass-panel">
-                                    <div class="stat-icon-box">💠</div>
-                                    <div>
-                                        <div class="stat-label">Puan</div>
-                                        <div class="stat-value" id="dash-points">0</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- News / Announcements Widget -->
-                            <div class="glass-panel dash-widget">
-                                <div class="widget-header">
-                                    <h3>📣 Duyurular</h3>
-                                </div>
-                                <div class="widget-body">
-                                    <div class="announcement-item">
-                                        <span class="tag tag-new">YENİ</span>
-                                        <p>Tetris turnuvası bu hafta sonu başlıyor! Büyük ödül 50.000 Nexus Puanı.</p>
-                                    </div>
-                                    <div class="announcement-item">
-                                        <span class="tag tag-update">GÜNCELLEME</span>
-                                        <p>Mayın Tarlası oyunu artık 2 kat daha fazla puan kazandırıyor.</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="stats-grid-simple">
+                        <div class="stat-box">
+                            <span class="lbl">Sıralama</span>
+                            <span class="val" id="dash-rank">#--</span>
                         </div>
-
-                        <!-- Right Column: Live Activity -->
-                        <div class="dash-col-right">
-                            <div class="glass-panel dash-widget full-height">
-                                <div class="widget-header">
-                                    <h3>⚡ Canlı Akış</h3>
-                                    <span class="live-dot"></span>
-                                </div>
-                                <div class="activity-list" id="global-activity-list">
-                                    <!-- Populated by JS -->
-                                    <div class="loading-spinner"></div>
-                                </div>
-                            </div>
+                        <div class="stat-box">
+                            <span class="lbl">Oyunlar</span>
+                            <span class="val" id="dash-games-played">0</span>
                         </div>
-
                     </div>
                 </section>
 
-                <!-- VIEW: GAMES HUB -->
+                <!-- GAMES HUB VIEW -->
                 <section id="view-games" class="view">
                     <div class="games-grid">
-                        <!-- Chess -->
-                        <div class="game-card glass-panel card-hover" onclick="window.gameSystem.launch('chess')">
-                            <div class="game-img chess-bg">
-                                <div class="game-overlay">
-                                    <button class="btn btn-play">OYNA</button>
-                                </div>
-                            </div>
-                            <div class="game-info">
-                                <h4>Satranç</h4>
-                                <p>Strateji ustalarının meydanı</p>
-                            </div>
-                        </div>
-
-                        <!-- 2048 -->
-                        <div class="game-card glass-panel card-hover" onclick="window.gameSystem.launch('2048')">
-                            <div class="game-img game2048-bg">
-                                <div class="game-overlay">
-                                    <button class="btn btn-play">OYNA</button>
-                                </div>
-                            </div>
-                            <div class="game-info">
-                                <h4>2048</h4>
-                                <p>Sayıları birleştir, zirveye ulaş</p>
-                            </div>
-                        </div>
-
-                        <!-- Wheel of Fortune -->
-                        <div class="game-card glass-panel card-hover" onclick="window.gameSystem.launch('wheel')">
-                            <div class="game-img wheel-bg">
-                                <div class="game-overlay">
-                                    <button class="btn btn-play">ÇEVİR</button>
-                                </div>
-                            </div>
-                            <div class="game-info">
-                                <h4>Çarkıfelek</h4>
-                                <p>Şansını dene, ödülleri kap</p>
-                            </div>
-                        </div>
-
-                        <!-- Rock Paper Scissors -->
-                        <div class="game-card glass-panel card-hover" onclick="window.gameSystem.launch('rps')">
-                            <div class="game-img rps-bg">
-                                <div class="game-overlay">
-                                    <button class="btn btn-play">OYNA</button>
-                                </div>
-                            </div>
-                            <div class="game-info">
-                                <h4>Taş Kağıt Makas</h4>
-                                <p>Klasik düello heyecanı</p>
-                            </div>
-                        </div>
-
-                        <!-- Coin Toss -->
-                        <div class="game-card glass-panel card-hover" onclick="window.gameSystem.launch('coin')">
-                            <div class="game-img coin-bg">
-                                <div class="game-overlay">
-                                    <button class="btn btn-play">AT</button>
-                                </div>
-                            </div>
-                            <div class="game-info">
-                                <h4>Yazı Tura</h4>
-                                <p>50% Şans, 100% Adrenalin</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Minesweeper (New Feature) -->
-                    <div class="game-card glass-panel card-hover" onclick="window.gameSystem.launch('mines')">
-                        <div class="game-img" style="background: linear-gradient(135deg, #FF512F, #DD2476);">
-                            <div class="game-overlay">
-                                <button class="btn btn-play">OYNA</button>
-                            </div>
-                        </div>
-                        <div class="game-info">
-                            <h4>Mayın Tarlası</h4>
-                            <p>Risk al, patlamadan kazan</p>
-                        </div>
-                    </div>
-            </div>
-            </section>
-
-            <!-- VIEW: CHAT ROOM (Global) -->
-            <section id="view-chat" class="view">
-                <div class="chat-container glass-panel">
-                    <div class="chat-header">
-                        <div class="chat-info">
-                            <h3>#genel-sohbet</h3>
-                            <span class="online-count"><span id="chat-online-count">0</span> Çevrimiçi</span>
-                        </div>
-                        <div class="chat-actions">
-                            <button class="icon-btn" id="chat-settings-btn" title="Ayarlar">⚙️</button>
-                        </div>
-                    </div>
-                    <div class="chat-messages" id="global-chat-messages">
-                        <!-- Messages Injected Here -->
-                        <div class="system-message">Sohbet sunucusuna bağlanıldı. Hoş geldin!</div>
-                    </div>
-                    <div class="chat-input-area">
-                        <form id="global-chat-form">
-                            <input type="text" id="global-chat-input" placeholder="Mesajını yaz..." autocomplete="off">
-                            <button type="submit" class="btn btn-primary send-btn">
-                                <svg viewBox="0 0 24 24">
-                                    <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                                </svg>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW: MESSAGES (DM) -->
-            <section id="view-messages" class="view">
-                <div class="dm-layout glass-panel">
-                    <div class="dm-sidebar">
-                        <div class="dm-search">
-                            <input type="text" placeholder="Kullanıcı Ara...">
-                        </div>
-                        <div class="dm-list" id="dm-users-list">
-                            <!-- User List Items -->
-                        </div>
-                    </div>
-                    <div class="dm-content empty" id="dm-active-chat">
-                        <div class="empty-placeholder">
-                            <div class="icon">💬</div>
-                            <p>Mesajlaşmak için bir sohbet seçin veya yeni birini bulun.</p>
-                        </div>
-                        <!-- Actual Chat Structure (Hidden Initially) -->
-                        <div class="dm-chat-interface hidden">
-                            <div class="dm-header">
-                                <div class="user-details">
-                                    <img src="" alt="" class="dm-avatar">
-                                    <h4 class="dm-username">Username</h4>
-                                </div>
-                                <button class="icon-btn close-chat-mobile mobile-only">✕</button>
-                            </div>
-                            <div class="dm-messages-area" id="dm-messages-area"></div>
-                            <div class="dm-input-area">
-                                <form id="dm-form">
-                                    <input type="text" id="dm-input" placeholder="Özel mesaj..." autocomplete="off">
-                                    <button type="submit" class="btn btn-primary">➤</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW: ADMIN PANEL -->
-            <section id="view-admin" class="view">
-                <div class="admin-dashboard">
-                    <div class="admin-header glass-panel">
-                        <h2>Yönetim Merkezi</h2>
-                        <div class="admin-controls">
-                            <span class="admin-badge">YETKİLİ</span>
-                        </div>
-                    </div>
-
-                    <div class="admin-grid">
-                        <div class="admin-card glass-panel">
-                            <h3>Üye Yönetimi & Ceza</h3>
-                            <div class="admin-form">
-                                <input type="text" id="admin-target-user" placeholder="Kullanıcı ID veya E-posta">
-                                <div class="action-buttons">
-                                    <button class="btn btn-danger btn-sm"
-                                        onclick="window.adminSystem.banUser()">BAN</button>
-                                    <button class="btn btn-warning btn-sm"
-                                        onclick="window.adminSystem.muteUser()">MUTE</button>
-                                    <button class="btn btn-info btn-sm"
-                                        onclick="window.adminSystem.kickUser()">KICK</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="admin-card glass-panel">
-                            <h3>Sistem Duyurusu</h3>
-                            <div class="admin-form">
-                                <textarea id="admin-announce-text"
-                                    placeholder="Tüm kullanıcılara gidecek mesaj..."></textarea>
-                                <button class="btn btn-primary btn-sm"
-                                    onclick="window.adminSystem.sendAnnouncement()">YAYINLA</button>
-                            </div>
-                        </div>
 
                         <div class="admin-card glass-panel">
                             <h3>Oyun Kontrolü</h3>
@@ -629,7 +334,7 @@
                             <div class="log-entry"><span class="log-time">[SYSTEM]</span> Admin paneli yüklendi...</div>
                         </div>
                     </div>
-                </div>
+            </div>
     </div>
     </section>
 
