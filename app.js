@@ -288,32 +288,48 @@ class AuthManager {
 
     completeLoginFlow() {
         // Hide Auth, Show App
-        document.getElementById('auth-module').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('hidden');
+        const authModule = document.getElementById('auth-module');
+        const appContainer = document.getElementById('app-container');
 
-        // Update UI with User Data
-        document.getElementById('user-name').textContent = STATE.userData.username;
-        document.getElementById('dash-username').textContent = STATE.userData.username;
-        document.getElementById('user-points').textContent = STATE.userData.points;
-        document.getElementById('user-role-badge').textContent = this.translateRole(STATE.userData.role);
-        document.getElementById('dash-rank').textContent = "#" + (STATE.userData.rank || "-"); // Calculated later
-        document.getElementById('dash-games-played').textContent = STATE.userData.stats.gamesPlayed;
-        document.getElementById('user-avatar-img').src = STATE.userData.avatar;
+        if (authModule) authModule.classList.add('hidden');
+        if (appContainer) appContainer.classList.remove('hidden');
+
+        // Update UI with User Data (Safe Access)
+        const safeData = STATE.userData || {};
+        const safeStats = safeData.stats || {};
+
+        const setText = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
+
+        setText('user-name', safeData.username || 'Kullanıcı');
+        setText('dash-username', safeData.username || 'Kullanıcı');
+        setText('user-points', safeData.points || 0);
+        setText('user-role-badge', this.translateRole(safeData.role));
+        setText('dash-rank', "#" + (safeData.rank || "-"));
+        setText('dash-games-played', safeStats.gamesPlayed || 0);
+
+        const avatarImg = document.getElementById('user-avatar-img');
+        if (avatarImg) avatarImg.src = safeData.avatar || 'https://ui-avatars.com/api/?name=User';
 
         // Show Admin Panel if privileged
-        if (['admin', 'founder'].includes(STATE.userData.role)) {
-            document.getElementById('admin-nav-section').classList.remove('hidden');
-        } else {
-            document.getElementById('admin-nav-section').classList.add('hidden');
+        const adminSection = document.getElementById('admin-nav-section');
+        if (adminSection) {
+            if (['admin', 'founder'].includes(safeData.role)) {
+                adminSection.classList.remove('hidden');
+            } else {
+                adminSection.classList.add('hidden');
+            }
         }
 
-        // Initialize user interaction for audio
-        this.ui.initAudio();
-
         // Routing default
-        window.router.navigate('dashboard');
-        this.ui.hideLoader();
-        this.ui.showToast(`Hoş geldin, ${STATE.userData.username}!`, 'success');
+        if (window.router) window.router.navigate('dashboard');
+
+        if (this.ui) {
+            this.ui.hideLoader();
+            this.ui.showToast(`Hoş geldin, ${safeData.username}!`, 'success');
+        }
     }
 
     showAuthScreen() {
