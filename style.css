@@ -1395,3 +1395,174 @@ small.text-muted {
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================================================
+   FOUNDER PANEL
+   ============================================================================ */
+
+.founder-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.founder-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--danger), var(--primary));
+    border-radius: 1rem;
+    color: white;
+}
+
+.founder-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.founder-section {
+    padding: 1rem 0;
+}
+
+.founder-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.founder-actions .btn {
+    width: 100%;
+}
+
+.founder-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.founder-stat {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.founder-stat:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary);
+    box-shadow: 0 8px 20px rgba(0, 198, 255, 0.2);
+}
+
+.founder-stat i {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.founder-stat-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.founder-stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.complaints-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: var(--bg-surface);
+    border-radius: 0.5rem;
+}
+
+.complaint-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.complaint-item:hover {
+    border-color: var(--primary);
+}
+
+.complaint-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.complaint-type {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.complaint-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.complaint-from {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.complaint-message {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    padding: 0.75rem;
+    background: var(--bg-surface);
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.complaint-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-success {
+    background: var(--success);
+    color: #000;
+}
+
+.btn-success:hover {
+    background: #00dd88;
+    transform: translateY(-2px);
+}
+
+.btn-warning {
+    background: var(--warning);
+    color: #000;
+}
+
+.btn-warning:hover {
+    background: #ff9900;
+    transform: translateY(-2px);
+}
+
+/* Responsive Founder Panel */
+@media (max-width: 768px) {
+    .founder-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .founder-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .founder-header h1 {
+        font-size: 1.5rem;
+    }
+}
