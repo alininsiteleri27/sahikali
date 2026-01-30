@@ -526,7 +526,13 @@ const Chat = {
         const mainBadge = DOMHelper.get('chat-badge');
         if (mainBadge) {
             mainBadge.textContent = totalUnread;
-            mainBadge.style.display = totalUnread > 0 ? 'flex' : 'none';
+            if (totalUnread > 0) {
+                mainBadge.style.display = 'flex';
+                mainBadge.classList.remove('hidden');
+            } else {
+                mainBadge.style.display = 'none';
+                mainBadge.classList.add('hidden');
+            }
         }
     },
 
@@ -540,20 +546,15 @@ const Chat = {
         }
 
         container.innerHTML = this.dmList.map(chat => {
-            const time = chat.lastUpdate ? new Date(chat.lastUpdate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
             const unreadClass = chat.unread > 0 ? 'unread' : '';
 
             return `
                 <div class="dm-list-item ${unreadClass}" onclick="app.chat.openDM('${chat.uid}', '${chat.username}', '${chat.avatar}')">
                     <img src="${chat.avatar || 'https://ui-avatars.com/api/?name=' + chat.username}" class="dm-avatar" alt="${chat.username}">
                     <div class="dm-info">
-                        <div class="dm-name">
+                        <div class="dm-name" style="align-items: center;">
                             ${chat.username}
-                            <span class="dm-time">${time}</span>
-                        </div>
-                        <div class="dm-preview">
-                            ${this.escapeHTML(chat.lastMessage || '')}
-                            ${chat.unread > 0 ? `<span class="dm-badge">${chat.unread}</span>` : ''}
+                             ${chat.unread > 0 ? '<div class="unread-dot"></div>' : ''}
                         </div>
                     </div>
                 </div>
