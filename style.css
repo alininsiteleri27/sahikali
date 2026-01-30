@@ -2531,89 +2531,41 @@ body.modal-open {
     letter-spacing: 0.5px;
 }
 
-.members-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
+/* ============================================================================
+   MEMBERS LIST (Updated Layout)
+   ============================================================================ */
 
-.member-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 0.875rem;
-    overflow: hidden;
-    transition: all 0.3s;
+.members-list-container {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    /* Added margin-bottom to match previous .members-grid */
 }
 
-.member-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--primary);
-    box-shadow: 0 10px 30px rgba(0, 198, 255, 0.15);
-}
-
-.member-card.member-online {
-    border-color: rgba(0, 255, 157, 0.3);
-}
-
-.member-card-header {
-    position: relative;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, var(--bg-surface), var(--bg-card));
+.member-list-item {
     display: flex;
-    justify-content: center;
     align-items: center;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s;
+}
+
+.member-list-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary);
+}
+
+.member-avatar-wrapper {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin-right: 1rem;
 }
 
 .member-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid var(--primary);
-    object-fit: cover;
-}
-
-.member-online-badge {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    width: 12px;
-    height: 12px;
-    background: var(--success);
-    border-radius: 50%;
-    border: 2px solid var(--bg-card);
-    animation: pulse 2s infinite;
-}
-
-.member-card-body {
-    padding: 1.25rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.member-name {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    text-align: center;
-    margin: 0;
-}
-
-.member-email {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    text-align: center;
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.member-badges {
     display: flex;
     gap: 0.5rem;
     justify-content: center;
