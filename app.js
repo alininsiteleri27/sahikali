@@ -5,7 +5,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
     getDatabase, ref, set, get, update, push, onValue,
-    serverTimestamp, query, limitToLast, onDisconnect
+    serverTimestamp, query, limitToLast, onDisconnect, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // ============================================================================
@@ -419,31 +419,208 @@ const Router = {
 // ============================================================================
 
 const Chat = {
-    init() {
-        this.listen();
+    activeTab: 'global', // 'global' or 'dm'
+    activeDM: null, // target user uid
+    dmList: [],
 
-        // Floating chat form only
-        const floatingForm = DOMHelper.get('floating-chat-form');
-        if (floatingForm) {
-            floatingForm.addEventListener('submit', (e) => {
+    init() {
+        this.listenGlobal();
+        this.listenDMList();
+
+        // Global Chat Form
+        const globalForm = DOMHelper.get('floating-chat-form');
+        if (globalForm) {
+            globalForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                this.sendFloating();
+                this.sendGlobal();
+            });
+        }
+
+        // DM Chat Form
+        const dmForm = DOMHelper.get('dm-chat-form');
+        if (dmForm) {
+            dmForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.sendDM();
             });
         }
     },
 
-    listen() {
+    switchTab(tab) {
+        this.activeTab = tab;
+
+        // Update Tabs UI
+        document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
+        const tabBtn = DOMHelper.get(`tab-${tab}`);
+        if (tabBtn) tabBtn.classList.add('active');
+
+        // Update Sections UI
+        document.querySelectorAll('.chat-section').forEach(s => s.classList.remove('active'));
+        const section = DOMHelper.get(`section-${tab}`);
+        if (section) section.classList.add('active');
+
+        // Scroll adjustments
+        if (tab === 'global') {
+            const container = DOMHelper.get('floating-chat-messages');
+            if (container) container.scrollTop = container.scrollHeight;
+        } else {
+            // If switching to DM tab, update list view
+            // If we are already in a chat, show it, else show list
+            if (!this.activeDM) {
+                this.showDMList();
+            }
+        }
+    },
+
+    listenGlobal() {
         const q = query(ref(db, 'chats/global'), limitToLast(50));
         onValue(q, (snap) => {
-            // Floating chat container only
-            const floatingContainer = DOMHelper.get('floating-chat-messages');
-            if (floatingContainer) {
-                floatingContainer.innerHTML = '';
+            const container = DOMHelper.get('floating-chat-messages');
+            if (container) {
+                container.innerHTML = '';
                 snap.forEach(child => {
-                    this.renderMessage(child.val(), floatingContainer);
+                    this.renderMessage(child.val(), container);
                 });
-                floatingContainer.scrollTop = floatingContainer.scrollHeight;
+                container.scrollTop = container.scrollHeight;
             }
+        });
+    },
+
+    listenDMList() {
+        const user = Store.get('profile');
+        if (!user) return;
+
+        const dmRef = ref(db, `user-chats/${user.uid}`);
+        onValue(dmRef, (snap) => {
+            if (!snap.exists()) {
+                this.dmList = [];
+                this.renderDMList();
+                this.updateBadges();
+                return;
+            }
+
+            const data = snap.val();
+            this.dmList = Object.entries(data)
+                .map(([uid, info]) => ({ uid, ...info }))
+                .sort((a, b) => b.lastUpdate - a.lastUpdate);
+
+            this.updateBadges();
+
+            // Only re-render list if we are viewing the list
+            if (this.activeTab === 'dm' && !this.activeDM) {
+                this.renderDMList();
+            }
+        });
+    },
+
+    updateBadges() {
+        const totalUnread = this.dmList.reduce((acc, chat) => acc + (chat.unread || 0), 0);
+
+        const dmBadge = DOMHelper.get('dm-total-badge');
+        if (dmBadge) {
+            dmBadge.textContent = totalUnread;
+            if (totalUnread > 0) dmBadge.classList.remove('hidden');
+            else dmBadge.classList.add('hidden');
+        }
+
+        const mainBadge = DOMHelper.get('chat-badge');
+        if (mainBadge) {
+            mainBadge.textContent = totalUnread;
+            mainBadge.style.display = totalUnread > 0 ? 'flex' : 'none';
+        }
+    },
+
+    renderDMList() {
+        const container = DOMHelper.get('dm-list');
+        if (!container) return;
+
+        if (this.dmList.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center p-3">Henüz mesajınız yok.</p>';
+            return;
+        }
+
+        container.innerHTML = this.dmList.map(chat => {
+            const time = chat.lastUpdate ? new Date(chat.lastUpdate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
+            const unreadClass = chat.unread > 0 ? 'unread' : '';
+
+            return `
+                <div class="dm-list-item ${unreadClass}" onclick="app.chat.openDM('${chat.uid}', '${chat.username}', '${chat.avatar}')">
+                    <img src="${chat.avatar || 'https://ui-avatars.com/api/?name=' + chat.username}" class="dm-avatar" alt="${chat.username}">
+                    <div class="dm-info">
+                        <div class="dm-name">
+                            ${chat.username}
+                            <span class="dm-time">${time}</span>
+                        </div>
+                        <div class="dm-preview">
+                            ${this.escapeHTML(chat.lastMessage || '')}
+                            ${chat.unread > 0 ? `<span class="dm-badge">${chat.unread}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    showDMList() {
+        this.activeDM = null;
+        this.activeDMListener = null; // We might want to keep it detailed, but for simplicity reset
+
+        DOMHelper.get('dm-chat-view').classList.add('hidden');
+        DOMHelper.get('dm-list-view').classList.remove('hidden');
+        this.renderDMList();
+    },
+
+    startDM(targetUid, username, avatar) {
+        // Switch to DM tab
+        if (!UI.floatingChatOpen) UI.toggleFloatingChat();
+        this.switchTab('dm');
+        this.openDM(targetUid, username, avatar);
+    },
+
+    openDM(targetUid, username, avatar) {
+        this.activeDM = targetUid;
+
+        // UI Updates
+        DOMHelper.get('dm-list-view').classList.add('hidden');
+        DOMHelper.get('dm-chat-view').classList.remove('hidden');
+        DOMHelper.setText('dm-chat-username', username);
+
+        // Listen Messages
+        this.listenDMMessages(targetUid);
+
+        // Reset unread count
+        const myUid = Store.get('profile').uid;
+        update(ref(db, `user-chats/${myUid}/${targetUid}`), {
+            unread: 0
+        });
+    },
+
+    closeDM() {
+        this.showDMList();
+    },
+
+    listenDMMessages(targetUid) {
+        const myUid = Store.get('profile').uid;
+        const roomId = [myUid, targetUid].sort().join('_');
+        const container = DOMHelper.get('dm-messages');
+
+        // Unsubscribe previous listener if needed (Firebase JS SDK handles overwrite but good practice)
+
+        const q = query(ref(db, `chats/dm/${roomId}`), limitToLast(50));
+
+        onValue(q, (snap) => {
+            if (!container || this.activeDM !== targetUid) return;
+
+            container.innerHTML = '';
+            if (!snap.exists()) {
+                container.innerHTML = '<p class="text-muted text-center p-3">Mesajlaşmaya başlayın!</p>';
+                return;
+            }
+
+            snap.forEach(child => {
+                this.renderMessage(child.val(), container);
+            });
+            container.scrollTop = container.scrollHeight;
         });
     },
 
@@ -481,10 +658,8 @@ const Chat = {
                 </div>
             `;
         } else {
-            // Normal message
             div.innerHTML = `
-                <img src="${msg.avatar || 'https://ui-avatars.com/api/?name=User&background=666&color=fff'}" 
-                     class="msg-avatar" alt="${msg.name}">
+                <img src="${msg.avatar || 'https://ui-avatars.com/api/?name=User'}" class="msg-avatar" alt="${msg.name}">
                 <div class="msg-content">
                     <div class="msg-header">
                         <span class="msg-user">${this.escapeHTML(msg.name)}</span>
@@ -497,7 +672,7 @@ const Chat = {
         container.appendChild(div);
     },
 
-    sendFloating() {
+    async sendGlobal() {
         const input = DOMHelper.get('floating-chat-input');
         if (!input) return;
         const text = input.value.trim();
@@ -506,24 +681,79 @@ const Chat = {
         const p = Store.get('profile');
         if (!p) return;
 
-        push(ref(db, 'chats/global'), {
+        await push(ref(db, 'chats/global'), {
             uid: p.uid,
             name: p.username,
-            msg: text,
             avatar: p.avatar,
+            msg: text,
             ts: serverTimestamp(),
             type: 'text'
         });
 
-        // Update message count
-        update(ref(db, `users/${p.uid}`), {
-            messageCount: (p.messageCount || 0) + 1
+        // Update stats
+        runTransaction(ref(db, `users/${p.uid}/messageCount`), (count) => (count || 0) + 1);
+
+        input.value = '';
+    },
+
+    async sendDM() {
+        const input = DOMHelper.get('dm-chat-input');
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text || !this.activeDM) return;
+
+        const myProfile = Store.get('profile');
+        const targetUid = this.activeDM;
+        const targetUsername = DOMHelper.get('dm-chat-username').textContent;
+        const roomId = [myProfile.uid, targetUid].sort().join('_');
+
+        // Push Message
+        await push(ref(db, `chats/dm/${roomId}`), {
+            uid: myProfile.uid,
+            name: myProfile.username,
+            avatar: myProfile.avatar,
+            msg: text,
+            ts: serverTimestamp(),
+            type: 'text'
+        });
+
+        // Update My List (reset unread)
+        update(ref(db, `user-chats/${myProfile.uid}/${targetUid}`), {
+            username: targetUsername,
+            avatar: 'https://ui-avatars.com/api/?name=' + targetUsername,
+            lastMessage: text,
+            lastUpdate: serverTimestamp(),
+            unread: 0
+        });
+
+        // Update Target List (increment unread)
+        const targetRef = ref(db, `user-chats/${targetUid}/${myProfile.uid}`);
+        await runTransaction(targetRef, (data) => {
+            if (!data) {
+                return {
+                    username: myProfile.username,
+                    avatar: myProfile.avatar,
+                    lastMessage: text,
+                    lastUpdate: serverTimestamp(),
+                    unread: 1
+                };
+            }
+            data.lastMessage = text;
+            data.lastUpdate = serverTimestamp();
+            data.unread = (data.unread || 0) + 1;
+
+            // Ensure username/avatar are current
+            data.username = myProfile.username;
+            data.avatar = myProfile.avatar;
+
+            return data;
         });
 
         input.value = '';
     },
 
     escapeHTML(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -1461,49 +1691,45 @@ const Members = {
     },
 
     renderMembersList() {
-        const container = DOMHelper.get('members-grid');
-        if (!container) return;
+        const grid = DOMHelper.get('members-list-container');
+        if (!grid) return;
+
+        // Update stats
+        const onlineCount = this.filteredMembers.filter(m => this.onlineUserIds.includes(m.uid)).length;
+        DOMHelper.setText('members-total', this.allMembers.length);
+        DOMHelper.setText('members-online', onlineCount);
+        DOMHelper.setText('members-showing', this.filteredMembers.length);
 
         if (this.filteredMembers.length === 0) {
-            container.innerHTML = '<p class="text-muted">Üye bulunamadı.</p>';
+            grid.innerHTML = '<p class="text-muted text-center w-full p-4">Üye bulunamadı.</p>';
             return;
         }
 
-        container.innerHTML = this.filteredMembers.map(member => {
-            const roleText = member.role === 'founder' ? 'Founder' :
-                member.role === 'admin' ? 'Admin' : 'Üye';
-            const roleClass = member.role === 'founder' ? 'badge-danger' :
-                member.role === 'admin' ? 'badge-primary' : 'badge-secondary';
-            const onlineClass = member.isOnline ? 'member-online' : 'member-offline';
-            const onlineText = member.isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+        const currentUser = Store.get('profile');
+
+        grid.innerHTML = this.filteredMembers.map(member => {
+            const isOnline = this.onlineUserIds.includes(member.uid);
+            const statusClass = isOnline ? 'online' : 'offline';
+            const statusText = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+            const isMe = currentUser && currentUser.uid === member.uid;
 
             return `
-                <div class="member-card ${onlineClass}">
-                    <div class="member-card-header">
-                        <img src="${member.avatar || 'https://ui-avatars.com/api/?name=User&background=666&color=fff'}" 
+                <div class="member-list-item">
+                    <div class="member-avatar-wrapper">
+                        <img src="${member.avatar || 'https://ui-avatars.com/api/?name=' + member.username}" 
                              class="member-avatar" alt="${member.username}">
-                        ${member.isOnline ? '<span class="member-online-badge"></span>' : ''}
                     </div>
-                    <div class="member-card-body">
-                        <h3 class="member-name">${this.escapeHTML(member.username)}</h3>
-                        <p class="member-email">${this.escapeHTML(member.email)}</p>
-                        <div class="member-badges">
-                            <span class="badge ${roleClass}">${roleText}</span>
-                            <span class="badge badge-accent">LVL ${member.level || 1}</span>
+                    <div class="member-info">
+                        <div class="member-details">
+                            <span class="member-username">${member.username}</span>
+                            <span class="member-status ${statusClass}">${statusText}</span>
                         </div>
-                        <div class="member-status">
-                            <i class="ri-checkbox-blank-circle-fill ${member.isOnline ? 'text-success' : 'text-muted'}"></i>
-                            ${onlineText}
-                        </div>
-                    </div>
-                    <div class="member-card-footer">
-                        <div class="member-stat">
-                            <i class="ri-chat-3-line"></i>
-                            <span>${member.messageCount || 0} mesaj</span>
-                        </div>
-                        <div class="member-stat">
-                            <i class="ri-star-line"></i>
-                            <span>${member.points || 0} puan</span>
+                        <div class="member-actions">
+                            ${!isMe ? `
+                                <button class="btn-dm" onclick="app.chat.startDM('${member.uid}', '${member.username}', '${member.avatar}')">
+                                    <i class="ri-message-2-line"></i> DM
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
