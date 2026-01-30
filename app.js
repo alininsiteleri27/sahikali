@@ -1276,10 +1276,60 @@ async function sendChatMessage() {
     input.value = '';
 }
 
-document.getElementById('chatSend').addEventListener('click', sendChatMessage);
-document.getElementById('chatInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendChatMessage();
-});
+const adminUserSearch = document.getElementById('adminUserSearch');
+if (adminUserSearch) {
+    adminUserSearch.addEventListener('input', async (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        if (!searchTerm) {
+            loadAdminUsers();
+            return;
+        }
+
+        const listEl = document.getElementById('adminUserList');
+        const usersQuery = query(collection(db, 'users'));
+        const snapshot = await getDocs(usersQuery);
+
+        listEl.innerHTML = '';
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            const role = data.role || 'user';
+
+            if (data.username.toLowerCase().includes(searchTerm) || data.email.toLowerCase().includes(searchTerm)) {
+                const item = document.createElement('div');
+                item.className = 'admin-user-item';
+                if (role === 'KURUCU') {
+                    item.style.borderLeft = '4px solid var(--founder-color)';
+                    item.style.background = 'linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%)';
+                }
+
+                item.innerHTML = `
+                    <div class="admin-user-info-section">
+                        <div class="user-avatar">
+                            ${data.profileImage ? `<img src="${data.profileImage}" alt="">` : '👤'}
+                        </div>
+                        <div class="admin-user-details">
+                            <div class="admin-user-name">${data.username}</div>
+                            <div class="admin-user-email">${data.email}</div>
+                            <div class="admin-user-score">💎 ${data.score}</div>
+                            <div class="admin-user-badges">
+                                ${role === 'KURUCU' ? '<span class="admin-badge founder">KURUCU</span>' : ''}
+                                ${role === 'admin' ? '<span class="admin-badge admin">Admin</span>' : ''}
+                                ${data.banned ? '<span class="admin-badge banned">Banned</span>' : ''}
+                                ${data.muted ? '<span class="admin-badge muted">Muted</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-user-actions">
+                        <button class="admin-action-quick-btn" onclick="openAdminAction('${docSnap.id}', '${data.username}', ${data.banned}, ${data.muted}, '${role}')">
+                            ⚙️ İşlemler
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            }
+        });
+    });
+}
 
 // ========================================
 // DM (Direct Messages)
