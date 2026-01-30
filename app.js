@@ -425,7 +425,17 @@ const Chat = {
 
     init() {
         this.listenGlobal();
-        this.listenDMList();
+
+        // Init logic for DMs
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Wait for profile store
+                setTimeout(() => this.listenDMList(), 1000);
+            } else {
+                this.dmList = [];
+                this.renderDMList();
+            }
+        });
 
         // Global Chat Form
         const globalForm = DOMHelper.get('floating-chat-form');
