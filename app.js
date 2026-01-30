@@ -188,6 +188,7 @@ const Auth = {
 
 const UI = {
     sidebarCollapsed: false,
+    floatingChatOpen: false,
 
     openModal(id) {
         const modal = DOMHelper.get(id);
@@ -225,6 +226,19 @@ const UI = {
         }
     },
 
+    toggleFloatingChat() {
+        const chatWindow = DOMHelper.get('floating-chat-window');
+        if (!chatWindow) return;
+
+        this.floatingChatOpen = !this.floatingChatOpen;
+
+        if (this.floatingChatOpen) {
+            chatWindow.classList.add('active');
+        } else {
+            chatWindow.classList.remove('active');
+        }
+    },
+
     updateDOM() {
         const p = Store.get('profile');
         if (!p) return;
@@ -248,6 +262,16 @@ const UI = {
         if (p.created) {
             const date = new Date(p.created);
             DOMHelper.setText('profile-joined', date.toLocaleDateString('tr-TR'));
+        }
+
+        // Account info
+        DOMHelper.setText('profile-uid', p.uid || '-');
+        DOMHelper.setText('profile-email-info', p.email || '-');
+        DOMHelper.setText('profile-role-info', p.role === 'admin' ? 'Admin' : 'Üye');
+
+        if (p.lastLogin) {
+            const lastLogin = new Date(p.lastLogin);
+            DOMHelper.setText('profile-last-login', lastLogin.toLocaleDateString('tr-TR'));
         }
 
         // Stats
@@ -320,19 +344,39 @@ const Chat = {
                 this.send();
             });
         }
+
+        // Floating chat form
+        const floatingForm = DOMHelper.get('floating-chat-form');
+        if (floatingForm) {
+            floatingForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.sendFloating();
+            });
+        }
     },
 
     listen() {
         const q = query(ref(db, 'chats/global'), limitToLast(50));
         onValue(q, (snap) => {
+            // Main chat container
             const container = DOMHelper.get('chat-messages');
-            if (!container) return;
-            container.innerHTML = '';
+            if (container) {
+                container.innerHTML = '';
+                snap.forEach(child => {
+                    this.renderMessage(child.val(), container);
+                });
+                container.scrollTop = container.scrollHeight;
+            }
 
-            snap.forEach(child => {
-                this.renderMessage(child.val(), container);
-            });
-            container.scrollTop = container.scrollHeight;
+            // Floating chat container
+            const floatingContainer = DOMHelper.get('floating-chat-messages');
+            if (floatingContainer) {
+                floatingContainer.innerHTML = '';
+                snap.forEach(child => {
+                    this.renderMessage(child.val(), floatingContainer);
+                });
+                floatingContainer.scrollTop = floatingContainer.scrollHeight;
+            }
         });
     },
 
@@ -384,10 +428,191 @@ const Chat = {
         input.value = '';
     },
 
+    sendFloating() {
+        const input = DOMHelper.get('floating-chat-input');
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+
+        const p = Store.get('profile');
+        if (!p) return;
+
+        push(ref(db, 'chats/global'), {
+            uid: p.uid,
+            name: p.username,
+            msg: text,
+            avatar: p.avatar,
+            ts: serverTimestamp()
+        });
+
+        // Update message count
+        update(ref(db, `users/${p.uid}`), {
+            messageCount: (p.messageCount || 0) + 1
+        });
+
+        input.value = '';
+    },
+
     escapeHTML(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+};
+
+// ============================================================================
+//    PROFILE MANAGEMENT
+// ============================================================================
+
+const Profile = {
+    async updateUsername() {
+        const input = DOMHelper.get('settings-username');
+        if (!input) return;
+
+        const newUsername = input.value.trim();
+        if (!newUsername) {
+            alert('Lütfen yeni kullanıcı adını girin!');
+            return;
+        }
+
+        const user = Store.get('user');
+        if (!user) return;
+
+        try {
+            await update(ref(db, `users/${user.uid}`), {
+                username: newUsername,
+                avatar: `https://ui-avatars.com/api/?name=${newUsername}&background=00c6ff&color=000`
+            });
+            alert('Kullanıcı adı başarıyla güncellendi!');
+            input.value = '';
+        } catch (error) {
+            console.error(error);
+            alert('Kullanıcı adı güncellenirken hata oluştu!');
+        }
+    },
+
+    async updateEmail() {
+        const input = DOMHelper.get('settings-email');
+        if (!input) return;
+
+        const newEmail = input.value.trim();
+        if (!newEmail) {
+            alert('Lütfen yeni e-posta adresini girin!');
+            return;
+        }
+
+        const user = Store.get('user');
+        if (!user) return;
+
+        try {
+            const { updateEmail } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+            await updateEmail(auth.currentUser, newEmail);
+            await update(ref(db, `users/${user.uid}`), {
+                email: newEmail
+            });
+            alert('E-posta başarıyla güncellendi!');
+            input.value = '';
+        } catch (error) {
+            console.error(error);
+            if (error.code === 'auth/requires-recent-login') {
+                alert('Bu işlem için tekrar giriş yapmanız gerekiyor!');
+            } else {
+                alert('E-posta güncellenirken hata oluştu!');
+            }
+        }
+    },
+
+    async updatePassword() {
+        const currentPass = DOMHelper.get('settings-current-pass');
+        const newPass = DOMHelper.get('settings-new-pass');
+        const confirmPass = DOMHelper.get('settings-new-pass-confirm');
+
+        if (!currentPass || !newPass || !confirmPass) return;
+
+        const current = currentPass.value;
+        const newPassword = newPass.value;
+        const confirm = confirmPass.value;
+
+        if (!current || !newPassword || !confirm) {
+            alert('Lütfen tüm alanları doldurun!');
+            return;
+        }
+
+        if (newPassword !== confirm) {
+            alert('Yeni şifreler eşleşmiyor!');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            alert('Şifre en az 6 karakter olmalıdır!');
+            return;
+        }
+
+        const user = Store.get('user');
+        if (!user) return;
+
+        try {
+            const { updatePassword, EmailAuthProvider, reauthenticateWithCredential } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+
+            // Re-authenticate user
+            const credential = EmailAuthProvider.credential(user.email, current);
+            await reauthenticateWithCredential(auth.currentUser, credential);
+
+            // Update password
+            await updatePassword(auth.currentUser, newPassword);
+
+            alert('Şifre başarıyla güncellendi!');
+            currentPass.value = '';
+            newPass.value = '';
+            confirmPass.value = '';
+        } catch (error) {
+            console.error(error);
+            if (error.code === 'auth/wrong-password') {
+                alert('Mevcut şifre yanlış!');
+            } else {
+                alert('Şifre güncellenirken hata oluştu!');
+            }
+        }
+    },
+
+    async deleteAccount() {
+        const confirm = window.confirm(
+            'Hesabınızı silmek istediğinizden emin misiniz?\n\nBu işlem GERİ ALINAMAZ!\n\nTüm verileriniz kalıcı olarak silinecektir.'
+        );
+
+        if (!confirm) return;
+
+        const doubleConfirm = window.prompt(
+            'Hesabınızı silmek için "SİL" yazın:'
+        );
+
+        if (doubleConfirm !== 'SİL') {
+            alert('İşlem iptal edildi.');
+            return;
+        }
+
+        const user = Store.get('user');
+        if (!user) return;
+
+        try {
+            // Delete user data from database
+            await set(ref(db, `users/${user.uid}`), null);
+            await set(ref(db, `status/${user.uid}`), null);
+
+            // Delete auth account
+            const { deleteUser } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+            await deleteUser(auth.currentUser);
+
+            alert('Hesabınız başarıyla silindi. Güle güle!');
+            location.reload();
+        } catch (error) {
+            console.error(error);
+            if (error.code === 'auth/requires-recent-login') {
+                alert('Bu işlem için tekrar giriş yapmanız gerekiyor!');
+            } else {
+                alert('Hesap silinirken hata oluştu!');
+            }
+        }
     }
 };
 
@@ -399,7 +624,8 @@ window.app = {
     auth: Auth,
     ui: UI,
     router: Router,
-    chat: Chat
+    chat: Chat,
+    profile: Profile
 };
 
 document.addEventListener('DOMContentLoaded', () => {
