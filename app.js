@@ -306,16 +306,29 @@ class AuthManager {
     }
 
     completeLoginFlow() {
-        // Hide Auth, Show App
+        console.log("🚀 STARTING LOGIN FLOW UI UPDATE");
+
+        // Hide Auth, Show App (FORCE STYLE)
         const authModule = document.getElementById('auth-module');
         const appContainer = document.getElementById('app-container');
 
-        if (authModule) authModule.classList.add('hidden');
-        if (appContainer) appContainer.classList.remove('hidden');
+        if (authModule) {
+            authModule.classList.add('hidden');
+            authModule.style.display = 'none'; // Force hide
+            console.log("🔒 Auth Module hidden");
+        }
+
+        if (appContainer) {
+            appContainer.classList.remove('hidden');
+            appContainer.style.display = 'flex'; // Force show (assuming flex layout)
+            console.log("🔓 App Container shown");
+        }
 
         // Update UI with User Data (Safe Access)
         const safeData = STATE.userData || {};
         const safeStats = safeData.stats || {};
+
+        console.log("📊 Updating UI with:", safeData.username);
 
         const setText = (id, val) => {
             const el = document.getElementById(id);
@@ -337,8 +350,10 @@ class AuthManager {
         if (adminSection) {
             if (['admin', 'founder'].includes(safeData.role)) {
                 adminSection.classList.remove('hidden');
+                adminSection.style.display = 'block';
             } else {
                 adminSection.classList.add('hidden');
+                adminSection.style.display = 'none';
             }
         }
 
