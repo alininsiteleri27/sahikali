@@ -76,12 +76,6 @@
                 <span>Ana Sayfa</span>
             </a>
 
-            <a href="#" class="nav-link" onclick="app.router.go('chat')" data-page="chat">
-                <i class="ri-chat-3-line"></i>
-                <span>Sohbet</span>
-                <span class="badge badge-success ml-auto">CANLI</span>
-            </a>
-
             <a href="#" class="nav-link" onclick="app.router.go('profile')" data-page="profile">
                 <i class="ri-user-line"></i>
                 <span>Profilim</span>
@@ -162,38 +156,13 @@
             <div class="card">
                 <h3 class="card-title">Hızlı Erişim</h3>
                 <div class="quick-actions">
-                    <button class="btn btn-primary" onclick="app.router.go('chat')">
-                        <i class="ri-chat-3-line"></i> Sohbete Katıl
-                    </button>
                     <button class="btn btn-accent" onclick="app.router.go('profile')">
                         <i class="ri-user-line"></i> Profilim
                     </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- CHAT VIEW -->
-        <section id="view-chat" class="view-section">
-            <div class="chat-container">
-                <div class="chat-header">
-                    <h3>Global Sohbet</h3>
-                    <div class="chat-online">
-                        <span class="online-dot"></span>
-                        <span id="chat-online-count">0</span> kişi
-                    </div>
-                </div>
-
-                <div class="chat-messages" id="chat-messages">
-                    <!-- Messages will be inserted here -->
-                </div>
-
-                <form class="chat-input-form" id="chat-form">
-                    <input type="text" id="chat-msg-input" class="chat-input" placeholder="Mesajınızı yazın..."
-                        maxlength="500" autocomplete="off">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ri-send-plane-fill"></i>
+                    <button class="btn btn-primary" onclick="app.ui.openModal('settings-modal')">
+                        <i class="ri-settings-4-line"></i> Ayarlar
                     </button>
-                </form>
+                </div>
             </div>
         </section>
 
@@ -400,22 +369,106 @@
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Ayarlar</h3>
+                <h3>⚙️ Ayarlar</h3>
                 <button class="modal-close" onclick="app.ui.closeModal('settings-modal')">
                     <i class="ri-close-line"></i>
                 </button>
             </div>
             <div class="modal-body">
+                <!-- TEMA SEÇİMİ -->
                 <div class="settings-group">
-                    <h4>Genel</h4>
+                    <h4>🎨 Tema Seçimi</h4>
+                    <p class="text-muted">Sitenin görünümünü değiştirin</p>
+                    <div class="theme-grid">
+                        <div class="theme-card" data-theme="dark-cyber"
+                            onclick="app.settings.changeTheme('dark-cyber')">
+                            <div class="theme-preview theme-dark-cyber">
+                                <div class="theme-color" style="background: #00c6ff;"></div>
+                                <div class="theme-color" style="background: #ae00ff;"></div>
+                                <div class="theme-color" style="background: #020202;"></div>
+                            </div>
+                            <div class="theme-name">Dark Cyber</div>
+                            <div class="theme-check" id="check-dark-cyber">
+                                <i class="ri-check-line"></i>
+                            </div>
+                        </div>
+
+                        <div class="theme-card" data-theme="purple-dream"
+                            onclick="app.settings.changeTheme('purple-dream')">
+                            <div class="theme-preview theme-purple-dream">
+                                <div class="theme-color" style="background: #a855f7;"></div>
+                                <div class="theme-color" style="background: #ec4899;"></div>
+                                <div class="theme-color" style="background: #1a1a2e;"></div>
+                            </div>
+                            <div class="theme-name">Purple Dream</div>
+                            <div class="theme-check" id="check-purple-dream">
+                                <i class="ri-check-line"></i>
+                            </div>
+                        </div>
+
+                        <div class="theme-card" data-theme="ocean-blue"
+                            onclick="app.settings.changeTheme('ocean-blue')">
+                            <div class="theme-preview theme-ocean-blue">
+                                <div class="theme-color" style="background: #0ea5e9;"></div>
+                                <div class="theme-color" style="background: #06b6d4;"></div>
+                                <div class="theme-color" style="background: #0f172a;"></div>
+                            </div>
+                            <div class="theme-name">Ocean Blue</div>
+                            <div class="theme-check" id="check-ocean-blue">
+                                <i class="ri-check-line"></i>
+                            </div>
+                        </div>
+
+                        <div class="theme-card" data-theme="sunset-orange"
+                            onclick="app.settings.changeTheme('sunset-orange')">
+                            <div class="theme-preview theme-sunset-orange">
+                                <div class="theme-color" style="background: #f97316;"></div>
+                                <div class="theme-color" style="background: #ef4444;"></div>
+                                <div class="theme-color" style="background: #1c1917;"></div>
+                            </div>
+                            <div class="theme-name">Sunset Orange</div>
+                            <div class="theme-check" id="check-sunset-orange">
+                                <i class="ri-check-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GENEL AYARLAR -->
+                <div class="settings-group">
+                    <h4>🔔 Genel Ayarlar</h4>
                     <div class="setting-item">
                         <label>Bildirimler</label>
-                        <input type="checkbox" class="toggle" checked>
+                        <input type="checkbox" class="toggle" id="setting-notifications" checked>
                     </div>
                     <div class="setting-item">
                         <label>Sesler</label>
-                        <input type="checkbox" class="toggle" checked>
+                        <input type="checkbox" class="toggle" id="setting-sounds" checked>
                     </div>
+                </div>
+
+                <!-- ŞİKAYET SİSTEMİ -->
+                <div class="settings-group">
+                    <h4>📢 Şikayet & Öneri</h4>
+                    <p class="text-muted">Sorun bildirin veya öneride bulunun. Mesajınız kurucuya iletilecektir.</p>
+                    <div class="form-group">
+                        <label>Konu</label>
+                        <select id="complaint-type" class="form-input">
+                            <option value="bug">🐛 Hata Bildirimi</option>
+                            <option value="suggestion">💡 Öneri</option>
+                            <option value="complaint">⚠️ Şikayet</option>
+                            <option value="other">📝 Diğer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mesajınız</label>
+                        <textarea id="complaint-message" class="form-input" rows="4"
+                            placeholder="Lütfen detaylı açıklama yapın..." maxlength="500"></textarea>
+                        <small class="text-muted">Maksimum 500 karakter</small>
+                    </div>
+                    <button class="btn btn-primary w-full" onclick="app.settings.sendComplaint()">
+                        <i class="ri-send-plane-fill"></i> Gönder
+                    </button>
                 </div>
             </div>
         </div>
