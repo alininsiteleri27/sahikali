@@ -54,6 +54,11 @@ const auth = getAuth(app);
 const db = initializeFirestore(app, { localCache: persistentLocalCache() });
 const rtdb = getDatabase(app);
 
+// GÜVENLİK: Sayfa yenilendiğinde oturumu otomatik kapat
+signOut(auth).then(() => {
+    console.log("Sayfa yenilendiği için oturum kapatıldı.");
+}).catch((e) => console.error(e));
+
 
 // --- STATE MANAGEMENT ---
 const STATE = {
@@ -238,8 +243,29 @@ class DataManager {
                 this.updateUIWithProfile();
                 this.setupPresenceSystem(uid);
             } else {
-                console.error("No such document!");
-                // Failsafe: create if missing?
+                console.warn("Profil bulunamadı, otomatik oluşturuluyor...");
+                // Auto-create missing profile
+                const newProfile = {
+                    uid: uid,
+                    username: STATE.currentUser.displayName || "Gezgin",
+                    email: STATE.currentUser.email,
+                    avatar: "avatar1.png",
+                    role: 'member',
+                    balance: 100,
+                    stats: { wins: 0, losses: 0, rank: 0 },
+                    createdAt: serverTimestamp(),
+                    status: 'online',
+                    banned: false,
+                    muted: false
+                };
+                await setDoc(docRef, newProfile);
+                STATE.userProfile = newProfile; // Set local state immediately
+
+                // Wait small delay to ensure write then update UI
+                setTimeout(() => {
+                    this.updateUIWithProfile();
+                    this.setupPresenceSystem(uid);
+                }, 500);
             }
         } catch (e) {
             console.error("Error fetching profile", e);
