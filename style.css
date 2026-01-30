@@ -2723,14 +2723,21 @@ body.modal-open {
     background: rgba(0, 0, 0, 0.2);
     padding: 0.25rem;
     border-radius: 0.5rem;
+    flex: 1;
+    /* Take available space */
+    margin-right: 1rem;
+    /* Space for close button */
 }
 
 .chat-tab {
+    flex: 1;
+    /* Equal width */
+    text-align: center;
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    padding: 0.4rem 0.75rem;
-    font-size: 0.9rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
     border-radius: 0.35rem;
@@ -2740,6 +2747,8 @@ body.modal-open {
 
 .chat-tab:hover {
     color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+    /* Hover effect */
 }
 
 .chat-tab.active {
@@ -2751,7 +2760,8 @@ body.modal-open {
 .tab-badge {
     position: absolute;
     top: -4px;
-    right: -4px;
+    right: 4px;
+    /* Adjusted position */
     background: var(--danger);
     color: #fff;
     font-size: 0.65rem;
@@ -2761,19 +2771,30 @@ body.modal-open {
 }
 
 .chat-close-btn {
-    background: transparent;
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
     color: var(--text-secondary);
     cursor: pointer;
-    font-size: 1.25rem;
-    padding: 0.25rem;
-    transition: color 0.2s;
+    font-size: 1rem;
+    /* Smaller font size */
+    width: 28px;
+    /* Fixed width */
+    height: 28px;
+    /* Fixed height */
+    padding: 0;
+    border-radius: 50%;
+    /* Circle shape */
+    transition: all 0.2s;
     display: flex;
-    /* Ensure visible */
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .chat-close-btn:hover {
     color: var(--danger);
+    background: rgba(255, 0, 0, 0.1);
+    border-color: var(--danger);
 }
 
 .chat-section {
