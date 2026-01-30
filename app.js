@@ -70,7 +70,7 @@ const STATE = {
 class UIController {
     constructor() {
         this.toastsContainer = document.getElementById('toast-container');
-        this.loader = document.getElementById('global-loader');
+        this.loader = document.getElementById('app-loader'); // Corrected ID
         this.audioContext = null;
     }
 
@@ -495,20 +495,7 @@ class Router {
     }
 }
 
-// --- INITIALIZATION HOOK ---
-// We attach classes to window so they can be accessed globally if needed (debugging)
-// and to allow Part 2 to extend them easily.
-
-const ui = new UIController();
-const authManager = new AuthManager(ui);
-window.router = new Router(ui);
-window.nexusUI = ui; // Expose for other modules
-window.db = db;      // Expose for other modules
-window.STATE = STATE; // Shared State
-
-console.log("NEXUS Core System Initialized.");
-
-// End of Part 1 - Core & Auth
+// --- PART 1 END ---
 
 /* ==========================================================================
    PART 2: GAME SYSTEMS, CHAT, AND ADMIN
