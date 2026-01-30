@@ -980,6 +980,214 @@ body.sidebar-collapsed .app-main {
 }
 
 /* ============================================================================
+   FLOATING CHAT
+   ============================================================================ */
+
+.floating-chat-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 198, 255, 0.4);
+    transition: all 0.3s;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-chat-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(0, 198, 255, 0.6);
+}
+
+.chat-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--danger);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 2px solid var(--bg-main);
+}
+
+.floating-chat-window {
+    position: fixed;
+    bottom: 100px;
+    right: 2rem;
+    width: 350px;
+    height: 500px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    display: none;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    animation: slideUp 0.3s ease;
+}
+
+.floating-chat-window.active {
+    display: flex;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.floating-chat-header {
+    padding: 1rem;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 1rem 1rem 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.floating-chat-header h4 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.chat-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.chat-close-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.floating-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.floating-chat-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+.floating-chat-messages::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 2px;
+}
+
+.floating-chat-input-form {
+    padding: 1rem;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ============================================================================
+   PROFILE ENHANCEMENTS
+   ============================================================================ */
+
+.profile-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--primary);
+}
+
+.stat-icon-sm {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.account-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-surface);
+    border-radius: 0.5rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.info-value {
+    color: var(--text-primary);
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.text-muted {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================================================
    UTILITIES
    ============================================================================ */
 
@@ -997,4 +1205,25 @@ body.sidebar-collapsed .app-main {
 
 .mb-2 {
     margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .floating-chat-window {
+        width: calc(100% - 2rem);
+        right: 1rem;
+        left: 1rem;
+    }
+
+    .profile-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .profile-actions .btn {
+        width: 100%;
+    }
 }
