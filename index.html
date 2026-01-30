@@ -451,8 +451,8 @@
             <!-- Messages will be inserted here -->
         </div>
         <form class="floating-chat-input-form" id="floating-chat-form">
-            <button type="button" class="btn btn-accent btn-sm" onclick="app.game.sendInvite()" title="Hokey Oyna">
-                <i class="ri-gamepad-line"></i>
+            <button type="button" class="btn btn-vs" onclick="app.game.openGameMenu()" title="Oyun Daveti Gönder">
+                VS
             </button>
             <input type="text" id="floating-chat-input" class="chat-input" placeholder="Mesaj yaz..." maxlength="500"
                 autocomplete="off">
@@ -489,6 +489,28 @@
             </div>
             <div class="game-controls-hint">
                 <i class="ri-drag-move-line"></i> Diski parmağınla veya mouse ile sürükle!
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME SELECTION MODAL -->
+    <div class="modal-overlay" id="game-select-modal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>🎮 Oyun Seç</h3>
+                <button class="modal-close" onclick="app.ui.closeModal('game-select-modal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="game-select-grid">
+                    <button class="game-select-card" onclick="app.game.sendInvite('hockey')">
+                        <div class="game-icon">🏑</div>
+                        <div class="game-name">Hava Hokeyi</div>
+                        <div class="game-desc">2 oyuncu - Hızlı tempolu</div>
+                    </button>
+                    <!-- More games can be added here -->
+                </div>
             </div>
         </div>
     </div>
