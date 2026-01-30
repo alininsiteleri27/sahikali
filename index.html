@@ -103,21 +103,17 @@
                 <i class="ri-settings-4-line"></i>
                 <span>Ayarlar</span>
             </a>
+
+            <div class="nav-divider"></div>
+
+            <a href="#" class="nav-link text-danger" onclick="app.auth.logout()">
+                <i class="ri-logout-box-line"></i>
+                <span>Çıkış Yap</span>
+            </a>
         </nav>
 
-        <!-- USER CARD -->
-        <div class="sidebar-user">
-            <div class="user-mini-card">
-                <img src="#" id="sb-avatar" class="user-avatar-sm" alt="User">
-                <div class="user-mini-info">
-                    <div class="font-bold text-sm" id="sb-username">Kullanıcı</div>
-                    <div class="text-xs text-gray-400" id="sb-level">LVL 1</div>
-                </div>
-            </div>
-            <button class="btn btn-danger btn-sm w-full mt-2" onclick="app.auth.logout()">
-                <i class="ri-logout-box-line"></i> Çıkış
-            </button>
-        </div>
+        <!-- USER CARD (Removed as requested, moved logout to nav) -->
+    </aside>
     </aside>
 
     <!-- HEADER -->
