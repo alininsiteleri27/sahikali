@@ -110,54 +110,17 @@ class UIController {
         }, 3000);
     }
 
-    // --- Audio System ---
+    // --- Audio System (DISABLED) ---
     initAudio() {
-        if (!this.audioContext && (window.AudioContext || window.webkitAudioContext)) {
-            try {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            } catch (e) {
-                console.warn("Audio blocked");
-            }
-        }
+        // Audio disabled per user request
     }
 
     playSound(type) {
-        if (!STATE.audioEnabled) return;
-
-        this.initAudio(); // Try to init if not ready
-
-        if (!this.audioContext) return;
-
-        // Auto-resume logic (browser policy)
-        if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume().catch(() => { });
-        }
-
-        const sounds = {
-            'click': [400, 50, 'sine'],
-            'success': [600, 100, 'square'],
-            'error': [150, 200, 'sawtooth'],
-            'join': [300, 150, 'triangle'],
-            'msg': [800, 50, 'sine']
-        };
-
-        const sound = sounds[type];
-        if (sound) this.playTone(...sound);
+        // Audio disabled per user request
     }
 
     playTone(freq, duration, type) {
-        try {
-            const osc = this.audioContext.createOscillator();
-            const gain = this.audioContext.createGain();
-            osc.frequency.value = freq;
-            osc.type = type;
-            osc.connect(gain);
-            gain.connect(this.audioContext.destination);
-            osc.start();
-            setTimeout(() => osc.stop(), duration / 1000);
-        } catch (e) {
-            // Ignore
-        }
+        // Audio disabled per user request
     }
 }
 
