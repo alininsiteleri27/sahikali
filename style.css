@@ -145,7 +145,31 @@ textarea {
     display: flex;
     flex-direction: column;
     z-index: 1000;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.app-sidebar.collapsed {
+    width: 70px;
+}
+
+.app-sidebar.collapsed .sidebar-logo,
+.app-sidebar.collapsed .nav-link span,
+.app-sidebar.collapsed .user-mini-info,
+.app-sidebar.collapsed .btn {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.app-sidebar.collapsed .nav-link {
+    justify-content: center;
+}
+
+.app-sidebar.collapsed .user-mini-card {
+    justify-content: center;
+}
+
+.app-sidebar.collapsed .user-avatar-sm {
+    margin: 0;
 }
 
 .app-header {
@@ -161,6 +185,11 @@ textarea {
     justify-content: space-between;
     padding: 0 1.5rem;
     z-index: 999;
+    transition: left 0.3s ease;
+}
+
+body.sidebar-collapsed .app-header {
+    left: 70px;
 }
 
 .app-main {
@@ -168,6 +197,11 @@ textarea {
     margin-top: var(--header-height);
     padding: 2rem;
     min-height: calc(100vh - var(--header-height));
+    transition: margin-left 0.3s ease;
+}
+
+body.sidebar-collapsed .app-main {
+    margin-left: 70px;
 }
 
 /* ============================================================================
@@ -262,13 +296,23 @@ textarea {
     gap: 1rem;
 }
 
-.mobile-toggle {
-    display: none;
+.sidebar-toggle {
     background: none;
     border: none;
     color: var(--text-primary);
     font-size: 1.5rem;
     padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-toggle:hover {
+    background: var(--bg-card);
+    color: var(--primary);
 }
 
 .page-title {
@@ -937,7 +981,16 @@ textarea {
         transform: translateX(0);
     }
 
+    .app-sidebar.collapsed {
+        width: var(--sidebar-width);
+        transform: translateX(-100%);
+    }
+
     .app-header {
+        left: 0;
+    }
+
+    body.sidebar-collapsed .app-header {
         left: 0;
     }
 
@@ -946,8 +999,8 @@ textarea {
         padding: 1rem;
     }
 
-    .mobile-toggle {
-        display: block;
+    body.sidebar-collapsed .app-main {
+        margin-left: 0;
     }
 
     .stats-grid {
