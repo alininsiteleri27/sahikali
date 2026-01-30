@@ -922,3 +922,1288 @@ document.addEventListener('DOMContentLoaded', () => {
 
     Router.go('dashboard');
 });
+
+// ====================================================================================================
+//    EXTENDED FEATURES: NOTIFICATION SYSTEM
+// ====================================================================================================
+const NotificationManager = {
+    notifications: [],
+    unreadCount: 0,
+
+    init() {
+        this.loadNotifications();
+        this.listenForNew();
+    },
+
+    loadNotifications() {
+        const uid = Store.get('user')?.uid;
+        if (!uid) return;
+
+        const q = query(ref(db, `notifications/${uid}`), limitToLast(20));
+        onValue(q, (snap) => {
+            this.notifications = [];
+            snap.forEach(child => {
+                this.notifications.push({ id: child.key, ...child.val() });
+            });
+            this.updateUI();
+        });
+    },
+
+    listenForNew() {
+        const uid = Store.get('user')?.uid;
+        if (!uid) return;
+
+        const notifRef = ref(db, `notifications/${uid}`);
+        onValue(notifRef, (snap) => {
+            this.unreadCount = 0;
+            snap.forEach(child => {
+                if (!child.val().read) this.unreadCount++;
+            });
+            this.updateBadge();
+        });
+    },
+
+    updateBadge() {
+        const dot = DOMHelper.get('notif-dot');
+        if (dot) {
+            if (this.unreadCount > 0) {
+                dot.classList.remove('hidden');
+            } else {
+                dot.classList.add('hidden');
+            }
+        }
+    },
+
+    updateUI() {
+        const container = DOMHelper.get('notif-list');
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (this.notifications.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8">Bildirim yok</div>';
+            return;
+        }
+
+        this.notifications.reverse().forEach(notif => {
+            const div = document.createElement('div');
+            div.className = `notif-item ${notif.read ? 'read' : 'unread'}`;
+            div.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <i class="ri-${this.getIcon(notif.type)}-line text-xl text-${this.getColor(notif.type)}"></i>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm">${notif.title}</div>
+                        <div class="text-xs text-gray-400">${notif.message}</div>
+                        <div class="text-xs text-gray-600 mt-1">${this.formatTime(notif.timestamp)}</div>
+                    </div>
+                </div>
+            `;
+            div.onclick = () => this.markAsRead(notif.id);
+            container.appendChild(div);
+        });
+    },
+
+    getIcon(type) {
+        const icons = {
+            'achievement': 'trophy',
+            'message': 'mail',
+            'system': 'information',
+            'win': 'medal',
+            'gift': 'gift'
+        };
+        return icons[type] || 'notification';
+    },
+
+    getColor(type) {
+        const colors = {
+            'achievement': 'accent',
+            'message': 'primary',
+            'system': 'info',
+            'win': 'success',
+            'gift': 'warning'
+        };
+        return colors[type] || 'gray-400';
+    },
+
+    formatTime(ts) {
+        if (!ts) return 'Şimdi';
+        const date = new Date(ts);
+        const now = new Date();
+        const diff = now - date;
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 1) return 'Az önce';
+        if (minutes < 60) return `${minutes} dakika önce`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} saat önce`;
+        return date.toLocaleDateString('tr-TR');
+    },
+
+    markAsRead(id) {
+        const uid = Store.get('user')?.uid;
+        if (!uid) return;
+        update(ref(db, `notifications/${uid}/${id}`), { read: true });
+    },
+
+    send(userId, type, title, message) {
+        const notifRef = push(ref(db, `notifications/${userId}`));
+        set(notifRef, {
+            type: type,
+            title: title,
+            message: message,
+            timestamp: serverTimestamp(),
+            read: false
+        });
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED FEATURES: DIRECT MESSAGING SYSTEM
+// ====================================================================================================
+const DMManager = {
+    conversations: [],
+    activeConversation: null,
+
+    init() {
+        this.loadConversations();
+    },
+
+    loadConversations() {
+        const uid = Store.get('user')?.uid;
+        if (!uid) return;
+
+        const convRef = ref(db, `conversations/${uid}`);
+        onValue(convRef, (snap) => {
+            this.conversations = [];
+            snap.forEach(child => {
+                this.conversations.push({ id: child.key, ...child.val() });
+            });
+            this.renderConversationList();
+        });
+    },
+
+    renderConversationList() {
+        const container = DOMHelper.get('dm-conversation-list');
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (this.conversations.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8">Mesaj yok</div>';
+            return;
+        }
+
+        this.conversations.forEach(conv => {
+            const div = document.createElement('div');
+            div.className = `dm-conv-item ${conv.unread ? 'unread' : ''}`;
+            div.innerHTML = `
+                <img src="${conv.avatar || 'https://ui-avatars.com/api/?name=' + conv.name}" class="w-12 h-12 rounded-full">
+                <div class="flex-1">
+                    <div class="font-bold">${conv.name}</div>
+                    <div class="text-xs text-gray-400 truncate">${conv.lastMessage || 'Mesaj yok'}</div>
+                </div>
+                ${conv.unread ? '<div class="w-3 h-3 bg-primary rounded-full"></div>' : ''}
+            `;
+            div.onclick = () => this.openConversation(conv.id);
+            container.appendChild(div);
+        });
+    },
+
+    openConversation(convId) {
+        this.activeConversation = convId;
+        this.loadMessages(convId);
+        DOMHelper.show('dm-chat-area');
+    },
+
+    loadMessages(convId) {
+        const uid = Store.get('user')?.uid;
+        if (!uid) return;
+
+        const msgRef = query(ref(db, `messages/${convId}`), limitToLast(50));
+        onValue(msgRef, (snap) => {
+            const container = DOMHelper.get('dm-messages');
+            if (!container) return;
+
+            container.innerHTML = '';
+            snap.forEach(child => {
+                const msg = child.val();
+                const div = document.createElement('div');
+                div.className = `dm-message ${msg.senderId === uid ? 'mine' : 'theirs'}`;
+                div.innerHTML = `
+                    <div class="dm-bubble">
+                        <div class="text-sm">${this.escapeHtml(msg.text)}</div>
+                        <div class="text-xs text-gray-500 mt-1">${this.formatTime(msg.timestamp)}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        });
+    },
+
+    sendMessage(text) {
+        if (!this.activeConversation || !text.trim()) return;
+
+        const uid = Store.get('user')?.uid;
+        const msgRef = push(ref(db, `messages/${this.activeConversation}`));
+        set(msgRef, {
+            senderId: uid,
+            text: text.trim(),
+            timestamp: serverTimestamp()
+        });
+
+        // Update last message in conversation
+        update(ref(db, `conversations/${uid}/${this.activeConversation}`), {
+            lastMessage: text.trim(),
+            lastTimestamp: serverTimestamp()
+        });
+    },
+
+    escapeHtml(text) {
+        return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
+    },
+
+    formatTime(ts) {
+        if (!ts) return '';
+        const date = new Date(ts);
+        return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED FEATURES: ACHIEVEMENT SYSTEM
+// ====================================================================================================
+const AchievementManager = {
+    achievements: [
+        { id: 'first_win', name: 'İlk Kan', desc: 'İlk oyununu kazan', icon: '🏆', points: 100 },
+        { id: 'win_10', name: 'Kazanan', desc: '10 oyun kazan', icon: '🎯', points: 500 },
+        { id: 'win_100', name: 'Efsane', desc: '100 oyun kazan', icon: '👑', points: 5000 },
+        { id: 'millionaire', name: 'Milyoner', desc: '1.000.000 puana ulaş', icon: '💰', points: 10000 },
+        { id: 'level_10', name: 'Yükselen Yıldız', desc: 'Seviye 10\'a ulaş', icon: '⭐', points: 1000 },
+        { id: 'level_50', name: 'Usta', desc: 'Seviye 50\'ye ulaş', icon: '🌟', points: 5000 },
+        { id: 'chat_100', name: 'Konuşkan', desc: '100 mesaj gönder', icon: '💬', points: 500 },
+        { id: 'daily_7', name: 'Sadık', desc: '7 gün üst üste giriş yap', icon: '📅', points: 1000 }
+    ],
+
+    check(profile) {
+        if (!profile) return;
+
+        const unlocked = profile.achievements || [];
+        const stats = profile.stats || {};
+
+        // Check achievements
+        if (stats.wins >= 1 && !unlocked.includes('first_win')) {
+            this.unlock('first_win', profile.uid);
+        }
+        if (stats.wins >= 10 && !unlocked.includes('win_10')) {
+            this.unlock('win_10', profile.uid);
+        }
+        if (stats.wins >= 100 && !unlocked.includes('win_100')) {
+            this.unlock('win_100', profile.uid);
+        }
+        if (profile.points >= 1000000 && !unlocked.includes('millionaire')) {
+            this.unlock('millionaire', profile.uid);
+        }
+        if (profile.level >= 10 && !unlocked.includes('level_10')) {
+            this.unlock('level_10', profile.uid);
+        }
+        if (profile.level >= 50 && !unlocked.includes('level_50')) {
+            this.unlock('level_50', profile.uid);
+        }
+    },
+
+    unlock(achievementId, userId) {
+        const achievement = this.achievements.find(a => a.id === achievementId);
+        if (!achievement) return;
+
+        // Add to user's achievements
+        const userRef = ref(db, `users/${userId}`);
+        get(userRef).then(snap => {
+            const data = snap.val();
+            const achievements = data.achievements || [];
+            if (!achievements.includes(achievementId)) {
+                achievements.push(achievementId);
+                update(userRef, {
+                    achievements: achievements,
+                    points: (data.points || 0) + achievement.points
+                });
+
+                // Send notification
+                NotificationManager.send(userId, 'achievement', 'Başarım Kazanıldı!',
+                    `${achievement.icon} ${achievement.name} - +${achievement.points} puan`);
+
+                // Show toast
+                UI.toast(`🎉 Başarım: ${achievement.name}`, 'success');
+                AudioFX.sfx.win();
+            }
+        });
+    },
+
+    renderList() {
+        const container = DOMHelper.get('achievement-list');
+        if (!container) return;
+
+        const profile = Store.get('profile');
+        const unlocked = profile?.achievements || [];
+
+        container.innerHTML = '';
+        this.achievements.forEach(ach => {
+            const isUnlocked = unlocked.includes(ach.id);
+            const div = document.createElement('div');
+            div.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+            div.innerHTML = `
+                <div class="text-4xl mb-2 ${isUnlocked ? '' : 'grayscale opacity-50'}">${ach.icon}</div>
+                <div class="font-bold">${ach.name}</div>
+                <div class="text-xs text-gray-400">${ach.desc}</div>
+                <div class="text-accent text-sm mt-2">+${ach.points} puan</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED FEATURES: LEADERBOARD MANAGER
+// ====================================================================================================
+const LeaderboardManager = {
+    topPlayers: [],
+
+    init() {
+        this.loadLeaderboard();
+    },
+
+    loadLeaderboard() {
+        const leaderboardRef = query(ref(db, 'users'), orderByChild('points'), limitToLast(100));
+        onValue(leaderboardRef, (snap) => {
+            this.topPlayers = [];
+            snap.forEach(child => {
+                this.topPlayers.push({ uid: child.key, ...child.val() });
+            });
+            this.topPlayers.reverse(); // Highest first
+            this.render();
+        });
+    },
+
+    render() {
+        const container = DOMHelper.get('leaderboard-list');
+        if (!container) return;
+
+        container.innerHTML = '';
+        this.topPlayers.slice(0, 50).forEach((player, index) => {
+            const rank = index + 1;
+            const isMe = player.uid === Store.get('user')?.uid;
+
+            const div = document.createElement('div');
+            div.className = `leaderboard-row ${isMe ? 'highlight' : ''}`;
+            div.innerHTML = `
+                <div class="rank rank-${rank <= 3 ? rank : 'other'}">#${rank}</div>
+                <img src="${player.avatar || 'https://ui-avatars.com/api/?name=' + player.username}" 
+                     class="w-10 h-10 rounded-full border-2 border-gray-700">
+                <div class="flex-1">
+                    <div class="font-bold">${player.username} ${isMe ? '(Sen)' : ''}</div>
+                    <div class="text-xs text-gray-400">Seviye ${player.level || 1}</div>
+                </div>
+                <div class="text-right">
+                    <div class="font-mono font-bold text-accent">${UI.formatNumber(player.points)}</div>
+                    <div class="text-xs text-gray-400">${player.stats?.wins || 0} galibiyet</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED FEATURES: THEME CUSTOMIZER
+// ====================================================================================================
+const ThemeCustomizer = {
+    themes: {
+        cyan: { primary: '#00f2ff', secondary: '#ae00ff', accent: '#f59e0b' },
+        purple: { primary: '#a855f7', secondary: '#ec4899', accent: '#fbbf24' },
+        green: { primary: '#10b981', secondary: '#06b6d4', accent: '#f59e0b' },
+        red: { primary: '#ef4444', secondary: '#f97316', accent: '#fbbf24' },
+        blue: { primary: '#3b82f6', secondary: '#8b5cf6', accent: '#f59e0b' }
+    },
+
+    apply(themeName) {
+        const theme = this.themes[themeName];
+        if (!theme) return;
+
+        const root = document.documentElement;
+        root.style.setProperty('--c-primary-500', theme.primary);
+        root.style.setProperty('--c-secondary-500', theme.secondary);
+        root.style.setProperty('--c-accent-500', theme.accent);
+
+        // Save preference
+        const settings = Store.get('settings');
+        settings.theme.color = themeName;
+        Store.saveSettings();
+
+        UI.toast(`Tema değiştirildi: ${themeName.toUpperCase()}`, 'success');
+    },
+
+    renderPicker() {
+        const container = DOMHelper.get('theme-picker');
+        if (!container) return;
+
+        container.innerHTML = '';
+        Object.keys(this.themes).forEach(name => {
+            const theme = this.themes[name];
+            const btn = document.createElement('button');
+            btn.className = 'theme-swatch';
+            btn.style.background = `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`;
+            btn.onclick = () => this.apply(name);
+            btn.title = name.toUpperCase();
+            container.appendChild(btn);
+        });
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED FEATURES: ADMIN PANEL FUNCTIONS
+// ====================================================================================================
+const AdminPanel = {
+    isAdmin() {
+        const profile = Store.get('profile');
+        return profile && (profile.role === 'admin' || profile.role === 'founder');
+    },
+
+    isFounder() {
+        const profile = Store.get('profile');
+        return profile && profile.role === 'founder';
+    },
+
+    init() {
+        if (this.isAdmin()) {
+            DOMHelper.show('nav-admin');
+        }
+    },
+
+    banUser(userId, reason) {
+        if (!this.isAdmin()) return UI.toast('Yetkiniz yok', 'error');
+
+        update(ref(db, `users/${userId}`), {
+            banned: true,
+            banReason: reason,
+            bannedAt: serverTimestamp()
+        });
+
+        UI.toast('Kullanıcı banlandı', 'success');
+        this.logAction('BAN_USER', userId, reason);
+    },
+
+    muteUser(userId, duration) {
+        if (!this.isAdmin()) return UI.toast('Yetkiniz yok', 'error');
+
+        const until = Date.now() + (duration * 60000); // duration in minutes
+        update(ref(db, `users/${userId}`), {
+            muted: true,
+            mutedUntil: until
+        });
+
+        UI.toast(`Kullanıcı ${duration} dakika susturuldu`, 'success');
+        this.logAction('MUTE_USER', userId, `${duration} minutes`);
+    },
+
+    giveCredits(userId, amount) {
+        if (!this.isAdmin()) return UI.toast('Yetkiniz yok', 'error');
+
+        get(ref(db, `users/${userId}`)).then(snap => {
+            const data = snap.val();
+            if (data) {
+                update(ref(db, `users/${userId}`), {
+                    points: (data.points || 0) + amount
+                });
+                UI.toast(`${amount} kredi verildi`, 'success');
+                this.logAction('GIVE_CREDITS', userId, amount);
+            }
+        });
+    },
+
+    deleteMessage(messageId) {
+        if (!this.isAdmin()) return UI.toast('Yetkiniz yok', 'error');
+
+        remove(ref(db, `chats/global/${messageId}`));
+        UI.toast('Mesaj silindi', 'success');
+        this.logAction('DELETE_MESSAGE', messageId);
+    },
+
+    lockChat(locked) {
+        if (!this.isFounder()) return UI.toast('Sadece kurucu yapabilir', 'error');
+
+        set(ref(db, 'system/chatLocked'), locked);
+        UI.toast(locked ? 'Chat kilitlendi' : 'Chat kilidi açıldı', locked ? 'warning' : 'success');
+        this.logAction('LOCK_CHAT', locked);
+    },
+
+    setRole(userId, role) {
+        if (!this.isFounder()) return UI.toast('Sadece kurucu yapabilir', 'error');
+
+        update(ref(db, `users/${userId}`), { role: role });
+        UI.toast(`Rol değiştirildi: ${role}`, 'success');
+        this.logAction('SET_ROLE', userId, role);
+    },
+
+    logAction(action, target, details = '') {
+        const uid = Store.get('user')?.uid;
+        if (!uid) return;
+
+        push(ref(db, 'admin_logs'), {
+            adminId: uid,
+            action: action,
+            target: target,
+            details: details,
+            timestamp: serverTimestamp()
+        });
+    },
+
+    viewLogs() {
+        const logsRef = query(ref(db, 'admin_logs'), limitToLast(100));
+        onValue(logsRef, (snap) => {
+            const container = DOMHelper.get('admin-logs');
+            if (!container) return;
+
+            container.innerHTML = '';
+            snap.forEach(child => {
+                const log = child.val();
+                const div = document.createElement('div');
+                div.className = 'admin-log-entry';
+                div.innerHTML = `
+                    <span class="text-danger">[${log.action}]</span>
+                    <span class="text-gray-400">${log.adminId.substring(0, 8)}</span>
+                    → <span class="text-primary">${log.target}</span>
+                    ${log.details ? `<span class="text-gray-500">(${log.details})</span>` : ''}
+                `;
+                container.appendChild(div);
+            });
+        });
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED GAME ENGINES: BLACKJACK
+// ====================================================================================================
+GameEngine.Blackjack = {
+    deck: [],
+    playerHand: [],
+    dealerHand: [],
+    bet: 0,
+    gameActive: false,
+
+    init() {
+        this.createDeck();
+        this.shuffle();
+    },
+
+    createDeck() {
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        this.deck = [];
+
+        for (let suit of suits) {
+            for (let value of values) {
+                this.deck.push({ suit, value, numValue: this.getCardValue(value) });
+            }
+        }
+    },
+
+    getCardValue(value) {
+        if (value === 'A') return 11;
+        if (['J', 'Q', 'K'].includes(value)) return 10;
+        return parseInt(value);
+    },
+
+    shuffle() {
+        for (let i = this.deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+        }
+    },
+
+    deal() {
+        return this.deck.pop();
+    },
+
+    calculateHand(hand) {
+        let total = 0;
+        let aces = 0;
+
+        for (let card of hand) {
+            total += card.numValue;
+            if (card.value === 'A') aces++;
+        }
+
+        while (total > 21 && aces > 0) {
+            total -= 10;
+            aces--;
+        }
+
+        return total;
+    },
+
+    start(betAmount) {
+        const profile = Store.get('profile');
+        if (betAmount > profile.points) return UI.toast('Yetersiz bakiye', 'error');
+
+        GameEngine.tx(betAmount * -1);
+        this.bet = betAmount;
+        this.gameActive = true;
+
+        this.createDeck();
+        this.shuffle();
+
+        this.playerHand = [this.deal(), this.deal()];
+        this.dealerHand = [this.deal(), this.deal()];
+
+        this.render();
+        AudioFX.sfx.click();
+
+        // Check for blackjack
+        if (this.calculateHand(this.playerHand) === 21) {
+            this.stand();
+        }
+    },
+
+    hit() {
+        if (!this.gameActive) return;
+
+        this.playerHand.push(this.deal());
+        this.render();
+        AudioFX.sfx.click();
+
+        const total = this.calculateHand(this.playerHand);
+        if (total > 21) {
+            this.bust();
+        } else if (total === 21) {
+            this.stand();
+        }
+    },
+
+    stand() {
+        if (!this.gameActive) return;
+
+        // Dealer draws until 17
+        while (this.calculateHand(this.dealerHand) < 17) {
+            this.dealerHand.push(this.deal());
+        }
+
+        this.render();
+        this.checkWinner();
+    },
+
+    checkWinner() {
+        const playerTotal = this.calculateHand(this.playerHand);
+        const dealerTotal = this.calculateHand(this.dealerHand);
+
+        let winAmount = 0;
+
+        if (dealerTotal > 21) {
+            winAmount = this.bet * 2;
+            UI.toast(`Krupiye patladı! +${winAmount}`, 'success');
+            AudioFX.sfx.win();
+        } else if (playerTotal > dealerTotal) {
+            winAmount = this.bet * 2;
+            UI.toast(`Kazandın! +${winAmount}`, 'success');
+            AudioFX.sfx.win();
+        } else if (playerTotal === dealerTotal) {
+            winAmount = this.bet;
+            UI.toast('Berabere', 'info');
+        } else {
+            UI.toast('Kaybettin', 'error');
+            AudioFX.sfx.error();
+        }
+
+        if (winAmount > 0) GameEngine.tx(winAmount);
+        this.gameActive = false;
+    },
+
+    bust() {
+        UI.toast('Patladın!', 'error');
+        AudioFX.sfx.error();
+        this.gameActive = false;
+        this.render();
+    },
+
+    render() {
+        const playerContainer = DOMHelper.get('bj-player-hand');
+        const dealerContainer = DOMHelper.get('bj-dealer-hand');
+        if (!playerContainer || !dealerContainer) return;
+
+        playerContainer.innerHTML = this.playerHand.map(card =>
+            `<div class="playing-card ${['♥', '♦'].includes(card.suit) ? 'red' : 'black'}">
+                <div class="card-value">${card.value}</div>
+                <div class="card-suit">${card.suit}</div>
+            </div>`
+        ).join('');
+
+        dealerContainer.innerHTML = this.dealerHand.map((card, i) => {
+            if (i === 1 && this.gameActive) {
+                return '<div class="playing-card back">?</div>';
+            }
+            return `<div class="playing-card ${['♥', '♦'].includes(card.suit) ? 'red' : 'black'}">
+                <div class="card-value">${card.value}</div>
+                <div class="card-suit">${card.suit}</div>
+            </div>`;
+        }).join('');
+
+        DOMHelper.setText('bj-player-total', this.calculateHand(this.playerHand));
+        DOMHelper.setText('bj-dealer-total', this.gameActive ? '?' : this.calculateHand(this.dealerHand));
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED GAME ENGINES: PLINKO
+// ====================================================================================================
+GameEngine.Plinko = {
+    rows: 12,
+    multipliers: [0.2, 0.5, 1, 1.5, 2, 3, 5, 3, 2, 1.5, 1, 0.5, 0.2],
+    ball: null,
+    bet: 0,
+
+    start(betAmount) {
+        const profile = Store.get('profile');
+        if (betAmount > profile.points) return UI.toast('Yetersiz bakiye', 'error');
+
+        GameEngine.tx(betAmount * -1);
+        this.bet = betAmount;
+
+        this.dropBall();
+    },
+
+    dropBall() {
+        let position = this.rows / 2;
+        const path = [];
+
+        // Simulate ball path
+        for (let i = 0; i < this.rows; i++) {
+            const direction = Math.random() > 0.5 ? 1 : -1;
+            position += direction * 0.5;
+            path.push(position);
+        }
+
+        // Animate ball drop
+        this.animateDrop(path);
+    },
+
+    animateDrop(path) {
+        const canvas = DOMHelper.get('plinko-canvas');
+        if (!canvas) return;
+
+        let step = 0;
+        const interval = setInterval(() => {
+            if (step >= path.length) {
+                clearInterval(interval);
+                this.calculateWin(Math.round(path[path.length - 1]));
+                return;
+            }
+
+            // Draw ball at current position
+            this.drawBall(canvas, path[step], step);
+            AudioFX.sfx.click();
+            step++;
+        }, 100);
+    },
+
+    drawBall(canvas, x, y) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw pegs
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col <= row; col++) {
+                ctx.fillStyle = '#666';
+                ctx.beginPath();
+                ctx.arc(50 + col * 40, 50 + row * 40, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Draw ball
+        ctx.fillStyle = '#00f2ff';
+        ctx.beginPath();
+        ctx.arc(50 + x * 40, 50 + y * 40, 8, 0, Math.PI * 2);
+        ctx.fill();
+    },
+
+    calculateWin(slot) {
+        const multiplier = this.multipliers[slot] || 1;
+        const winAmount = Math.floor(this.bet * multiplier);
+
+        if (winAmount > this.bet) {
+            UI.toast(`${multiplier}x! Kazanç: +${winAmount}`, 'success');
+            AudioFX.sfx.win();
+        } else {
+            UI.toast(`${multiplier}x - ${winAmount}`, 'info');
+        }
+
+        GameEngine.tx(winAmount);
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED GAME ENGINES: KENO
+// ====================================================================================================
+GameEngine.Keno = {
+    selectedNumbers: [],
+    drawnNumbers: [],
+    bet: 0,
+
+    selectNumber(num) {
+        if (this.selectedNumbers.includes(num)) {
+            this.selectedNumbers = this.selectedNumbers.filter(n => n !== num);
+        } else if (this.selectedNumbers.length < 10) {
+            this.selectedNumbers.push(num);
+        } else {
+            UI.toast('Maksimum 10 sayı seçebilirsin', 'warning');
+        }
+        this.renderBoard();
+    },
+
+    start(betAmount) {
+        if (this.selectedNumbers.length === 0) {
+            return UI.toast('En az 1 sayı seç', 'error');
+        }
+
+        const profile = Store.get('profile');
+        if (betAmount > profile.points) return UI.toast('Yetersiz bakiye', 'error');
+
+        GameEngine.tx(betAmount * -1);
+        this.bet = betAmount;
+
+        this.draw();
+    },
+
+    draw() {
+        this.drawnNumbers = [];
+        const numbers = Array.from({ length: 80 }, (_, i) => i + 1);
+
+        // Draw 20 random numbers
+        for (let i = 0; i < 20; i++) {
+            const index = Math.floor(Math.random() * numbers.length);
+            this.drawnNumbers.push(numbers[index]);
+            numbers.splice(index, 1);
+        }
+
+        this.animateDraw();
+    },
+
+    animateDraw() {
+        let revealed = 0;
+        const interval = setInterval(() => {
+            if (revealed >= this.drawnNumbers.length) {
+                clearInterval(interval);
+                this.checkWin();
+                return;
+            }
+
+            this.renderBoard(revealed);
+            AudioFX.sfx.click();
+            revealed++;
+        }, 200);
+    },
+
+    checkWin() {
+        const matches = this.selectedNumbers.filter(n => this.drawnNumbers.includes(n)).length;
+        const multipliers = [0, 0, 0, 1, 2, 5, 10, 20, 50, 100, 500];
+        const multiplier = multipliers[matches] || 0;
+        const winAmount = Math.floor(this.bet * multiplier);
+
+        if (matches > 0) {
+            UI.toast(`${matches} eşleşme! ${multiplier}x = +${winAmount}`, 'success');
+            AudioFX.sfx.win();
+            GameEngine.tx(winAmount);
+        } else {
+            UI.toast('Eşleşme yok', 'error');
+            AudioFX.sfx.error();
+        }
+    },
+
+    renderBoard(revealedCount = 0) {
+        const container = DOMHelper.get('keno-board');
+        if (!container) return;
+
+        container.innerHTML = '';
+        for (let i = 1; i <= 80; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'keno-number';
+            btn.textContent = i;
+
+            if (this.selectedNumbers.includes(i)) {
+                btn.classList.add('selected');
+            }
+
+            if (revealedCount > 0 && this.drawnNumbers.slice(0, revealedCount).includes(i)) {
+                btn.classList.add('drawn');
+                if (this.selectedNumbers.includes(i)) {
+                    btn.classList.add('match');
+                }
+            }
+
+            btn.onclick = () => this.selectNumber(i);
+            container.appendChild(btn);
+        }
+    }
+};
+
+// ====================================================================================================
+//    MOBILE OPTIMIZATIONS
+// ====================================================================================================
+const MobileOptimizer = {
+    init() {
+        this.detectMobile();
+        this.setupGestures();
+        this.optimizePerformance();
+    },
+
+    detectMobile() {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+            document.body.classList.add('mobile');
+            this.adjustForMobile();
+        }
+    },
+
+    adjustForMobile() {
+        // Reduce particle count
+        const settings = Store.get('settings');
+        if (settings.graphics.particles) {
+            settings.graphics.particles = false;
+            Store.saveSettings();
+        }
+
+        // Add mobile navigation
+        this.createMobileNav();
+    },
+
+    createMobileNav() {
+        const nav = document.createElement('div');
+        nav.className = 'mobile-bottom-nav';
+        nav.innerHTML = `
+            <button onclick="app.router.go('dashboard')" class="mobile-nav-btn">
+                <i class="ri-home-line"></i>
+                <span>Ana Sayfa</span>
+            </button>
+            <button onclick="app.router.go('games')" class="mobile-nav-btn">
+                <i class="ri-gamepad-line"></i>
+                <span>Oyunlar</span>
+            </button>
+            <button onclick="app.router.go('chat')" class="mobile-nav-btn">
+                <i class="ri-chat-3-line"></i>
+                <span>Chat</span>
+            </button>
+            <button onclick="app.router.go('profile')" class="mobile-nav-btn">
+                <i class="ri-user-line"></i>
+                <span>Profil</span>
+            </button>
+        `;
+        document.body.appendChild(nav);
+    },
+
+    setupGestures() {
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            this.handleSwipe();
+        });
+    },
+
+    handleSwipe() {
+        // Implement swipe navigation if needed
+    },
+
+    optimizePerformance() {
+        // Disable animations on low-end devices
+        if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
+            const settings = Store.get('settings');
+            settings.graphics.animations = false;
+            Store.saveSettings();
+            document.body.classList.add('low-performance');
+        }
+    }
+};
+
+// ====================================================================================================
+//    EXTENDED APP INITIALIZATION
+// ====================================================================================================
+window.addEventListener('load', () => {
+    // Initialize extended features
+    NotificationManager.init();
+    DMManager.init();
+    LeaderboardManager.init();
+    AdminPanel.init();
+    ThemeCustomizer.renderPicker();
+    MobileOptimizer.init();
+
+    // Apply saved theme
+    const savedTheme = Store.get('settings').theme.color;
+    if (savedTheme) {
+        ThemeCustomizer.apply(savedTheme);
+    }
+
+    // Check achievements periodically
+    setInterval(() => {
+        const profile = Store.get('profile');
+        if (profile) {
+            AchievementManager.check(profile);
+        }
+    }, 10000); // Every 10 seconds
+
+    // Update online counter
+    setInterval(() => {
+        const count = Math.floor(Math.random() * 50) + 10; // Mock online count
+        DOMHelper.setText('online-counter', count);
+    }, 5000);
+});
+
+// Extend window.app object
+if (window.app) {
+    window.app.notifications = NotificationManager;
+    window.app.dm = DMManager;
+    window.app.achievements = AchievementManager;
+    window.app.leaderboard = LeaderboardManager;
+    window.app.theme = ThemeCustomizer;
+    window.app.admin = AdminPanel;
+    window.app.chat = Chat;
+    window.app.game.blackjack = GameEngine.Blackjack;
+    window.app.game.plinko = GameEngine.Plinko;
+    window.app.game.keno = GameEngine.Keno;
+}
+
+// ====================================================================================================
+//    UTILITY FUNCTIONS & HELPERS
+// ====================================================================================================
+
+/**
+ * Format number with thousand separators
+ * @param {number} num - Number to format
+ * @returns {string} Formatted number
+ */
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+/**
+ * Generate random ID
+ * @returns {string} Random ID
+ */
+function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
+/**
+ * Debounce function
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Wait time in ms
+ * @returns {Function} Debounced function
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+/**
+ * Throttle function
+ * @param {Function} func - Function to throttle
+ * @param {number} limit - Time limit in ms
+ * @returns {Function} Throttled function
+ */
+function throttle(func, limit) {
+    let inThrottle;
+    return function (...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+/**
+ * Deep clone object
+ * @param {Object} obj - Object to clone
+ * @returns {Object} Cloned object
+ */
+function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+/**
+ * Check if user is online
+ * @returns {boolean} Online status
+ */
+function isOnline() {
+    return navigator.onLine;
+}
+
+/**
+ * Get device type
+ * @returns {string} Device type (mobile, tablet, desktop)
+ */
+function getDeviceType() {
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+        return "tablet";
+    }
+    if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+        return "mobile";
+    }
+    return "desktop";
+}
+
+/**
+ * Copy text to clipboard
+ * @param {string} text - Text to copy
+ */
+async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        UI.toast('Kopyalandı!', 'success');
+    } catch (err) {
+        UI.toast('Kopyalama başarısız', 'error');
+    }
+}
+
+/**
+ * Validate email
+ * @param {string} email - Email to validate
+ * @returns {boolean} Valid or not
+ */
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+/**
+ * Validate username
+ * @param {string} username - Username to validate
+ * @returns {boolean} Valid or not
+ */
+function isValidUsername(username) {
+    return username.length >= 3 && username.length <= 20 && /^[a-zA-Z0-9_]+$/.test(username);
+}
+
+/**
+ * Get time ago string
+ * @param {number} timestamp - Timestamp
+ * @returns {string} Time ago string
+ */
+function getTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days} gün önce`;
+    if (hours > 0) return `${hours} saat önce`;
+    if (minutes > 0) return `${minutes} dakika önce`;
+    return 'Az önce';
+}
+
+/**
+ * Calculate level from XP
+ * @param {number} xp - Experience points
+ * @returns {number} Level
+ */
+function calculateLevel(xp) {
+    return Math.floor(Math.sqrt(xp / CONFIG.GAME.LEVEL_XP_BASE)) + 1;
+}
+
+/**
+ * Calculate XP needed for next level
+ * @param {number} currentLevel - Current level
+ * @returns {number} XP needed
+ */
+function xpForNextLevel(currentLevel) {
+    return Math.pow(currentLevel, 2) * CONFIG.GAME.LEVEL_XP_BASE;
+}
+
+/**
+ * Get random element from array
+ * @param {Array} arr - Array
+ * @returns {*} Random element
+ */
+function randomElement(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/**
+ * Shuffle array
+ * @param {Array} arr - Array to shuffle
+ * @returns {Array} Shuffled array
+ */
+function shuffleArray(arr) {
+    const newArr = [...arr];
+    for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+    }
+    return newArr;
+}
+
+/**
+ * Sleep function
+ * @param {number} ms - Milliseconds to sleep
+ * @returns {Promise} Promise that resolves after ms
+ */
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Log to console with timestamp (debug mode only)
+ * @param {...any} args - Arguments to log
+ */
+function debugLog(...args) {
+    if (CONFIG.SYSTEM.DEBUG) {
+        console.log(`[${new Date().toISOString()}]`, ...args);
+    }
+}
+
+/**
+ * Export utility functions to window
+ */
+window.utils = {
+    formatNumber,
+    generateId,
+    debounce,
+    throttle,
+    deepClone,
+    isOnline,
+    getDeviceType,
+    copyToClipboard,
+    isValidEmail,
+    isValidUsername,
+    getTimeAgo,
+    calculateLevel,
+    xpForNextLevel,
+    randomElement,
+    shuffleArray,
+    sleep,
+    debugLog
+};
+
+// ====================================================================================================
+//    CONSOLE WELCOME MESSAGE
+// ====================================================================================================
+console.log('%c🚀 SAHIKALI PLATFORM', 'font-size: 24px; font-weight: bold; color: #00f2ff; text-shadow: 0 0 10px #00f2ff;');
+console.log('%cVersion: ' + CONFIG.SYSTEM.VERSION, 'font-size: 14px; color: #ae00ff;');
+console.log('%cEnvironment: ' + CONFIG.SYSTEM.ENV, 'font-size: 12px; color: #888;');
+console.log('%c⚠️ Bu konsolu kullanarak sisteme zarar verebilirsiniz!', 'font-size: 12px; color: #ff0055; font-weight: bold;');
+console.log('%cBilmediğiniz kodları buraya yapıştırmayın!', 'font-size: 12px; color: #ff0055;');
+
+debugLog('Application initialized successfully');
+debugLog('Device type:', getDeviceType());
+debugLog('Online status:', isOnline());
+
