@@ -1801,86 +1801,107 @@ class MusicSystem {
     }
 }
 
-// Final Hooks and Initialization using window namespace for easy console access
-window.gameSystem.instances.tetris = new TetrisGame(window.gameSystem);
-window.clanSystem = new ClanSystem();
-window.musicSystem = new MusicSystem();
+// --- FINAL APP INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("🚀 NEXUS SYSTEM INITIALIZING...");
 
-// Hook Tetris Lanch
-const originalLaunch = window.gameSystem ? window.gameSystem.launch : null;
+    // 1. Core UI
+    window.nexusUI = new UIController();
 
-// Ensure Safe Launch
-window.gameSystem.launch = function (id) {
-    console.log("Launching Game:", id);
-
-    // Safety check for instances
-    if (id === 'mines' && !window.gameSystem.instances.mines) {
-        window.gameSystem.instances.mines = new MinesweeperGame(window.gameSystem);
-    }
-    if (id === 'tetris' && !window.gameSystem.instances.tetris) {
-        window.gameSystem.instances.tetris = new TetrisGame(window.gameSystem);
-    }
-
-    if (id === 'tetris') {
-        // Custom Launch Logic
-        document.getElementById('game-overlay-container').classList.remove('hidden');
-        document.getElementById('game-overlay-container').style.display = 'flex';
-        document.querySelectorAll('.game-stage').forEach(el => el.classList.add('hidden'));
-        document.getElementById('game-stage-tetris').classList.remove('hidden');
-        STATE.activeGame = 'tetris';
+    // 2. Systems
+    window.router = new Router(window.nexusUI);
+    // Ensure GameSystem exists before extensions
+    if (typeof GameSystem !== 'undefined') {
+        window.gameSystem = new GameSystem(window.nexusUI);
     } else {
-        // Standard Launch
-        document.getElementById('game-overlay-container').classList.remove('hidden');
-        document.getElementById('game-overlay-container').style.display = 'flex';
-        // Hide all stages first
-        document.querySelectorAll('.game-stage').forEach(el => el.classList.add('hidden'));
+        console.error("GameSystem Class Missing!");
+    }
 
+    window.chatSystem = new ChatSystem(window.nexusUI);
+    window.adminSystem = new AdminSystem(window.nexusUI);
+    window.dataSystem = new DataSystem();
+    window.marketSystem = new MarketSystem();
+
+    // 3. Extensions (Tetris, Clans, Music)
+    window.gameSystem.instances.tetris = new TetrisGame(window.gameSystem);
+    window.clanSystem = new ClanSystem();
+    window.musicSystem = new MusicSystem();
+
+    // 4. Auth Manager (Starts the Flow)
+    window.authManager = new AuthManager(window.nexusUI);
+
+    // 5. Hook Game Launchers
+    const originalLaunch = window.gameSystem.launch;
+    window.gameSystem.launch = function (id) {
+        console.log("Launching Game:", id);
+
+        // Lazy Load Instances if missing
+        if (id === 'mines' && !window.gameSystem.instances.mines) window.gameSystem.instances.mines = new MinesweeperGame(window.gameSystem);
+        if (id === 'tetris' && !window.gameSystem.instances.tetris) window.gameSystem.instances.tetris = new TetrisGame(window.gameSystem);
+
+        // Custom Logic for Tetris Overlay
+        if (id === 'tetris') {
+            const container = document.getElementById('game-overlay-container');
+            if (container) {
+                container.classList.remove('hidden');
+                container.style.display = 'flex';
+            }
+            document.querySelectorAll('.game-stage').forEach(el => el.classList.add('hidden'));
+            const stage = document.getElementById('game-stage-tetris');
+            if (stage) stage.classList.remove('hidden');
+            STATE.activeGame = 'tetris';
+            return;
+        }
+
+        // Default Logic
+        const container = document.getElementById('game-overlay-container');
+        if (container) {
+            container.classList.remove('hidden');
+            container.style.display = 'flex';
+        }
+        document.querySelectorAll('.game-stage').forEach(el => el.classList.add('hidden'));
         const stage = document.getElementById(`game-stage-${id}`);
         if (stage) stage.classList.remove('hidden');
-        else console.error("Stage ID not found:", id);
 
         STATE.activeGame = id;
 
-        // Init specific logic
+        // Auto Start
         if (id === 'chess' && window.gameSystem.instances.chess) window.gameSystem.instances.chess.start();
         else if (id === '2048' && window.gameSystem.instances.g2048) window.gameSystem.instances.g2048.start();
         else if (id === 'wheel' && window.gameSystem.instances.wheel) window.gameSystem.instances.wheel.draw();
         else if (id === 'rps' && window.gameSystem.instances.rps) window.gameSystem.instances.rps.reset();
         else if (id === 'mines' && window.gameSystem.instances.mines) window.gameSystem.instances.mines.startGame();
-    }
-};
+    };
 
-/* ==========================================
-   MODULE 14: SOCIAL FEED (DASHBOARD)
-   ========================================== */
-// Inject Feed Logic
-setTimeout(() => {
-    const feed = document.getElementById('global-activity-list');
-    if (feed) {
-        const activities = [
-            { type: 'game', text: "Mehmet satrançta kazandı! (+50P)", time: "2dk önce" },
-            { type: 'clan', text: "[TR] Anadolu Klanı seviye atladı!", time: "5dk önce" },
-            { type: 'market', text: "Ahmet 'Neon Çerçeve' satın aldı.", time: "10dk önce" },
-            { type: 'chat', text: "Sohbet odası rekor kırdı: 154 Online", time: "1sa önce" }
-        ];
+    // 6. Social Feed
+    setTimeout(() => {
+        const feed = document.getElementById('global-activity-list');
+        if (feed) {
+            const activities = [
+                { type: 'game', text: "Mehmet satrançta kazandı! (+50P)", time: "2dk önce" },
+                { type: 'clan', text: "[TR] Anadolu Klanı seviye atladı!", time: "5dk önce" },
+                { type: 'market', text: "Ahmet 'Neon Çerçeve' satın aldı.", time: "10dk önce" },
+                { type: 'chat', text: "Sohbet odası rekor kırdı: 154 Online", time: "1sa önce" }
+            ];
 
-        feed.innerHTML = '';
-        activities.forEach(act => {
-            const div = document.createElement('div');
-            div.className = 'activity-item';
-            div.innerHTML = `
-                <div class="user-avatar-sm" style="background:#333; display:flex; align-items:center; justify-content:center;">📢</div>
-                <div>
-                    <div style="font-size:0.9rem; color:#fff;">${act.text}</div>
-                    <div style="font-size:0.7rem; color:#666;">${act.time}</div>
-                </div>
-             `;
-            feed.appendChild(div);
-        });
-    }
-}, 2000);
+            feed.innerHTML = '';
+            activities.forEach(act => {
+                const div = document.createElement('div');
+                div.className = 'activity-item';
+                div.innerHTML = `
+                    <div class="user-avatar-sm" style="font-size:1.2rem; display:flex; align-items:center; justify-content:center;">📢</div>
+                    <div>
+                        <div style="font-size:0.9rem; color:#fff;">${act.text}</div>
+                        <div style="font-size:0.7rem; color:#666;">${act.time}</div>
+                    </div>
+                `;
+                feed.appendChild(div);
+            });
+        }
+    }, 2000);
 
-console.log("NEXUS ULTRA: All Modules Loaded (Tetris, Clans, Music, Feed). Ready.");
+    console.log("✅ SYSTEM READY");
+});
 
 
 
