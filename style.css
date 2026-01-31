@@ -6979,3 +6979,76 @@ body .floating-chat-btn:hover {
         font-size: 2.5rem !important;
     }
 }
+
+/* ===== TYPING INDICATOR (REAL-TIME) ===== */
+.typing-indicators {
+    padding: 0 10px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    color: #00c6ff;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    position: absolute;
+    bottom: 60px;
+    /* Position above input */
+    left: 10px;
+    z-index: 10;
+    text-shadow: 0 0 10px rgba(0, 198, 255, 0.5);
+}
+
+.typing-indicators.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.typing-user {
+    color: #ae00ff;
+    font-weight: 700;
+    margin-right: 4px;
+}
+
+/* Animated Dots */
+.typing-dots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    margin-left: 5px;
+}
+
+.typing-dot {
+    width: 4px;
+    height: 4px;
+    background: #00c6ff;
+    border-radius: 50%;
+    animation: typingPulse 1.4s infinite ease-in-out both;
+    box-shadow: 0 0 5px #00c6ff;
+}
+
+.typing-dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes typingPulse {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
