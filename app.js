@@ -88,6 +88,8 @@ const Store = new StateManager();
 // ============================================================================
 
 const Auth = {
+    activeAuthTab: 'login',
+
     init() {
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -100,9 +102,10 @@ const Auth = {
             }
         });
 
-        const form = DOMHelper.get('form-login');
-        if (form) {
-            form.addEventListener('submit', (e) => {
+        // Login Form Listener
+        const loginForm = DOMHelper.get('form-login');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.login(
                     DOMHelper.get('login-email').value,
@@ -110,24 +113,98 @@ const Auth = {
                 );
             });
         }
-    },
 
-    async login(email, pass) {
-        try {
-            await signInWithEmailAndPassword(auth, email, pass);
-        } catch (error) {
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                this.register(email, pass);
-            }
+        // Register Form Listener
+        const registerForm = DOMHelper.get('form-register');
+        if (registerForm) {
+            registerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const pass = DOMHelper.get('reg-pass').value;
+                if (pass.length < 6) {
+                    alert('Şifre en az 6 karakter olmalıdır!');
+                    return;
+                }
+                this.register(
+                    DOMHelper.get('reg-email').value,
+                    pass,
+                    DOMHelper.get('reg-username').value
+                );
+            });
         }
     },
 
-    async register(email, pass) {
+    switchTab(tab) {
+        this.activeAuthTab = tab;
+
+        // Update Tabs
+        const loginTab = DOMHelper.get('auth-tab-login');
+        const regTab = DOMHelper.get('auth-tab-register');
+
+        if (tab === 'login') {
+            if (loginTab) loginTab.classList.add('active');
+            if (regTab) regTab.classList.remove('active');
+
+            DOMHelper.get('form-login').classList.remove('hidden');
+            DOMHelper.get('form-login').classList.add('active');
+
+            DOMHelper.get('form-register').classList.add('hidden');
+            DOMHelper.get('form-register').classList.remove('active');
+        } else {
+            if (loginTab) loginTab.classList.remove('active');
+            if (regTab) regTab.classList.add('active');
+
+            DOMHelper.get('form-login').classList.add('hidden');
+            DOMHelper.get('form-login').classList.remove('active');
+
+            DOMHelper.get('form-register').classList.remove('hidden');
+            DOMHelper.get('form-register').classList.add('active');
+        }
+    },
+
+    async login(email, pass) {
+        const btn = DOMHelper.get('form-login').querySelector('button');
+        if (btn) btn.classList.add('btn-loading');
+
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (error) {
+            console.error('Login Error:', error);
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                alert('❌ Kullanıcı bulunamadı veya şifre yanlış!');
+            } else if (error.code === 'auth/wrong-password') {
+                alert('❌ Şifre yanlış!');
+            } else if (error.code === 'auth/too-many-requests') {
+                alert('⚠️ Çok fazla hatalı deneme. Lütfen bir süre sonra tekrar deneyin.');
+            } else {
+                alert('❌ Giriş hatası: ' + error.message);
+            }
+        } finally {
+            if (btn) btn.classList.remove('btn-loading');
+        }
+    },
+
+    async register(email, pass, username) {
+        if (!username) {
+            alert('Lütfen kullanıcı adı girin!');
+            return;
+        }
+
+        const btn = DOMHelper.get('form-register').querySelector('button');
+        if (btn) btn.classList.add('btn-loading');
+
         try {
             const cred = await createUserWithEmailAndPassword(auth, email, pass);
-            await this.createProfile(cred.user, email.split('@')[0]);
+            await this.createProfile(cred.user, username);
+            // Profile creation success
         } catch (error) {
-            console.error(error);
+            console.error('Register Error:', error);
+            if (error.code === 'auth/email-already-in-use') {
+                alert('⚠️ Bu e-posta adresi zaten kullanımda!');
+            } else {
+                alert('❌ Kayıt hatası: ' + error.message);
+            }
+        } finally {
+            if (btn) btn.classList.remove('btn-loading');
         }
     },
 
