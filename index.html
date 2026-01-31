@@ -144,10 +144,12 @@
                 </div>
             </div>
 
-            <div class="online-badge">
+            <!-- Active Users Button -->
+            <button class="online-badge-btn"
+                onclick="app.router.go('members'); setTimeout(() => app.members.filterByRole('online'), 200);">
                 <span class="online-dot"></span>
-                <span id="online-counter">0</span> Çevrimiçi
-            </div>
+                <span id="online-counter">0</span> Aktif Kullanıcılar
+            </button>
 
             <button class="header-btn" onclick="app.router.go('profile')">
                 <i class="ri-user-line"></i>
@@ -371,10 +373,10 @@
         <section id="view-profile" class="view-section">
             <div class="profile-container">
                 <div class="profile-actions">
-                    <button class="btn btn-ghost btn-sm" onclick="app.router.go('dashboard')">
+                    <button class="btn btn-ghost btn-xs" onclick="app.router.go('dashboard')">
                         <i class="ri-arrow-left-line"></i> Geri Dön
                     </button>
-                    <button class="btn btn-primary btn-sm" onclick="app.ui.openModal('user-settings-modal')">
+                    <button class="btn btn-primary btn-xs" onclick="app.ui.openModal('user-settings-modal')">
                         <i class="ri-settings-4-line"></i> Kullanıcı Ayarları
                     </button>
                 </div>
@@ -436,7 +438,7 @@
 
                 <!-- LOGOUT BUTTON -->
                 <div class="flex justify-end mt-4">
-                    <button class="btn btn-danger btn-sm" onclick="app.auth.logout()">
+                    <button class="btn btn-danger btn-xs" onclick="app.auth.logout()">
                         <i class="ri-logout-box-line"></i> Çıkış Yap
                     </button>
                 </div>
@@ -759,14 +761,14 @@
                                 kullanın</small>
                         </div>
                         <div class="avatar-options">
-                            <button type="button" class="btn btn-sm btn-accent" onclick="app.profile.useGravatar()">
+                            <button type="button" class="btn btn-xs btn-accent" onclick="app.profile.useGravatar()">
                                 <i class="ri-user-smile-line"></i> Gravatar Kullan
                             </button>
-                            <button type="button" class="btn btn-sm btn-accent" onclick="app.profile.useUIAvatar()">
+                            <button type="button" class="btn btn-xs btn-accent" onclick="app.profile.useUIAvatar()">
                                 <i class="ri-user-line"></i> İsim Avatar
                             </button>
                         </div>
-                        <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateAvatar()">
+                        <button class="btn btn-primary btn-xs mt-2" onclick="app.profile.updateAvatar()">
                             Fotoğrafı Güncelle
                         </button>
                     </div>
@@ -777,7 +779,7 @@
                             <label>Kullanıcı Adı</label>
                             <input type="text" id="settings-username" class="form-input"
                                 placeholder="Yeni kullanıcı adı">
-                            <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateUsername()">
+                            <button class="btn btn-primary btn-xs mt-2" onclick="app.profile.updateUsername()">
                                 Kullanıcı Adını Güncelle
                             </button>
                         </div>
@@ -788,7 +790,7 @@
                         <div class="form-group">
                             <label>Yeni E-posta</label>
                             <input type="email" id="settings-email" class="form-input" placeholder="yeni@email.com">
-                            <button class="btn btn-primary btn-sm mt-2" onclick="app.profile.updateEmail()">
+                            <button class="btn btn-primary btn-xs mt-2" onclick="app.profile.updateEmail()">
                                 E-posta Güncelle
                             </button>
                         </div>
@@ -808,7 +810,7 @@
                             <label>Yeni Şifre (Tekrar)</label>
                             <input type="password" id="settings-new-pass-confirm" class="form-input">
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="app.profile.updatePassword()">
+                        <button class="btn btn-primary btn-xs" onclick="app.profile.updatePassword()">
                             Şifreyi Güncelle
                         </button>
                     </div>
@@ -816,7 +818,7 @@
                     <div class="settings-group">
                         <h4>⚠️ Tehlikeli Bölge</h4>
                         <p class="text-muted">Bu işlemler geri alınamaz!</p>
-                        <button class="btn btn-danger btn-sm" onclick="app.profile.deleteAccount()">
+                        <button class="btn btn-danger btn-xs" onclick="app.profile.deleteAccount()">
                             Hesabı Sil
                         </button>
                     </div>
