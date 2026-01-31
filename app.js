@@ -3586,13 +3586,17 @@ window.app = {
 
 document.addEventListener('DOMContentLoaded', () => {
     // Hide loader
+    // Hide loader with EPIC fade out
     setTimeout(() => {
-        const loader = DOMHelper.get('loader-overlay');
+        const loader = document.getElementById('loader-overlay');
         if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.remove(), 500);
+            loader.classList.add('fade-out');
+            // Wait for CSS transition (0.8s) to finish before removing from DOM
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 800);
         }
-    }, 1000);
+    }, 1500); // 1.5 seconds delay to show off the logo
 
     // Initialize
     Settings.init();  // Initialize theme first
