@@ -3498,3 +3498,183 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('%c🚀 SAHIKALI', 'font-size: 24px; font-weight: bold; color: #00c6ff;');
     console.log('%cModern Community Platform', 'font-size: 14px; color: #ae00ff;');
 });
+// ============================================================================
+//    PERFORMANCE & BUG FIX UTILITIES
+// ============================================================================
+
+/**
+ * Performance optimizations and bug fixes
+ */
+const PerformanceBoost = {
+    // Debounce function for expensive operations
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+
+    // Throttle function for scroll/resize events
+    throttle(func, limit) {
+        let inThrottle;
+        return function (...args) {
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    },
+
+    // Request Animation Frame wrapper
+    raf(callback) {
+        return window.requestAnimationFrame(callback);
+    },
+
+    // Cancel Animation Frame wrapper
+    cancelRaf(id) {
+        return window.cancelAnimationFrame(id);
+    },
+
+    // Lazy load images
+    lazyLoadImages() {
+        const images = document.querySelectorAll('img[data-src]');
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                    observer.unobserve(img);
+                }
+            });
+        });
+
+        images.forEach(img => imageObserver.observe(img));
+    },
+
+    // Smooth scroll to element
+    smoothScrollTo(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    },
+
+    // Optimize animations with will-change
+    optimizeElement(element) {
+        if (element) {
+            element.style.willChange = 'transform';
+            // Remove after animation
+            setTimeout(() => {
+                element.style.willChange = 'auto';
+            }, 1000);
+        }
+    },
+
+    // Add ripple effect to buttons
+    addRippleEffect(button, event) {
+        const ripple = document.createElement('span');
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        ripple.classList.add('ripple');
+
+        button.appendChild(ripple);
+
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
+    },
+
+    // Initialize all button ripples
+    initButtonRipples() {
+        document.querySelectorAll('.btn, button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                // Don't add ripple if already happening
+                if (!button.querySelector('.ripple')) {
+                    this.addRippleEffect(button, e);
+                }
+            });
+        });
+    },
+
+    // Fix iOS hover states
+    fixiOSHover() {
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            document.addEventListener('touchstart', function () { }, true);
+        }
+    },
+
+    // Prevent double-tap zoom on buttons
+    preventDoubleTapZoom() {
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (event) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    },
+
+    // Memory leak prevention - cleanup listeners
+    cleanupListeners(element) {
+        if (element) {
+            const clone = element.cloneNode(true);
+            element.parentNode.replaceChild(clone, element);
+            return clone;
+        }
+    },
+
+    // Initialize all optimizations
+    init() {
+        console.log('ğŸš€ Initializing Performance Boost...');
+
+        // Fix iOS issues
+        this.fixiOSHover();
+        this.preventDoubleTapZoom();
+
+        // Init button effects
+        this.initButtonRipples();
+
+        // Lazy load images
+        this.lazyLoadImages();
+
+        // Optimize scroll performance
+        const optimizedScroll = this.throttle(() => {
+            // Scroll handler
+        }, 100);
+
+        window.addEventListener('scroll', optimizedScroll, { passive: true });
+
+        console.log('âœ… Performance Boost Active!');
+    }
+};
+
+// Auto-initialize on DOMContentLoaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        PerformanceBoost.init();
+    });
+} else {
+    PerformanceBoost.init();
+}
+
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = PerformanceBoost;
+}
