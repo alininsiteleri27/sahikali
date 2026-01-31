@@ -5121,3 +5121,35 @@ button[style*='fixed']:not(.floating-chat-btn):not(.sidebar-toggle),
     display: none !important;
 }
 
+
+/* FORCE FIX FLOATING BUTTON POSITION AND DUPLICATES */
+body .floating-chat-btn {
+    position: fixed !important;
+    bottom: 2rem !important;
+    right: 2rem !important;
+    left: auto !important;
+    top: auto !important;
+    float: none !important;
+    margin: 0 !important;
+    z-index: 2147483647 !important;
+    transform: none; /* Reset transform to avoid positioning issues */
+}
+
+/* Ensure hover effect still works but with transform */
+body .floating-chat-btn:hover {
+    transform: scale(1.1) rotate(5deg) !important;
+}
+
+/* Hide any potential duplicates or ghost elements */
+.floating-chat-btn ~ .floating-chat-btn,
+.floating-chat-btn:nth-of-type(n+2) {
+    display: none !important;
+}
+
+/* Remove pseudo-elements that might look like buttons */
+.floating-chat-btn::before,
+.floating-chat-btn::after {
+    content: none !important;
+    display: none !important;
+}
+
