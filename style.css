@@ -5244,9 +5244,9 @@ body .floating-chat-btn:hover {
     background: var(--bg-surface);
     color: var(--text-secondary);
     border: 1px solid var(--border);
-    padding: 0.3rem 0.8rem; /* K���k boyut */
+    padding: 0.3rem 0.8rem; /* Küçük boyut */
     border-radius: 6px;
-    font-size: 0.75rem; /* K���k font */
+    font-size: 0.75rem; /* Küçük font */
     font-weight: 500;
     cursor: pointer;
     display: flex;
@@ -5791,13 +5791,13 @@ body .floating-chat-btn:hover {
 }
 
 /* ===================================
-   MOBÄ°L UYUMLULUK DÃœZENLEMELERÄ°
+   MOBIL UYUMLULUK DUZENLEMELERI
    =================================== */
 
 /* Chat Butonu Mobil Optimizasyonu */
 @media (max-width: 768px) {
 
-    /* Chat Butonu KÃ¼Ã§Ã¼ltme */
+    /* Chat Butonu Kucultme */
     .floating-chat-btn {
         width: 45px !important;
         height: 45px !important;
@@ -5812,7 +5812,7 @@ body .floating-chat-btn:hover {
         margin: 0 !important;
     }
 
-    /* Chat Badge KÃ¼Ã§Ã¼ltme */
+    /* Chat Badge Kucultme */
     .chat-badge {
         width: 18px !important;
         height: 18px !important;
@@ -5833,13 +5833,13 @@ body .floating-chat-btn:hover {
         border-radius: 12px !important;
     }
 
-    /* Chat Header KÃ¼Ã§Ã¼ltme */
+    /* Chat Header Kucultme */
     .floating-chat-header {
         padding: 8px 10px !important;
         min-height: 45px !important;
     }
 
-    /* Chat Tab ButonlarÄ±nÄ± KÃ¼Ã§Ã¼ltme */
+    /* Chat Tab Butonlarini Kucultme */
     .chat-tab {
         padding: 6px 12px !important;
         font-size: 12px !important;
@@ -5858,20 +5858,20 @@ body .floating-chat-btn:hover {
         padding: 0 !important;
     }
 
-    /* Chat Mesaj AlanÄ± */
+    /* Chat Mesaj Alani */
     .floating-chat-messages {
         padding: 8px !important;
         font-size: 13px !important;
     }
 
-    /* Chat Input AlanÄ± */
+    /* Chat Input Alani */
     .chat-input {
         padding: 8px 10px !important;
         font-size: 13px !important;
         height: 40px !important;
     }
 
-    /* Chat GÃ¶nder Butonu */
+    /* Chat Gonder Butonu */
     .floating-chat-input-form button[type="submit"] {
         width: 35px !important;
         height: 35px !important;
@@ -5901,7 +5901,7 @@ body .floating-chat-btn:hover {
         font-size: 18px !important;
     }
 
-    /* Ana MenÃ¼ Nav Item Optimizasyonu */
+    /* Ana Menu Nav Item Optimizasyonu */
     .nav-item {
         padding: 8px 12px !important;
         font-size: 13px !important;
@@ -5957,7 +5957,7 @@ body .floating-chat-btn:hover {
     }
 }
 
-/* Ekstra KÃ¼Ã§Ã¼k Ekranlar iÃ§in */
+/* Ekstra Kucuk Ekranlar icin */
 @media (max-width: 480px) {
     .floating-chat-btn {
         width: 40px !important;
@@ -6007,12 +6007,12 @@ body .floating-chat-btn:hover {
 
     .sidebar {
         width: 220px !important;
-
     }
 }
+
 /* =====================================
-   AUTH MODAL Ä°Ã‡Ä°N EK STÄ°LLER
-   style.css veya <head> iÃ§inde <style> tagine ekle
+   AUTH MODAL ICIN EK STILLER
+   style.css veya <head> icinde <style> tagine ekle
    ===================================== */
 
 .auth-buttons {
