@@ -21,7 +21,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css?v=3.7">
+    <link rel="stylesheet" href="style.css?v=3.8">
 
     <style>
         /* ===== EPIC SPLASH SCREEN ===== */
@@ -709,13 +709,17 @@
         <!-- FLOATING CHAT WINDOW -->
         <div class="floating-chat-window" id="floating-chat-window">
             <div class="floating-chat-header">
-                <div class="chat-tabs">
-                    <button class="chat-tab active" onclick="app.chat.switchTab('global')" id="tab-global">
-                        Genel
-                    </button>
-                    <button class="chat-tab" onclick="app.chat.switchTab('dm')" id="tab-dm">
-                        Mesajlar <span class="tab-badge hidden" id="dm-total-badge">0</span>
-                    </button>
+                <div class="chat-header-content" style="flex:1;">
+                    <div class="chat-tabs">
+                        <button class="chat-tab active" onclick="app.chat.switchTab('global')" id="tab-global">
+                            Genel
+                        </button>
+                        <button class="chat-tab" onclick="app.chat.switchTab('dm')" id="tab-dm">
+                            Mesajlar <span class="tab-badge hidden" id="dm-total-badge">0</span>
+                        </button>
+                    </div>
+                    <!-- Global Typing Indicator (Top) -->
+                    <div id="global-typing-indicator" class="typing-indicator-header"></div>
                 </div>
                 <button class="chat-close-btn" onclick="app.ui.toggleFloatingChat()">
                     <i class="ri-close-line"></i>
@@ -727,8 +731,7 @@
                 <div class="floating-chat-messages" id="floating-chat-messages">
                     <!-- Global Messages -->
                 </div>
-                <!-- Real-time Typing Indicator for Global -->
-                <div id="global-typing-indicator" class="typing-indicators"></div>
+                <!-- Old indicator removed -->
 
                 <form class="floating-chat-input-form" id="floating-chat-form">
                     <button type="button" class="btn btn-vs" onclick="app.game.openGameMenu()"
@@ -758,14 +761,16 @@
                         <button class="btn-icon" onclick="app.chat.closeDM()">
                             <i class="ri-arrow-left-line"></i>
                         </button>
-                        <span id="dm-chat-username" class="dm-username">Kullanıcı</span>
+                        <div class="dm-user-info" style="flex:1; display:flex; flex-direction:column;">
+                            <span id="dm-chat-username" class="dm-username">Kullanıcı</span>
+                            <!-- DM Typing Indicator (Top) -->
+                            <div id="dm-typing-indicator" class="typing-indicator-pm"></div>
+                        </div>
                         <span id="dm-chat-status" class="dm-status"></span>
                     </div>
                     <div class="floating-chat-messages" id="dm-messages">
                         <!-- DM Messages -->
                     </div>
-                    <!-- Real-time Typing Indicator for DM -->
-                    <div id="dm-typing-indicator" class="typing-indicators"></div>
 
                     <form class="floating-chat-input-form" id="dm-chat-form">
                         <input type="text" id="dm-chat-input" class="chat-input" placeholder="Mesaj yaz..."
@@ -1201,7 +1206,7 @@
         </div>
 
 
-        <script type="module" src="app.js?v=3.7"></script>
+        <script type="module" src="app.js?v=3.8"></script>
 </body>
 
 </html>
