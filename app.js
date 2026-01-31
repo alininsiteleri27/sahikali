@@ -585,7 +585,7 @@ const Chat = {
             if (container) {
                 container.innerHTML = '';
                 snap.forEach(child => {
-                    this.renderMessage(child.val(), container);
+                    this.renderMessage({ ...child.val(), key: child.key }, container);
                 });
                 container.scrollTop = container.scrollHeight;
             }
@@ -725,7 +725,7 @@ const Chat = {
             }
 
             snap.forEach(child => {
-                this.renderMessage(child.val(), container);
+                this.renderMessage({ ...child.val(), key: child.key }, container);
             });
             container.scrollTop = container.scrollHeight;
         });
@@ -748,6 +748,29 @@ const Chat = {
             };
             const info = gameInfo[msg.game];
 
+            const isExpired = msg.ts && (Date.now() - msg.ts > 120000); // 2 minutes
+            const myUid = Store.get('profile')?.uid;
+            const isMe = myUid === msg.uid;
+
+            // Auto-delete invalid invites if i am the owner
+            if (isExpired && isMe && msg.key) {
+                // Silme işlemini biraz gecikmeli yap ki render döngüsünü bozmasın
+                setTimeout(() => {
+                    remove(ref(db, `chats/global/${msg.key}`));
+                    // Opsiyonel: Oyunu da silebiliriz ama belki loglarda kalsın istenir
+                    if (msg.gameId) remove(ref(db, `games/${msg.gameId}`));
+                }, 1000);
+            }
+
+            let actionButton = '';
+            if (isExpired) {
+                actionButton = `<button class="btn-game-join disabled" disabled>Süresi Doldu ⌛</button>`;
+            } else if (isMe) {
+                actionButton = `<button class="btn-game-cancel" onclick="app.chat.deleteInvite('${msg.key}', '${msg.gameId}')">İptal Et 🗑️</button>`;
+            } else {
+                actionButton = `<button class="btn-game-join" onclick="app.game.joinGame('${msg.gameId}')">KABUL ET</button>`;
+            }
+
             div.innerHTML = `
                 <img src="${msg.avatar}" class="msg-avatar" alt="${msg.name}">
                 <div class="msg-content">
@@ -755,12 +778,10 @@ const Chat = {
                         <span class="msg-user">${this.escapeHTML(msg.name)}</span>
                         <span class="msg-time">${time}</span>
                     </div>
-                    <div class="invite-card">
+                    <div class="invite-card ${isExpired ? 'expired' : ''}">
                         <span class="invite-title">${info.icon} ${info.title}</span>
                         <span class="invite-vs">VS</span>
-                        <button class="btn-game-join" onclick="app.game.joinGame('${msg.gameId}')">
-                            KABUL ET
-                        </button>
+                        ${actionButton}
                     </div>
                 </div>
             `;
@@ -777,6 +798,23 @@ const Chat = {
             `;
         }
         container.appendChild(div);
+    },
+
+    async deleteInvite(msgKey, gameId) {
+        if (!confirm('Daveti iptal etmek istediğine emin misin?')) return;
+
+        try {
+            // Mesajı sil
+            await remove(ref(db, `chats/global/${msgKey}`));
+
+            // Oyunu da iptal et veya sil
+            if (gameId) {
+                // Oyunu sil veya status'u aborted yap (tercihe bağlı, silmek daha temiz)
+                await remove(ref(db, `games/${gameId}`));
+            }
+        } catch (error) {
+            console.error('Silme hatası:', error);
+        }
     },
 
     async sendGlobal() {
