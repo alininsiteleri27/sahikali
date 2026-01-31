@@ -161,6 +161,14 @@ const Auth = {
         }
     },
 
+    switchToLoginMode() {
+        this.switchTab('login');
+    },
+
+    switchToRegisterMode() {
+        this.switchTab('register');
+    },
+
     async login(email, pass) {
         const btn = DOMHelper.get('form-login').querySelector('button');
         if (btn) btn.classList.add('btn-loading');
