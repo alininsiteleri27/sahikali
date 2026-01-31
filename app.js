@@ -136,28 +136,53 @@ const Auth = {
     switchTab(tab) {
         this.activeAuthTab = tab;
 
-        // Update Tabs
+        // Hide button container when showing form
+        const buttonContainer = DOMHelper.get('auth-buttons-container');
+        if (buttonContainer) {
+            buttonContainer.style.display = 'none';
+        }
+
+        // Update Tabs (if visible)
         const loginTab = DOMHelper.get('auth-tab-login');
         const regTab = DOMHelper.get('auth-tab-register');
+
+        const loginForm = DOMHelper.get('form-login');
+        const registerForm = DOMHelper.get('form-register');
 
         if (tab === 'login') {
             if (loginTab) loginTab.classList.add('active');
             if (regTab) regTab.classList.remove('active');
 
-            DOMHelper.get('form-login').classList.remove('hidden');
-            DOMHelper.get('form-login').classList.add('active');
+            // Show login form
+            if (loginForm) {
+                loginForm.style.display = 'block';
+                loginForm.classList.remove('hidden');
+                loginForm.classList.add('active');
+            }
 
-            DOMHelper.get('form-register').classList.add('hidden');
-            DOMHelper.get('form-register').classList.remove('active');
+            // Hide register form
+            if (registerForm) {
+                registerForm.style.display = 'none';
+                registerForm.classList.add('hidden');
+                registerForm.classList.remove('active');
+            }
         } else {
             if (loginTab) loginTab.classList.remove('active');
             if (regTab) regTab.classList.add('active');
 
-            DOMHelper.get('form-login').classList.add('hidden');
-            DOMHelper.get('form-login').classList.remove('active');
+            // Hide login form
+            if (loginForm) {
+                loginForm.style.display = 'none';
+                loginForm.classList.add('hidden');
+                loginForm.classList.remove('active');
+            }
 
-            DOMHelper.get('form-register').classList.remove('hidden');
-            DOMHelper.get('form-register').classList.add('active');
+            // Show register form
+            if (registerForm) {
+                registerForm.style.display = 'block';
+                registerForm.classList.remove('hidden');
+                registerForm.classList.add('active');
+            }
         }
     },
 
