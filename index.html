@@ -21,7 +21,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css?v=3.3">
+    <link rel="stylesheet" href="style.css?v=3.4">
 
     <style>
         /* ===== EPIC SPLASH SCREEN ===== */
@@ -1001,84 +1001,85 @@
             </div>
         </div>
 
-        <!-- AUTH MODAL -->
+        <!-- AUTH MODAL (NEW HORIZONTAL SPLIT DESIGN) -->
         <div class="modal-overlay" id="auth-modal">
-            <div class="modal-content modal-auth">
-                <div class="auth-header">
-                    <h2 class="auth-title">SAHİKALI</h2>
-                    <p class="auth-subtitle">Topluluğa Hoş Geldin</p>
+            <div class="modal-content modal-auth-wide">
+
+                <!-- LEFT SIDE: VISUAL & SWITCHER -->
+                <div class="auth-side-visual">
+                    <div class="auth-visual-content">
+                        <h2 class="auth-logo-large">SAHİKALI</h2>
+                        <p class="auth-visual-text" id="auth-visual-text">
+                            Topluluğa katıl ve eğlencenin tadını çıkar!
+                        </p>
+
+                        <!-- SWITCH BUTTON (Login <-> Register) -->
+                        <div class="auth-switch-container">
+                            <p class="auth-switch-label" id="auth-switch-label">Hesabın yok mu?</p>
+                            <button class="btn btn-outline-white btn-wide" id="auth-switch-btn"
+                                onclick="app.auth.switchToRegisterMode()">
+                                Kayıt Ol
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Background Effects -->
+                    <div class="visual-bg-glow"></div>
                 </div>
 
-                <!-- Karşılama Mesajı -->
-                <div class="auth-welcome-text">
-                    Platformumuza katılmak için giriş yapın veya yeni bir hesap oluşturun
+                <!-- RIGHT SIDE: FORMS -->
+                <div class="auth-side-form">
+
+                    <!-- LOGIN FORM -->
+                    <form id="form-login" class="auth-form active">
+                        <h3 class="form-title">Giriş Yap</h3>
+                        <p class="form-subtitle">Hesabınıza erişin</p>
+
+                        <div class="input-group-modern">
+                            <i class="ri-mail-line"></i>
+                            <input type="email" id="login-email" placeholder="E-posta Adresi" required>
+                        </div>
+                        <div class="input-group-modern">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="login-pass" placeholder="Şifre" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <a href="#" class="forgot-pass-link" onclick="alert('Yakında!'); return false;">Şifremi
+                                Unuttum</a>
+                            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                                <i class="ri-login-circle-line"></i> Giriş Yap
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- REGISTER FORM -->
+                    <form id="form-register" class="auth-form hidden">
+                        <h3 class="form-title">Kayıt Ol</h3>
+                        <p class="form-subtitle">Yeni bir hesap oluşturun</p>
+
+                        <div class="input-group-modern">
+                            <i class="ri-user-line"></i>
+                            <input type="text" id="reg-username" placeholder="Kullanıcı Adı" required minlength="3"
+                                maxlength="15">
+                        </div>
+                        <div class="input-group-modern">
+                            <i class="ri-mail-line"></i>
+                            <input type="email" id="reg-email" placeholder="E-posta Adresi" required>
+                        </div>
+                        <div class="input-group-modern">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="reg-pass" placeholder="Şifre (Min 6 karakter)" required
+                                minlength="6">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                                <i class="ri-user-add-line"></i> Kayıt Ol
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
-                <!-- Auth Butonları (YENİ TASARIM) - Her zaman görünür -->
-                <div class="auth-buttons" id="auth-buttons-container">
-                    <button class="auth-btn auth-btn-login" onclick="app.auth.switchToLoginMode()">
-                        <i class="ri-login-box-line"></i> Giriş Yap
-                    </button>
-                    <button class="auth-btn auth-btn-register" onclick="app.auth.switchToRegisterMode()">
-                        <i class="ri-user-add-line"></i> Kayıt Ol
-                    </button>
-                </div>
-
-                <!-- Auth Tabs (Gizli ama fonksiyonel) -->
-                <div class="auth-tabs" style="display: none;">
-                    <button class="auth-tab active" onclick="app.auth.switchTab('login')"
-                        id="auth-tab-login">Giriş</button>
-                    <button class="auth-tab" onclick="app.auth.switchTab('register')"
-                        id="auth-tab-register">Kayıt</button>
-                </div>
-
-                <!-- LOGIN FORM - Başlangıçta gizli -->
-                <form id="form-login" class="modal-body auth-section" style="display: none;">
-                    <div class="input-group-neon">
-                        <i class="ri-mail-line"></i>
-                        <input type="email" id="login-email" placeholder="E-posta Adresi" required>
-                    </div>
-                    <div class="input-group-neon">
-                        <i class="ri-lock-line"></i>
-                        <input type="password" id="login-pass" placeholder="Şifre" required>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="ri-login-circle-line"></i> Giriş Yap
-                    </button>
-
-                    <p class="auth-switch-text">
-                        Hesabın yok mu? <a href="#" onclick="app.auth.switchToRegisterMode(); return false;">Kayıt
-                            Ol</a>
-                    </p>
-                </form>
-
-                <!-- REGISTER FORM - Başlangıçta gizli -->
-                <form id="form-register" class="modal-body auth-section" style="display: none;">
-                    <div class="input-group-neon">
-                        <i class="ri-user-line"></i>
-                        <input type="text" id="reg-username" placeholder="Kullanıcı Adı" required minlength="3"
-                            maxlength="15">
-                    </div>
-                    <div class="input-group-neon">
-                        <i class="ri-mail-line"></i>
-                        <input type="email" id="reg-email" placeholder="E-posta Adresi" required>
-                    </div>
-                    <div class="input-group-neon">
-                        <i class="ri-lock-line"></i>
-                        <input type="password" id="reg-pass" placeholder="Şifre (Min 6 karakter)" required
-                            minlength="6">
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="ri-user-add-line"></i> Kayıt Ol
-                    </button>
-
-                    <p class="auth-switch-text">
-                        Zaten hesabın var mı? <a href="#" onclick="app.auth.switchToLoginMode(); return false;">Giriş
-                            Yap</a>
-                    </p>
-                </form>
             </div>
         </div>
 
@@ -1194,7 +1195,7 @@
         </div>
 
 
-        <script type="module" src="app.js?v=3.3"></script>
+        <script type="module" src="app.js?v=3.4"></script>
 </body>
 
 </html>
