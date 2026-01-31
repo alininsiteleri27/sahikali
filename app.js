@@ -240,32 +240,51 @@ const Auth = {
                 Store.set('profile', { ...data, uid: uid });
                 UI.updateDOM();
                 console.log('✅ Profil yüklendi:', data.username);
+
+                // Kullanıcı adı geldikten sonra presence'i güncelle
+                this.initPresence(uid, data.username);
             }
         });
 
-        // Presence
-        const presenceRef = ref(db, `status/${uid}`);
+        // Count online users (Realtime)
+        onValue(ref(db, 'status'), (snap) => {
+            let count = 0;
+            if (snap.exists()) {
+                count = Object.keys(snap.val()).length;
+            }
+            DOMHelper.setText('online-counter', count);
+            DOMHelper.setText('chat-online-count', count);
+            DOMHelper.setText('online-users', count);
+        });
+    },
+
+    initPresence(uid, username) {
+        // Presence System - Simplified & Reliable
+        const userStatusRef = ref(db, `status/${uid}`);
         const connectedRef = ref(db, '.info/connected');
+
         onValue(connectedRef, (snap) => {
             if (snap.val() === true) {
-                const con = push(presenceRef);
-                onDisconnect(con).remove();
-                set(con, { state: 'online', last: serverTimestamp() });
-            }
-        });
+                // Bağlantı koptuğunda silinecek komutu ver
+                onDisconnect(userStatusRef).remove();
 
-        // Count online users
-        onValue(ref(db, 'status'), (snap) => {
-            if (snap.exists()) {
-                const count = Object.keys(snap.val()).length;
-                DOMHelper.setText('online-counter', count);
-                DOMHelper.setText('chat-online-count', count);
-                DOMHelper.setText('online-users', count);
+                // Şimdi online olarak işaretle
+                set(userStatusRef, {
+                    state: 'online',
+                    username: username,
+                    last_changed: serverTimestamp(),
+                    device: navigator.userAgent // Debug için faydalı olabilir
+                });
             }
         });
     },
 
     async logout() {
+        // Çıkış yapmadan önce manuel olarak status'u sil
+        const user = auth.currentUser;
+        if (user) {
+            await set(ref(db, `status/${user.uid}`), null);
+        }
         await signOut(auth);
         location.reload();
     }
