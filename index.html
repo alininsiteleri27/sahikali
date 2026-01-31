@@ -21,7 +21,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css?v=3.0">
+    <link rel="stylesheet" href="style.css?v=3.2">
 
     <style>
         #loader-overlay {
@@ -821,8 +821,8 @@
                     Platformumuza katılmak için giriş yapın veya yeni bir hesap oluşturun
                 </div>
 
-                <!-- Auth Butonları (YENİ TASARIM) -->
-                <div class="auth-buttons">
+                <!-- Auth Butonları (YENİ TASARIM) - Her zaman görünür -->
+                <div class="auth-buttons" id="auth-buttons-container">
                     <button class="auth-btn auth-btn-login" onclick="app.auth.switchToLoginMode()">
                         <i class="ri-login-box-line"></i> Giriş Yap
                     </button>
@@ -839,8 +839,8 @@
                         id="auth-tab-register">Kayıt</button>
                 </div>
 
-                <!-- LOGIN FORM -->
-                <form id="form-login" class="modal-body auth-section active">
+                <!-- LOGIN FORM - Başlangıçta gizli -->
+                <form id="form-login" class="modal-body auth-section" style="display: none;">
                     <div class="input-group-neon">
                         <i class="ri-mail-line"></i>
                         <input type="email" id="login-email" placeholder="E-posta Adresi" required>
@@ -855,12 +855,13 @@
                     </button>
 
                     <p class="auth-switch-text">
-                        Hesabın yok mu? <a href="#" onclick="app.auth.switchTab('register'); return false;">Kayıt Ol</a>
+                        Hesabın yok mu? <a href="#" onclick="app.auth.switchToRegisterMode(); return false;">Kayıt
+                            Ol</a>
                     </p>
                 </form>
 
-                <!-- REGISTER FORM -->
-                <form id="form-register" class="modal-body auth-section hidden">
+                <!-- REGISTER FORM - Başlangıçta gizli -->
+                <form id="form-register" class="modal-body auth-section" style="display: none;">
                     <div class="input-group-neon">
                         <i class="ri-user-line"></i>
                         <input type="text" id="reg-username" placeholder="Kullanıcı Adı" required minlength="3"
@@ -881,7 +882,7 @@
                     </button>
 
                     <p class="auth-switch-text">
-                        Zaten hesabın var mı? <a href="#" onclick="app.auth.switchTab('login'); return false;">Giriş
+                        Zaten hesabın var mı? <a href="#" onclick="app.auth.switchToLoginMode(); return false;">Giriş
                             Yap</a>
                     </p>
                 </form>
@@ -1000,7 +1001,7 @@
         </div>
 
 
-        <script type="module" src="app.js?v=3.0"></script>
+        <script type="module" src="app.js?v=3.1"></script>
 </body>
 
 </html>
