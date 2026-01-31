@@ -5529,3 +5529,264 @@ body .floating-chat-btn:hover {
     text-shadow: 0 0 10px var(--primary);
 }
 
+
+/* FORCE FIX AUTH MODAL STYLES */
+.hidden { display: none !important; }
+
+#auth-modal {
+    z-index: 10000 !important;
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#auth-modal .modal-content {
+    background: #0a0a0f !important;
+    background: linear-gradient(135deg, rgba(16, 16, 24, 0.95) 0%, rgba(10, 10, 15, 0.98) 100%) !important;
+    border: 1px solid rgba(0, 198, 255, 0.2) !important;
+    box-shadow: 0 0 100px rgba(0, 198, 255, 0.15) !important;
+    padding: 3rem !important;
+    max-width: 420px !important;
+    width: 90%;
+    border-radius: 24px !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Remove default modal header styles inside auth */
+#auth-modal .modal-header {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: 2rem !important;
+    display: block !important;
+    text-align: center !important;
+}
+
+#auth-modal .modal-header h3 {
+    display: none !important;
+}
+
+/* Input styles specific to auth */
+#auth-modal input {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    padding: 1rem 1rem 1rem 3rem !important;
+    border-radius: 12px !important;
+    font-size: 1rem !important;
+    height: auto !important;
+    width: 100% !important;
+    transition: all 0.3s !important;
+}
+
+#auth-modal input:focus {
+    border-color: #00c6ff !important;
+    box-shadow: 0 0 20px rgba(0, 198, 255, 0.2) !important;
+    background: rgba(0, 0, 0, 0.2) !important;
+}
+
+#auth-modal .input-group-neon {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+#auth-modal .input-group-neon i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#auth-modal .input-group-neon:focus-within i {
+    color: #00c6ff !important;
+}
+
+/* Button override */
+#auth-modal .btn {
+    width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    margin-top: 1rem !important;
+    text-transform: uppercase !important;
+    border-radius: 12px !important;
+}
+
+#auth-modal .btn-neon-primary {
+    background: linear-gradient(90deg, #00c6ff, #0072ff) !important;
+    box-shadow: 0 5px 20px rgba(0, 198, 255, 0.3) !important;
+}
+
+#auth-modal .btn-neon-primary:hover {
+    box-shadow: 0 8px 30px rgba(0, 198, 255, 0.5) !important;
+    transform: translateY(-2px);
+}
+
+#auth-modal .btn-neon-success {
+    background: linear-gradient(90deg, #11998e, #38ef7d) !important;
+    box-shadow: 0 5px 20px rgba(56, 239, 125, 0.3) !important;
+}
+
+
+/* ============================================================================
+   MOBILE RESPONSIVENESS FIXES (ULTRA COMPACT)
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    /* 1. GLOBAL SCALING DOWN */
+    html {
+        font-size: 13px !important; /* Decrease base size from 16px to 13px */
+    }
+
+    body {
+        overflow-x: hidden !important; /* Prevent horizontal scroll */
+        padding-bottom: 80px !important; /* Space for floating buttons */
+    }
+
+    /* 2. LAYOUT ADJUSTMENTS */
+    .app-container {
+        grid-template-columns: 1fr !important; /* Single column */
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .sidebar {
+        position: fixed !important;
+        left: -100% !important;
+        top: 0;
+        bottom: 0;
+        z-index: 1000 !important;
+        width: 250px !important;
+        transition: left 0.3s ease !important;
+    }
+
+    .sidebar.active {
+        left: 0 !important;
+        box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    }
+
+    .main-content {
+        padding: 1rem !important; /* Smaller padding */
+        height: auto !important; /* Allow scroll */
+        overflow: visible !important;
+    }
+
+    .right-panel {
+        display: none !important; /* Hide right panel on mobile usually */
+    }
+    
+    /* 3. HEADER COMPACTING */
+    .app-header {
+        padding: 0.5rem 1rem !important;
+        height: auto !important;
+        flex-wrap: wrap; /* Allow wrapping */
+        gap: 0.5rem;
+    }
+
+    .page-title {
+        font-size: 1.2rem !important;
+    }
+
+    .online-badge-btn {
+        padding: 0.2rem 0.6rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* 4. GRID SYSTEMS FIX */
+    .members-grid,
+    .stats-grid, 
+    .founder-actions,
+    .profile-stats {
+        grid-template-columns: 1fr !important; /* Single column grids */
+        gap: 0.8rem !important;
+    }
+
+    .theme-grid {
+        grid-template-columns: repeat(2, 1fr) !important; /* 2 cols for themes is fine */
+    }
+
+    /* 5. MODAL FIXES */
+    .modal-content,
+    .modal-auth {
+        width: 95% !important;
+        max-width: 95% !important;
+        padding: 1.2rem !important;
+        margin: 1rem auto !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+
+    #auth-modal .modal-content {
+        padding: 1.5rem !important;
+    }
+
+    /* 6. TYPOGRAPHY & BUTTONS */
+    h1 { font-size: 1.8rem !important; }
+    h2 { font-size: 1.5rem !important; }
+    h3 { font-size: 1.3rem !important; }
+    
+    .btn {
+        width: 100% !important; /* Full width buttons on mobile usually better */
+        margin-bottom: 0.5rem;
+        justify-content: center;
+    }
+
+    .profile-actions {
+        flex-direction: column;
+    }
+    
+    .profile-actions .btn {
+        width: 100% !important;
+    }
+
+    /* 7. GAME CANVAS RESPONSIVE */
+    .game-canvas-container {
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 2/3; /* Maintain aspect ratio */
+    }
+
+    canvas {
+        width: 100% !important;
+        height: 100% !important;
+        touch-action: none;
+    }
+
+    /* 8. CHAT & FLOATING BUTTONS */
+    .floating-chat {
+        width: 90% !important;
+        height: 70vh !important;
+        bottom: 5rem !important;
+        right: 5% !important;
+        left: 5% !important;
+    }
+
+    .floating-chat-btn {
+        bottom: 1.5rem !important;
+        right: 1.5rem !important;
+        width: 50px !important;
+        height: 50px !important;
+    }
+
+    /* 9. TABLE OVERFLOW */
+    .table-container {
+        overflow-x: auto !important;
+        display: block;
+        width: 100%;
+    }
+
+    table {
+        min-width: 600px; /* Force scroll for tables */
+    }
+
+    /* Auth Title Compact */
+    .auth-title {
+        font-size: 1.8rem !important;
+    }
+}
+
