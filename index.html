@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="theme-color" content="#020202">
 
@@ -718,25 +718,7 @@
             </div>
         </div>
 
-        <!-- AUTH MODAL -->
-        <div class="modal-overlay" id="auth-modal">
-            <div class="modal-content modal-sm">
-                <div class="modal-header">
-                    <h3>Giriş Yap / Kayıt Ol</h3>
-                </div>
-                <form id="form-login" class="modal-body">
-                    <div class="form-group">
-                        <label>E-posta</label>
-                        <input type="email" id="login-email" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Şifre</label>
-                        <input type="password" id="login-pass" class="form-input" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-full">Devam Et</button>
-                </form>
-            </div>
-        </div>
+
 
         <!-- USER SETTINGS MODAL -->
         <div class="modal-overlay" id="user-settings-modal">
@@ -829,14 +811,28 @@
         <!-- AUTH MODAL -->
         <div class="modal-overlay" id="auth-modal">
             <div class="modal-content modal-auth">
-
                 <div class="auth-header">
-                    <h2 class="auth-title">SAHIKALI</h2>
+                    <h2 class="auth-title">SAHİKALI</h2>
                     <p class="auth-subtitle">Topluluğa Hoş Geldin</p>
                 </div>
 
-                <!-- Auth Tabs (Gizli ama fonksiyonel kalabilir veya tamamen kaldırıp sadece linklerle yönetebiliriz. Şimdilik stilize edelim) -->
-                <div class="auth-tabs">
+                <!-- Karşılama Mesajı -->
+                <div class="auth-welcome-text">
+                    Platformumuza katılmak için giriş yapın veya yeni bir hesap oluşturun
+                </div>
+
+                <!-- Auth Butonları (YENİ TASARIM) -->
+                <div class="auth-buttons">
+                    <button class="auth-btn auth-btn-login" onclick="app.auth.switchToLoginMode()">
+                        <i class="ri-login-box-line"></i> Giriş Yap
+                    </button>
+                    <button class="auth-btn auth-btn-register" onclick="app.auth.switchToRegisterMode()">
+                        <i class="ri-user-add-line"></i> Kayıt Ol
+                    </button>
+                </div>
+
+                <!-- Auth Tabs (Gizli ama fonksiyonel) -->
+                <div class="auth-tabs" style="display: none;">
                     <button class="auth-tab active" onclick="app.auth.switchTab('login')"
                         id="auth-tab-login">Giriş</button>
                     <button class="auth-tab" onclick="app.auth.switchTab('register')"
@@ -854,13 +850,12 @@
                         <input type="password" id="login-pass" placeholder="Şifre" required>
                     </div>
 
-                    <button type="submit" class="btn btn-neon-primary w-full mt-4">
-                        GİRİŞ YAP <i class="ri-arrow-right-line"></i>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="ri-login-circle-line"></i> Giriş Yap
                     </button>
 
                     <p class="auth-switch-text">
-                        Hesabın yok mu? <a href="#" onclick="app.auth.switchTab('register'); return false;">Hemen Kayıt
-                            Ol</a>
+                        Hesabın yok mu? <a href="#" onclick="app.auth.switchTab('register'); return false;">Kayıt Ol</a>
                     </p>
                 </form>
 
@@ -881,8 +876,8 @@
                             minlength="6">
                     </div>
 
-                    <button type="submit" class="btn btn-neon-success w-full mt-4">
-                        KAYIT OL <i class="ri-user-add-line"></i>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="ri-user-add-line"></i> Kayıt Ol
                     </button>
 
                     <p class="auth-switch-text">
@@ -1004,71 +999,7 @@
         </div>
         </div>
 
-        <!-- FLOATING CHAT -->
-        <button class="floating-chat-btn" onclick="app.ui.toggleFloatingChat()">
-            <i class="ri-message-2-line"></i>
-            <div class="chat-badge" id="chat-badge" style="display: none;">0</div>
-        </button>
 
-        <div class="floating-chat-window" id="floating-chat-window">
-            <!-- Header -->
-            <div class="floating-chat-header">
-                <div class="chat-tabs">
-                    <button class="chat-tab active" onclick="app.chat.switchTab('global')" id="tab-global">
-                        Genel
-                    </button>
-                    <button class="chat-tab" onclick="app.chat.switchTab('dm')" id="tab-dm">
-                        Mesajlar <span class="tab-badge hidden" id="dm-total-badge">0</span>
-                    </button>
-                </div>
-                <button class="chat-close-btn" onclick="app.ui.toggleFloatingChat()">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-
-            <!-- Global Chat Section -->
-            <div class="chat-section active" id="section-global">
-                <div class="floating-chat-messages" id="floating-chat-messages">
-                    <!-- Messages will be loaded here -->
-                    <p class="text-muted text-center p-3">Sohbete bağlanılıyor...</p>
-                </div>
-                <form class="floating-chat-input-form" id="floating-chat-form">
-                    <input type="text" class="chat-input" placeholder="Mesaj yaz..." maxlength="200" required>
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="ri-send-plane-fill"></i>
-                    </button>
-                </form>
-            </div>
-
-            <!-- DM Section -->
-            <div class="chat-section" id="section-dm">
-                <!-- DM List View -->
-                <div class="dm-view" id="dm-list-view">
-                    <div class="dm-list" id="dm-list">
-                        <!-- DM List Items -->
-                    </div>
-                </div>
-
-                <!-- Active DM Chat View -->
-                <div class="dm-view hidden" id="dm-chat-view">
-                    <div class="dm-header">
-                        <button class="btn-icon" onclick="app.chat.closeDM()">
-                            <i class="ri-arrow-left-line"></i>
-                        </button>
-                        <span class="font-bold flex-1 text-center" id="dm-chat-username">Kullanıcı</span>
-                    </div>
-                    <div class="floating-chat-messages" id="dm-messages">
-                        <!-- DM Messages -->
-                    </div>
-                    <form class="floating-chat-input-form" id="dm-chat-form">
-                        <input type="text" class="chat-input" placeholder="Mesaj yaz..." maxlength="200" required>
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="ri-send-plane-fill"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
         <script type="module" src="app.js"></script>
 </body>
 
