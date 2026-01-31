@@ -3844,3 +3844,182 @@ if (document.readyState === 'loading') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = PerformanceBoost;
 }
+
+/* ============================================================================
+   REAL-TIME TYPING INDICATOR SYSTEM
+   ============================================================================ */
+const TypingSystem = {
+    typingTimeout: null,
+    isTyping: false,
+
+    init() {
+        console.log('✨ Typing System Initialized');
+
+        // Listeners for inputs
+        const globalInput = document.getElementById('floating-chat-input');
+        const dmInput = document.getElementById('dm-chat-input');
+
+        if (globalInput) {
+            globalInput.addEventListener('input', () => this.handleTyping('global'));
+        }
+
+        if (dmInput) {
+            dmInput.addEventListener('input', () => this.handleTyping('dm'));
+        }
+
+        // Subscribe to typing updates
+        this.subscribeToGlobalTyping();
+        // DM subscription is handled when opening a DM
+    },
+
+    // Handle User Typing
+    handleTyping(type) {
+        if (!auth.currentUser) return;
+
+        // Prevent spamming DB updates
+        if (!this.isTyping) {
+            this.isTyping = true;
+            this.updateTypingStatus(type, true);
+        }
+
+        // Reset timeout
+        if (this.typingTimeout) clearTimeout(this.typingTimeout);
+
+        this.typingTimeout = setTimeout(() => {
+            this.isTyping = false;
+            this.updateTypingStatus(type, false);
+        }, 2000); // Stop typing after 2 seconds of inactivity
+    },
+
+    async updateTypingStatus(type, isTyping) {
+        if (!auth.currentUser) return;
+
+        // Determnie Path
+        let path = '';
+        if (type === 'global') {
+            path = `typing/global/${auth.currentUser.uid}`;
+        } else if (type === 'dm') {
+            // Need active DM user ID
+            const activeDMUser = window.app?.chat?.activeDMUser;
+            if (!activeDMUser) return;
+
+            // Create a unique room ID (alphabetical order of UIDs)
+            const uids = [auth.currentUser.uid, activeDMUser.uid].sort();
+            const roomId = `${uids[0]}_${uids[1]}`;
+            path = `typing/dm/${roomId}/${auth.currentUser.uid}`;
+        }
+
+        const typingRef = ref(db, path);
+
+        if (isTyping) {
+            // Set user as typing
+            set(typingRef, {
+                username: auth.currentUser.displayName || 'Kullanıcı',
+                timestamp: serverTimestamp()
+            });
+            // Remove on disconnect (just in case)
+            onDisconnect(typingRef).remove();
+        } else {
+            // Remove typing status
+            set(typingRef, null);
+        }
+    },
+
+    // Listen for Global Typing
+    subscribeToGlobalTyping() {
+        const globalTypingRef = ref(db, 'typing/global');
+
+        onValue(globalTypingRef, (snapshot) => {
+            const data = snapshot.val();
+            const indicator = document.getElementById('global-typing-indicator');
+            if (!indicator) return;
+
+            if (!data) {
+                indicator.innerHTML = '';
+                indicator.classList.remove('active');
+                return;
+            }
+
+            // Filter out self
+            const typers = Object.entries(data)
+                .filter(([uid, val]) => uid !== auth.currentUser?.uid)
+                .map(([uid, val]) => val.username);
+
+            if (typers.length > 0) {
+                const text = typers.length > 2
+                    ? `<span class="typing-user">${typers.length} kişi</span> yazıyor`
+                    : `<span class="typing-user">${typers.join(', ')}</span> yazıyor`;
+
+                indicator.innerHTML = `${text}<div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+                indicator.classList.add('active');
+            } else {
+                indicator.innerHTML = '';
+                indicator.classList.remove('active');
+            }
+        });
+    },
+
+    // Subscribe to DM Typing (Call this when opening DM)
+    subscribeToDMTyping(targetUid) {
+        if (!auth.currentUser || !targetUid) return;
+
+        // Unsubscribe previous if needed (firebase handles overwrite loosely but good to be safe)
+        // ... (simplified for now)
+
+        const uids = [auth.currentUser.uid, targetUid].sort();
+        const roomId = `${uids[0]}_${uids[1]}`;
+        const path = `typing/dm/${roomId}`;
+
+        const dmTypingRef = ref(db, path);
+
+        onValue(dmTypingRef, (snapshot) => {
+            const data = snapshot.val();
+            const indicator = document.getElementById('dm-typing-indicator');
+            if (!indicator) return;
+
+            if (!data) {
+                indicator.innerHTML = '';
+                indicator.classList.remove('active');
+                return;
+            }
+
+            // Filter out self
+            const typers = Object.entries(data)
+                .filter(([uid, val]) => uid !== auth.currentUser?.uid)
+                .map(([uid, val]) => val.username);
+
+            if (typers.length > 0) {
+                indicator.innerHTML = `<span class="typing-user">${typers[0]}</span> yazıyor<div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+                indicator.classList.add('active');
+            } else {
+                indicator.innerHTML = '';
+                indicator.classList.remove('active');
+            }
+        });
+    }
+};
+
+// Start Typing System when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => TypingSystem.init(), 2000); // Wait for auth & dom
+    });
+} else {
+    setTimeout(() => TypingSystem.init(), 2000);
+}
+
+// Attach to window.app if possible for DM integration
+window.addEventListener('load', () => {
+    if (window.app) {
+        window.app.typing = TypingSystem;
+
+        // Hook into chat.openDM to subscribe
+        if (window.app.chat && window.app.chat.openDM) {
+            const originalOpenDM = window.app.chat.openDM;
+            window.app.chat.openDM = function (uid, username) {
+                originalOpenDM.call(this, uid, username);
+                TypingSystem.subscribeToDMTyping(uid);
+            };
+        }
+    }
+});
