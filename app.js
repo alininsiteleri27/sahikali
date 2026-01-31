@@ -3910,11 +3910,13 @@ const TypingSystem = {
         }
 
         const typingRef = ref(db, path);
+        // Better username fetching
+        const username = (window.app?.profile?.username) || auth.currentUser.displayName || 'Kullanıcı';
 
         if (isTyping) {
             // Set user as typing
             set(typingRef, {
-                username: auth.currentUser.displayName || 'Kullanıcı',
+                username: username,
                 timestamp: serverTimestamp()
             });
             // Remove on disconnect (just in case)
@@ -3946,9 +3948,9 @@ const TypingSystem = {
                 .map(([uid, val]) => val.username);
 
             if (typers.length > 0) {
-                const text = typers.length > 2
+                const text = typers.length > 3
                     ? `<span class="typing-user">${typers.length} kişi</span> yazıyor`
-                    : `<span class="typing-user">${typers.join(', ')}</span> yazıyor`;
+                    : typers.map(name => `<span class="typing-user">${name}</span>`).join(', ') + ' yazıyor';
 
                 indicator.innerHTML = `${text}<div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
                 indicator.classList.add('active');
@@ -3963,8 +3965,8 @@ const TypingSystem = {
     subscribeToDMTyping(targetUid) {
         if (!auth.currentUser || !targetUid) return;
 
-        // Unsubscribe previous if needed (firebase handles overwrite loosely but good to be safe)
-        // ... (simplified for now)
+        // Unsubscribe previous if needed
+        // ...
 
         const uids = [auth.currentUser.uid, targetUid].sort();
         const roomId = `${uids[0]}_${uids[1]}`;
@@ -3989,6 +3991,7 @@ const TypingSystem = {
                 .map(([uid, val]) => val.username);
 
             if (typers.length > 0) {
+                // Show first typer (usually only 1 in DM)
                 indicator.innerHTML = `<span class="typing-user">${typers[0]}</span> yazıyor<div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
                 indicator.classList.add('active');
             } else {
