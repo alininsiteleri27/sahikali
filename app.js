@@ -136,52 +136,47 @@ const Auth = {
     switchTab(tab) {
         this.activeAuthTab = tab;
 
-        // Hide button container when showing form
-        const buttonContainer = DOMHelper.get('auth-buttons-container');
-        if (buttonContainer) {
-            buttonContainer.style.display = 'none';
-        }
+        const loginForm = document.getElementById('form-login');
+        const registerForm = document.getElementById('form-register');
 
-        // Update Tabs (if visible)
-        const loginTab = DOMHelper.get('auth-tab-login');
-        const regTab = DOMHelper.get('auth-tab-register');
-
-        const loginForm = DOMHelper.get('form-login');
-        const registerForm = DOMHelper.get('form-register');
+        // Split Visual Elements
+        const switchLabel = document.getElementById('auth-switch-label');
+        const switchBtn = document.getElementById('auth-switch-btn');
 
         if (tab === 'login') {
-            if (loginTab) loginTab.classList.add('active');
-            if (regTab) regTab.classList.remove('active');
-
-            // Show login form
+            // Show Login Form
             if (loginForm) {
-                loginForm.style.display = 'block';
                 loginForm.classList.remove('hidden');
                 loginForm.classList.add('active');
             }
-
-            // Hide register form
             if (registerForm) {
-                registerForm.style.display = 'none';
                 registerForm.classList.add('hidden');
                 registerForm.classList.remove('active');
             }
-        } else {
-            if (loginTab) loginTab.classList.remove('active');
-            if (regTab) regTab.classList.add('active');
 
-            // Hide login form
+            // Update Switcher (Left Side)
+            if (switchLabel) switchLabel.textContent = "Hesabın yok mu?";
+            if (switchBtn) {
+                switchBtn.textContent = "Kayıt Ol";
+                switchBtn.onclick = () => this.switchToRegisterMode();
+            }
+
+        } else {
+            // Show Register Form
             if (loginForm) {
-                loginForm.style.display = 'none';
                 loginForm.classList.add('hidden');
                 loginForm.classList.remove('active');
             }
-
-            // Show register form
             if (registerForm) {
-                registerForm.style.display = 'block';
                 registerForm.classList.remove('hidden');
                 registerForm.classList.add('active');
+            }
+
+            // Update Switcher (Left Side)
+            if (switchLabel) switchLabel.textContent = "Zaten hesabın var mı?";
+            if (switchBtn) {
+                switchBtn.textContent = "Giriş Yap";
+                switchBtn.onclick = () => this.switchToLoginMode();
             }
         }
     },
