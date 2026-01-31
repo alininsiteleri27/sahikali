@@ -21,7 +21,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css?v=3.6">
+    <link rel="stylesheet" href="style.css?v=3.7">
 
     <style>
         /* ===== EPIC SPLASH SCREEN ===== */
@@ -727,6 +727,9 @@
                 <div class="floating-chat-messages" id="floating-chat-messages">
                     <!-- Global Messages -->
                 </div>
+                <!-- Real-time Typing Indicator for Global -->
+                <div id="global-typing-indicator" class="typing-indicators"></div>
+
                 <form class="floating-chat-input-form" id="floating-chat-form">
                     <button type="button" class="btn btn-vs" onclick="app.game.openGameMenu()"
                         title="Oyun Daveti Gönder">
@@ -761,6 +764,9 @@
                     <div class="floating-chat-messages" id="dm-messages">
                         <!-- DM Messages -->
                     </div>
+                    <!-- Real-time Typing Indicator for DM -->
+                    <div id="dm-typing-indicator" class="typing-indicators"></div>
+
                     <form class="floating-chat-input-form" id="dm-chat-form">
                         <input type="text" id="dm-chat-input" class="chat-input" placeholder="Mesaj yaz..."
                             maxlength="500" autocomplete="off">
@@ -1195,7 +1201,7 @@
         </div>
 
 
-        <script type="module" src="app.js?v=3.6"></script>
+        <script type="module" src="app.js?v=3.7"></script>
 </body>
 
 </html>
