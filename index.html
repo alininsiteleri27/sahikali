@@ -21,41 +21,234 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css?v=3.2">
+    <link rel="stylesheet" href="style.css?v=3.3">
 
     <style>
+        /* ===== EPIC SPLASH SCREEN ===== */
         #loader-overlay {
             position: fixed;
             inset: 0;
-            background: #000;
+            background: linear-gradient(135deg, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%);
             z-index: 99999;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            overflow: hidden;
         }
 
-        .loader-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 198, 255, 0.3);
-            border-top: 3px solid #00c6ff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        #loader-overlay.fade-out {
+            opacity: 0;
+            transform: scale(1.1);
+            pointer-events: none;
         }
 
-        @keyframes spin {
+        /* Animated Background Particles */
+        #loader-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(2px 2px at 20% 30%, rgba(0, 198, 255, 0.4), transparent),
+                radial-gradient(2px 2px at 60% 70%, rgba(174, 0, 255, 0.4), transparent),
+                radial-gradient(1px 1px at 50% 50%, rgba(0, 198, 255, 0.3), transparent),
+                radial-gradient(1px 1px at 80% 10%, rgba(174, 0, 255, 0.3), transparent),
+                radial-gradient(2px 2px at 90% 60%, rgba(0, 198, 255, 0.2), transparent);
+            background-size: 200% 200%;
+            animation: particles 20s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes particles {
+            from {
+                background-position: 0% 0%;
+            }
+
             to {
-                transform: rotate(360deg);
+                background-position: 100% 100%;
+            }
+        }
+
+        /* SAHİKALI Logo */
+        .splash-logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            background: linear-gradient(135deg, #00c6ff 0%, #ae00ff 50%, #00c6ff 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: logoGradient 3s ease-in-out infinite, logoFloat 2s ease-in-out infinite;
+            text-shadow:
+                0 0 40px rgba(0, 198, 255, 0.8),
+                0 0 80px rgba(174, 0, 255, 0.6),
+                0 0 120px rgba(0, 198, 255, 0.4);
+            position: relative;
+            z-index: 2;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes logoGradient {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes logoFloat {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Glow Rings */
+        .splash-rings {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            z-index: 1;
+        }
+
+        .splash-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: ringPulse 2s ease-out infinite;
+        }
+
+        .splash-ring:nth-child(1) {
+            border-color: rgba(0, 198, 255, 0.6);
+            animation-delay: 0s;
+        }
+
+        .splash-ring:nth-child(2) {
+            border-color: rgba(174, 0, 255, 0.6);
+            animation-delay: 0.4s;
+        }
+
+        .splash-ring:nth-child(3) {
+            border-color: rgba(0, 198, 255, 0.4);
+            animation-delay: 0.8s;
+        }
+
+        @keyframes ringPulse {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* Loading Text */
+        .splash-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 1rem;
+            letter-spacing: 2px;
+            animation: textPulse 1.5s ease-in-out infinite;
+            z-index: 2;
+        }
+
+        @keyframes textPulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Loading Bar */
+        .splash-loading-bar {
+            width: 200px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1.5rem;
+            z-index: 2;
+        }
+
+        .splash-loading-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #ae00ff, #00c6ff);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            animation: loadingBar 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingBar {
+            0% {
+                width: 0%;
+                background-position: 0% 50%;
+            }
+
+            50% {
+                width: 100%;
+                background-position: 100% 50%;
+            }
+
+            100% {
+                width: 0%;
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .splash-logo {
+                font-size: 3rem;
+                letter-spacing: 4px;
+            }
+
+            .splash-rings {
+                width: 200px;
+                height: 200px;
+            }
+
+            .splash-text {
+                font-size: 0.9rem;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- LOADER -->
+    <!-- EPIC SPLASH SCREEN -->
     <div id="loader-overlay">
-        <div class="loader-spinner"></div>
+        <div class="splash-rings">
+            <div class="splash-ring"></div>
+            <div class="splash-ring"></div>
+            <div class="splash-ring"></div>
+        </div>
+        <h1 class="splash-logo">SAHİKALI</h1>
+        <p class="splash-text">YÜKLENİYOR...</p>
+        <div class="splash-loading-bar">
+            <div class="splash-loading-bar-fill"></div>
+        </div>
     </div>
 
     <!-- BACKGROUND -->
@@ -1001,7 +1194,7 @@
         </div>
 
 
-        <script type="module" src="app.js?v=3.1"></script>
+        <script type="module" src="app.js?v=3.3"></script>
 </body>
 
 </html>
