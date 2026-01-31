@@ -2907,42 +2907,42 @@ body.modal-open {
 
 .chat-tabs {
     display: flex;
-    gap: 0.5rem;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 0.25rem;
-    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border-radius: 12px;
     flex: 1;
-    /* Take available space */
     margin-right: 1rem;
-    /* Space for close button */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    gap: 0;
 }
 
 .chat-tab {
     flex: 1;
-    /* Equal width */
     text-align: center;
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    padding: 0.4rem 0.5rem;
+    padding: 0.5rem;
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    border-radius: 0.35rem;
+    border-radius: 8px;
     position: relative;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
 }
 
 .chat-tab:hover {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.05);
-    /* Hover effect */
 }
 
 .chat-tab.active {
     background: var(--bg-surface);
     color: var(--primary);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    font-weight: 700;
 }
 
 .tab-badge {
@@ -3829,7 +3829,9 @@ body.modal-open {
         display: none;
         /* Hide sidebar completely on tiny screens */
     }
-}/* ============================================================================
+}
+
+/* ============================================================================
    CHESS GAME - ADDITIONAL PREMIUM STYLES
    ============================================================================ */
 
@@ -4170,6 +4172,7 @@ body.modal-open {
     opacity: 0.95;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
+
 /* ============================================================================
    HOCKEY GAME - WIN/LOSE STYLES
    ============================================================================ */
@@ -4264,6 +4267,7 @@ body.modal-open {
     letter-spacing: 2px;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
+
 /* ============================================================================
    ULTRA PREMIUM BUTTON STYLES & PERFORMANCE BOOST
    ============================================================================ */
@@ -4569,6 +4573,17 @@ button:active::before {
    ============================================================================ */
 
 .floating-chat-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
     background: linear-gradient(135deg, #00c6ff, #ae00ff);
     box-shadow: 0 8px 30px rgba(0, 198, 255, 0.5),
         0 0 60px rgba(0, 198, 255, 0.3) inset;
@@ -4766,6 +4781,7 @@ button:focus-visible {
     transform: scale(1.2) rotate(5deg);
     filter: drop-shadow(0 0 20px currentColor);
 }
+
 /* ============================================================================
    RIPPLE EFFECT & ADDITIONAL ENHANCEMENTS
    ============================================================================ */
@@ -5099,3 +5115,9 @@ img[src] {
         scroll-behavior: auto !important;
     }
 }
+/* Hide any duplicate floating buttons except the main chat and sidebar toggle */
+button[style*='fixed']:not(.floating-chat-btn):not(.sidebar-toggle),
+.floating-btn:not(.floating-chat-btn) {
+    display: none !important;
+}
+
