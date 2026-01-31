@@ -6980,54 +6980,65 @@ body .floating-chat-btn:hover {
     }
 }
 
-/* ===== TYPING INDICATOR (REAL-TIME) ===== */
-.typing-indicators {
-    padding: 0 10px;
+/* ===== TYPING INDICATOR (NEW POSITIONS) ===== */
+
+/* Global Chat Header Indicator */
+.typing-indicator-header {
     height: 20px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 5px;
-    font-size: 0.8rem;
-    color: #00c6ff;
-    font-weight: 500;
     opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease;
+    margin-top: 4px;
     pointer-events: none;
-    position: absolute;
-    bottom: 60px;
-    /* Position above input */
-    left: 10px;
-    z-index: 10;
-    text-shadow: 0 0 10px rgba(0, 198, 255, 0.5);
+    width: 100%;
 }
 
-.typing-indicators.active {
+.typing-indicator-header.active {
     opacity: 1;
-    transform: translateY(0);
+}
+
+/* DM Header Indicator */
+.typing-indicator-pm {
+    height: 16px;
+    font-size: 0.7rem;
+    color: #ae00ff;
+    /* Purple for DMs */
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    margin-top: 2px;
+}
+
+.typing-indicator-pm.active {
+    opacity: 1;
 }
 
 .typing-user {
-    color: #ae00ff;
-    font-weight: 700;
-    margin-right: 4px;
+    font-weight: 600;
+    color: #00c6ff;
+    /* Cyan username */
 }
 
 /* Animated Dots */
 .typing-dots {
     display: flex;
-    gap: 3px;
+    gap: 2px;
     align-items: center;
-    margin-left: 5px;
 }
 
 .typing-dot {
-    width: 4px;
-    height: 4px;
-    background: #00c6ff;
+    width: 3px;
+    height: 3px;
+    background: currentColor;
     border-radius: 50%;
     animation: typingPulse 1.4s infinite ease-in-out both;
-    box-shadow: 0 0 5px #00c6ff;
 }
 
 .typing-dot:nth-child(1) {
