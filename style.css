@@ -6342,16 +6342,18 @@ body .floating-chat-btn:hover {
 
 .auth-buttons {
     display: flex;
-    gap: 12px;
-    margin: 20px 0;
+    flex-direction: column;
+    gap: 14px;
+    margin: 25px 0;
+    width: 100%;
 }
 
 .auth-btn {
-    flex: 1;
-    padding: 12px 24px;
+    width: 100%;
+    padding: 14px 24px;
     border: none;
     border-radius: 10px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -6359,7 +6361,7 @@ body .floating-chat-btn:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .auth-btn i {
