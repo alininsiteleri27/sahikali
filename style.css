@@ -5313,3 +5313,219 @@ body .floating-chat-btn:hover {
     line-height: 1.2 !important;
 }
 
+
+/* GAME INVITE STYLES */
+.invite-card.expired {
+    opacity: 0.6;
+    filter: grayscale(100%);
+    border-color: var(--text-muted);
+}
+
+.invite-card.expired .btn-game-join {
+    background: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-game-cancel {
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+    width: 100%;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-game-cancel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 65, 108, 0.6);
+}
+
+.btn-game-cancel:active {
+    transform: translateY(0);
+}
+
+
+/* --- ULTRA PREMIUM AUTH MODAL STYLES --- */
+.modal-auth {
+    background: rgba(10, 10, 15, 0.85) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 0 50px rgba(0, 198, 255, 0.15), 0 0 20px rgba(0, 0, 0, 0.5) !important;
+    max-width: 400px !important;
+    width: 90% !important;
+    padding: 2.5rem !important;
+    border-radius: 20px !important;
+    overflow: hidden;
+    position: relative;
+    background-image: 
+        radial-gradient(circle at top left, rgba(0, 198, 255, 0.15), transparent 40%),
+        radial-gradient(circle at bottom right, rgba(174, 0, 255, 0.15), transparent 40%);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-title {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff, #00c6ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+    letter-spacing: 2px;
+}
+
+.auth-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Tabs */
+.auth-tabs {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.auth-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.auth-tab.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Neon Inputs */
+.input-group-neon {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.input-group-neon i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.input-group-neon input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.9rem 1rem 0.9rem 3rem; /* Left padding for icon */
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.input-group-neon input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(0, 198, 255, 0.2);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.input-group-neon input:focus + i,
+.input-group-neon input:focus ~ i { /* If icon is after or before */
+    color: var(--primary);
+}
+/* Icon is before input in HTML, so we check focus within */
+.input-group-neon:focus-within i {
+    color: var(--primary);
+}
+
+/* Neon Buttons */
+.btn-neon-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: 1px;
+}
+
+.btn-neon-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 198, 255, 0.4);
+}
+
+.btn-neon-success {
+    background: linear-gradient(135deg, #00b09b, #96c93d);
+    color: white;
+    border: none;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: 1px;
+}
+
+.btn-neon-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(150, 201, 61, 0.4);
+}
+
+.auth-switch-text {
+    margin-top: 1.5rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.auth-switch-text a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.auth-switch-text a:hover {
+    color: #fff;
+    text-decoration: underline;
+    text-shadow: 0 0 10px var(--primary);
+}
+
