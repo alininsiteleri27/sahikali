@@ -371,10 +371,10 @@
         <section id="view-profile" class="view-section">
             <div class="profile-container">
                 <div class="profile-actions">
-                    <button class="btn btn-ghost" onclick="app.router.go('dashboard')">
+                    <button class="btn btn-ghost btn-sm" onclick="app.router.go('dashboard')">
                         <i class="ri-arrow-left-line"></i> Geri Dön
                     </button>
-                    <button class="btn btn-primary" onclick="app.ui.openModal('user-settings-modal')">
+                    <button class="btn btn-primary btn-sm" onclick="app.ui.openModal('user-settings-modal')">
                         <i class="ri-settings-4-line"></i> Kullanıcı Ayarları
                     </button>
                 </div>
@@ -434,11 +434,12 @@
                     </div>
                 </div>
 
-                <!-- LOGOUT BUTTON (Moved here as requested) -->
-                <button class="btn btn-danger w-full mt-4" style="padding: 1rem; border-radius: 0.75rem;"
-                    onclick="app.auth.logout()">
-                    <i class="ri-logout-box-line" style="margin-right: 0.5rem;"></i> Çıkış Yap
-                </button>
+                <!-- LOGOUT BUTTON -->
+                <div class="flex justify-end mt-4">
+                    <button class="btn btn-danger btn-sm" onclick="app.auth.logout()">
+                        <i class="ri-logout-box-line"></i> Çıkış Yap
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -823,13 +824,19 @@
             </div>
         </div>
 
-        <!-- SETTINGS MODAL -->
+        <!-- AUTH MODAL -->
         <div class="modal-overlay" id="auth-modal">
             <div class="modal-content modal-sm">
-                <div class="modal-header">
-                    <h3>Giriş Yap / Kayıt Ol</h3>
+                <!-- Auth Tabs -->
+                <div class="chat-tabs mb-4" style="margin-bottom: 1.5rem;">
+                    <button class="chat-tab active" onclick="app.auth.switchTab('login')" id="auth-tab-login">Giriş
+                        Yap</button>
+                    <button class="chat-tab" onclick="app.auth.switchTab('register')" id="auth-tab-register">Kayıt
+                        Ol</button>
                 </div>
-                <form id="form-login" class="modal-body">
+
+                <!-- LOGIN FORM -->
+                <form id="form-login" class="modal-body auth-section active">
                     <div class="form-group">
                         <label>E-posta</label>
                         <input type="email" id="login-email" class="form-input" required>
@@ -838,7 +845,29 @@
                         <label>Şifre</label>
                         <input type="password" id="login-pass" class="form-input" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-full">Devam Et</button>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i class="ri-login-box-line"></i> Giriş Yap
+                    </button>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="form-register" class="modal-body auth-section hidden">
+                    <div class="form-group">
+                        <label>Kullanıcı Adı</label>
+                        <input type="text" id="reg-username" class="form-input" required minlength="3" maxlength="15">
+                        <small class="text-muted">3-15 karakter</small>
+                    </div>
+                    <div class="form-group">
+                        <label>E-posta</label>
+                        <input type="email" id="reg-email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Şifre</label>
+                        <input type="password" id="reg-pass" class="form-input" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-success w-full">
+                        <i class="ri-user-add-line"></i> Hesap Oluştur
+                    </button>
                 </form>
             </div>
         </div>
