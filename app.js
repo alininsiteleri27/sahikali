@@ -2811,7 +2811,15 @@ const Chess = {
     // Drag and Drop handlers
     handleDragStart(e, row, col) {
         const piece = this.board[row][col];
-        if (!piece || piece.color !== this.role || this.currentTurn !== this.role) {
+
+        // Check if piece belongs to current turn
+        if (!piece || piece.color !== this.currentTurn) {
+            e.preventDefault();
+            return;
+        }
+
+        // In online mode, also check if it's player's turn
+        if (this.gameId && this.currentTurn !== this.role) {
             e.preventDefault();
             return;
         }
@@ -2845,75 +2853,42 @@ const Chess = {
         this.draggedPiece = null;
     },
 
-    // Touch handlers for mobile
+    // Touch handlers for mobile - SIMPLIFIED to prevent screen corruption
     handleTouchStart(e, row, col) {
         const piece = this.board[row][col];
-        if (!piece || piece.color !== this.role || this.currentTurn !== this.role) {
+
+        // Check if piece belongs to current turn
+        if (!piece || piece.color !== this.currentTurn) {
             return;
         }
 
-        e.preventDefault();
-        this.draggedFrom = { row, col };
-        this.draggedPiece = piece;
+        // In online mode, also check player's role
+        if (this.gameId && this.currentTurn !== this.role) {
+            return;
+        }
 
+        // Simple approach: just select the piece on touch
+        // User can then tap the destination square
         this.selectPiece(row, col);
-
-        const touch = e.touches[0];
-        const pieceEl = e.target;
-        pieceEl.classList.add('dragging');
-
-        // Store initial touch position
-        this.touchStartX = touch.clientX;
-        this.touchStartY = touch.clientY;
     },
 
     handleTouchMove(e) {
-        if (!this.draggedPiece) return;
-        e.preventDefault();
-
-        const touch = e.touches[0];
-        const pieceEl = e.target;
-
-        // Move piece with finger
-        pieceEl.style.position = 'fixed';
-        pieceEl.style.zIndex = '1000';
-        pieceEl.style.left = (touch.clientX - 25) + 'px';
-        pieceEl.style.top = (touch.clientY - 25) + 'px';
+        // Disabled to prevent screen corruption
+        // Mobile users will use tap-to-select, tap-to-move
     },
 
     handleTouchEnd(e) {
-        if (!this.draggedFrom) return;
-        e.preventDefault();
-
-        const touch = e.changedTouches[0];
-        const elementAtTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-
-        // Reset piece style
-        const pieceEl = e.target;
-        pieceEl.style.position = '';
-        pieceEl.style.left = '';
-        pieceEl.style.top = '';
-        pieceEl.classList.remove('dragging');
-
-        // Find target square
-        const square = elementAtTouch?.closest('.chess-square');
-        if (square) {
-            const row = parseInt(square.dataset.row);
-            const col = parseInt(square.dataset.col);
-
-            if (this.isValidMove(this.draggedFrom.row, this.draggedFrom.col, row, col)) {
-                this.attemptMove(this.draggedFrom.row, this.draggedFrom.col, row, col);
-            }
-        }
-
-        this.clearHighlights();
+        // Cleanup
         this.draggedFrom = null;
         this.draggedPiece = null;
     },
 
     handleSquareClick(row, col) {
         if (this.gameStatus !== 'playing') return;
-        if (this.currentTurn !== this.role) return;
+
+        // In local mode, allow both sides to play
+        // In online mode, only allow current player's role
+        if (this.gameId && this.currentTurn !== this.role) return;
 
         const piece = this.board[row][col];
 
@@ -2924,8 +2899,8 @@ const Chess = {
                 this.selectedPiece = null;
                 this.clearHighlights();
             } else {
-                // Select different piece
-                if (piece && piece.color === this.role) {
+                // Select different piece (must match current turn)
+                if (piece && piece.color === this.currentTurn) {
                     this.selectPiece(row, col);
                 } else {
                     this.selectedPiece = null;
@@ -2933,8 +2908,8 @@ const Chess = {
                 }
             }
         } else {
-            // Select piece
-            if (piece && piece.color === this.role) {
+            // Select piece (must match current turn)
+            if (piece && piece.color === this.currentTurn) {
                 this.selectPiece(row, col);
             }
         }
@@ -3565,7 +3540,15 @@ const Chess = {
     prepareGame(gameId, role) {
         this.gameId = gameId;
         this.role = role;
-        this.playerId = Store.get('profile').uid;
+
+        // Local mode (without Firebase)
+        if (!gameId) {
+            this.playerId = 'local-player';
+            this.role = 'white'; // In local mode, play as both sides
+        } else {
+            this.playerId = Store.get('profile')?.uid || 'guest';
+        }
+
         this.gameStatus = 'playing';
         this.currentTurn = 'white';
         this.moveHistory = [];
@@ -3579,13 +3562,24 @@ const Chess = {
         UI.openModal('chess-modal');
 
         // Set player info
-        this.updatePlayerInfo();
+        if (gameId) {
+            this.updatePlayerInfo();
+        } else {
+            // Local mode - set default names
+            document.getElementById('chess-white-name').textContent = 'Beyaz Oyuncu';
+            document.getElementById('chess-black-name').textContent = 'Siyah Oyuncu';
+        }
 
         // Render board
         this.renderBoard();
 
-        // Start syncing
-        this.sync();
+        // Update turn indicator
+        this.updateTurnIndicator();
+
+        // Start syncing only if online mode
+        if (gameId) {
+            this.sync();
+        }
     },
 
     async updatePlayerInfo() {
@@ -4279,18 +4273,32 @@ if (document.readyState === 'loading') {
     setTimeout(() => TypingSystem.init(), 2000);
 }
 
-// Attach to window.app if possible for DM integration
-window.addEventListener('load', () => {
-    if (window.app) {
-        window.app.typing = TypingSystem;
+// Attach to window for HTML access
+window.UI = UI;
+window.Chess = Chess;
 
-        // Hook into chat.openDM to subscribe
-        if (window.app.chat && window.app.chat.openDM) {
-            const originalOpenDM = window.app.chat.openDM;
-            window.app.chat.openDM = function (uid, username) {
-                originalOpenDM.call(this, uid, username);
-                TypingSystem.subscribeToDMTyping(uid);
-            };
-        }
-    }
-});
+window.app = {
+    auth: Auth,
+    router: Router,
+    ui: UI,
+    chat: Chat,
+    profile: Profile,
+    settings: Settings,
+    members: Members,
+    founder: Founder,
+    game: Game,
+    chess: Chess,
+    typing: TypingSystem
+};
+
+// Also verify Chess game works
+console.log('Chess module initialized and exported:', window.Chess);
+
+// Hook for Typing Indicators in DM
+if (window.app.chat && window.app.chat.openDM) {
+    const originalOpenDM = window.app.chat.openDM;
+    window.app.chat.openDM = function (uid, username) {
+        originalOpenDM.call(this, uid, username);
+        TypingSystem.subscribeToDMTyping(uid);
+    };
+}
