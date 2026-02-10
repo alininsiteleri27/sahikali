@@ -290,6 +290,12 @@
                 <span>Üyeler</span>
             </a>
 
+            <a href="#" class="nav-link" onclick="Chess.prepareGame(null, 'white'); UI.openModal('chess-modal')"
+                data-page="chess">
+                <i class="ri-sword-line"></i>
+                <span>♟️ Satranç</span>
+            </a>
+
             <div class="nav-divider"></div>
 
             <a href="#" class="nav-link" onclick="app.ui.openModal('settings-modal')">
@@ -734,10 +740,6 @@
                 <!-- Old indicator removed -->
 
                 <form class="floating-chat-input-form" id="floating-chat-form">
-                    <button type="button" class="btn btn-vs" onclick="app.game.openGameMenu()"
-                        title="Oyun Daveti Gönder">
-                        VS
-                    </button>
                     <input type="text" id="floating-chat-input" class="chat-input" placeholder="Mesaj yaz..."
                         maxlength="500" autocomplete="off">
                     <button type="submit" class="btn btn-primary btn-sm">
