@@ -883,10 +883,23 @@
                         </div>
 
                         <div class="chess-controls">
-                            <button class="btn btn-warning btn-sm" onclick="app.chess.offerDraw()">
+                            <button class="btn btn-primary btn-sm w-full" onclick="Chess.newGame()">
+                                <i class="ri-play-circle-line"></i> Yeni Oyun
+                            </button>
+                            <button class="btn btn-accent btn-sm w-full" onclick="Chess.undoLastMove()">
+                                <i class="ri-arrow-go-back-line"></i> Hamleyi Geri Al
+                            </button>
+                            <button class="btn btn-ghost btn-sm w-full" onclick="Chess.resetGame()">
+                                <i class="ri-restart-line"></i> Oyunu Sıfırla
+                            </button>
+                            <button class="btn btn-ghost btn-sm w-full" onclick="Chess.switchPlayer()"
+                                title="Test İçin">
+                                <i class="ri-shuffle-line"></i> Oyuncu Değiştir
+                            </button>
+                            <button class="btn btn-warning btn-sm w-full" onclick="Chess.offerDraw()">
                                 <i class="ri-hand-heart-line"></i> Beraberlik Teklifi
                             </button>
-                            <button class="btn btn-danger btn-sm" onclick="app.chess.resign()">
+                            <button class="btn btn-danger btn-sm w-full" onclick="Chess.resign()">
                                 <i class="ri-flag-line"></i> Pes Et
                             </button>
                         </div>
