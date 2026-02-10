@@ -7074,14 +7074,16 @@ body .floating-chat-btn:hover {
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
     width: 100%;
-    max-width: 600px;
+    max-width: 80vmin;
+    /* Increased size based on viewport */
     aspect-ratio: 1;
     margin: 0 auto;
     border: 4px solid var(--primary);
     box-shadow: 0 10px 40px rgba(0, 198, 255, 0.3);
-    border-radius: 8px;
+    border-radius: 4px;
     overflow: hidden;
     position: relative;
+    background-color: #2c2c3e;
 }
 
 /* Chess Squares */
@@ -7141,14 +7143,20 @@ body .floating-chat-btn:hover {
     animation: checkBlink 0.8s ease-in-out infinite;
 }
 
-/* Chess Pieces */
+/* Chess Pieces (SVG) */
 .chess-piece {
-    font-size: clamp(2.5rem, 8vw, 4rem);
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     cursor: grab;
-    user-select: none;
-    transition: transform 0.2s ease, filter 0.2s ease;
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
     z-index: 10;
+    transition: transform 0.1s;
+    user-select: none;
+    /* Remove text properties */
+    color: transparent;
+    font-size: 0;
 }
 
 .chess-piece:hover {
@@ -7164,17 +7172,62 @@ body .floating-chat-btn:hover {
     filter: drop-shadow(0 0 15px rgba(0, 198, 255, 1));
 }
 
-/* White and Black Pieces */
+/* White Pieces SVGs */
 .chess-piece.white {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8),
-        0 0 10px rgba(0, 198, 255, 0.3);
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 
+.chess-piece.white[data-piece="pawn"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cpath d='M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z' fill='%23fff' stroke='%23000' stroke-width='1.5' stroke-linecap='round' /%3E%3C/svg%3E");
+}
+
+.chess-piece.white[data-piece="rook"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23fff' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14V9h4v2h5V9h5v2h5V9h4v5' stroke-linecap='butt'/%3E%3Cpath d='M34 14l-3 3H14l-3-3'/%3E%3Cpath d='M31 17v12.5H14V17' stroke-linecap='butt' stroke-linejoin='miter'/%3E%3Cpath d='M31 29.5l1.5 2.5h-20l1.5-2.5'/%3E%3Cpath d='M11 14h23' fill='none' stroke-linejoin='miter'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.chess-piece.white[data-piece="knight"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23fff' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 10-21'/%3E%3Cpath d='M24 18c.38 2.32-2.58 2.9-3 3-3.17.74-7.8-.57-8.5-3.03-.73-2.53.52-15.46 8.5-15.46 3.9 0 6.55 1.7 8.5 5.25z'/%3E%3Cpath d='M9.5 25.5A4.5 4.5 0 1 1 5 21a4.5 4.5 0 0 1 4.5 4.5z'/%3E%3Cpath d='M15 15.5c-1.12.91-2.22 2.37-2.75 3.5'/%3E%3Cpath d='M20 15.5c-1.12.91-2.22 2.37-2.75 3.5'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.chess-piece.white[data-piece="bishop"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23fff' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg fill='%23fff' stroke='%23000' stroke-linecap='butt'%3E%3Cpath d='M9 36c3.39-.97 9.11-1.45 13.5-1.45 4.38 0 10.11.48 13.5 1.45V30H9v6z'/%3E%3Cpath d='M15 24c4.72-9.71 8.82-9.71 8.82-9.71 0 0 4.1 0 8.82 9.71.65 1.35.34 2.58 0 3.32-3.8 2.5-17.65 2.5-17.65 0-.34-.74-.65-1.97 0-3.32z'/%3E%3C/g%3E%3Cpath d='M12.5 30c.62-1.28 1.58-1.5 2.5-1.5 2.47 0 2.5 2.5 2.5 2.5M32.5 30c-.62-1.28-1.58-1.5-2.5-1.5-2.47 0-2.5 2.5-2.5 2.5'/%3E%3Cpath d='M22.5 10c2.5 0 3-2.5 3-2.5S25 5 22.5 5 20 7.5 20 7.5s.5 2.5 3 2.5z'/%3E%3Cpath d='M17 14.5h11'/%3E%3Cpath d='M19.5 10h6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.chess-piece.white[data-piece="queen"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23fff' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM24.5 7.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM41 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM10.5 20.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM38.5 20.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z' stroke-linecap='butt'/%3E%3Cpath d='M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15-5.5-13.5V25l-7-11z'/%3E%3Cpath d='M9 26c0 2 1.5 2 2.5 4 1 2.5 12.5 2.5 12.5 2.5s11.5 0 12.5-2.5c1-2 2.5-2 2.5-4 0 0-7.5-3-15-3s-15 3-15 3z'/%3E%3Cpath d='M6 40.5c0 2 2.5 2.5 16.5 2.5s16.5-.5 16.5-2.5V30H6v10.5z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.chess-piece.white[data-piece="king"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23fff' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22.5 11.63V6M20 8h5' stroke-linejoin='miter'/%3E%3Cpath d='M22.5 25s4.5-7.5 3-10c-1.5-2.5-5-2.5-6.5 0-1.5 2.5 3 10 3 10' fill='%23fff' stroke-linecap='butt'/%3E%3Cpath d='M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-1-5 5.5-8 12H13.5c-3-6.5-4-13-8-12-3 6 6 10.5 6 10.5v7z'/%3E%3Cpath d='M11.5 30c5.5-3 15.5-3 21 0' stroke-linecap='butt'/%3E%3Cpath d='M11.5 33.5c5.5-3 15.5-3 21 0' stroke-linecap='butt'/%3E%3Cpath d='M11.5 37c5.5-3 15.5-3 21 0' stroke-linecap='butt'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Black Pieces SVGs */
 .chess-piece.black {
-    color: #1a1a24;
-    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3),
-        0 0 10px rgba(174, 0, 255, 0.3);
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+.chess-piece.black[data-piece="pawn"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cpath d='M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z' fill='%23111' stroke='%23000' stroke-width='1.5' stroke-linecap='round' /%3E%3C/svg%3E");
+}
+
+.chess-piece.black[data-piece="rook"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23111' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14V9h4v2h5V9h5v2h5V9h4v5' stroke-linecap='butt'/%3E%3Cpath d='M34 14l-3 3H14l-3-3'/%3E%3Cpath d='M31 17v12.5H14V17' stroke-linecap='butt' stroke-linejoin='miter'/%3E%3Cpath d='M31 29.5l1.5 2.5h-20l1.5-2.5'/%3E%3Cpath d='M11 14h23' fill='none' stroke-linejoin='miter'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.chess-piece.black[data-piece="knight"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23111' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 10-21'/%3E%3Cpath d='M24 18c.38 2.32-2.58 2.9-3 3-3.17.74-7.8-.57-8.5-3.03-.73-2.53.52-15.46 8.5-15.46 3.9 0 6.55 1.7 8.5 5.25z'/%3E%3Cpath d='M9.5 25.5A4.5 4.5 0 1 1 5 21a4.5 4.5 0 0 1 4.5 4.5z'/%3E%3Cpath d='M15 15.5c-1.12.91-2.22 2.37-2.75 3.5'/%3E%3Cpath d='M20 15.5c-1.12.91-2.22 2.37-2.75 3.5'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.chess-piece.black[data-piece="bishop"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23111' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg fill='%23111' stroke='%23000' stroke-linecap='butt'%3E%3Cpath d='M9 36c3.39-.97 9.11-1.45 13.5-1.45 4.38 0 10.11.48 13.5 1.45V30H9v6z'/%3E%3Cpath d='M15 24c4.72-9.71 8.82-9.71 8.82-9.71 0 0 4.1 0 8.82 9.71.65 1.35.34 2.58 0 3.32-3.8 2.5-17.65 2.5-17.65 0-.34-.74-.65-1.97 0-3.32z'/%3E%3C/g%3E%3Cpath d='M12.5 30c.62-1.28 1.58-1.5 2.5-1.5 2.47 0 2.5 2.5 2.5 2.5M32.5 30c-.62-1.28-1.58-1.5-2.5-1.5-2.47 0-2.5 2.5-2.5 2.5'/%3E%3Cpath d='M22.5 10c2.5 0 3-2.5 3-2.5S25 5 22.5 5 20 7.5 20 7.5s.5 2.5 3 2.5z'/%3E%3Cpath d='M17 14.5h11'/%3E%3Cpath d='M19.5 10h6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.chess-piece.black[data-piece="queen"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23111' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM24.5 7.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM41 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM10.5 20.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM38.5 20.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z' stroke-linecap='butt'/%3E%3Cpath d='M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15-5.5-13.5V25l-7-11z'/%3E%3Cpath d='M9 26c0 2 1.5 2 2.5 4 1 2.5 12.5 2.5 12.5 2.5s11.5 0 12.5-2.5c1-2 2.5-2 2.5-4 0 0-7.5-3-15-3s-15 3-15 3z'/%3E%3Cpath d='M6 40.5c0 2 2.5 2.5 16.5 2.5s16.5-.5 16.5-2.5V30H6v10.5z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.chess-piece.black[data-piece="king"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 45 45'%3E%3Cg fill='%23111' fill-rule='evenodd' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22.5 11.63V6M20 8h5' stroke-linejoin='miter'/%3E%3Cpath d='M22.5 25s4.5-7.5 3-10c-1.5-2.5-5-2.5-6.5 0-1.5 2.5 3 10 3 10' fill='%23111' stroke-linecap='butt'/%3E%3Cpath d='M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-1-5 5.5-8 12H13.5c-3-6.5-4-13-8-12-3 6 6 10.5 6 10.5v7z'/%3E%3Cpath d='M11.5 30c5.5-3 15.5-3 21 0' stroke-linecap='butt'/%3E%3Cpath d='M11.5 33.5c5.5-3 15.5-3 21 0' stroke-linecap='butt'/%3E%3Cpath d='M11.5 37c5.5-3 15.5-3 21 0' stroke-linecap='butt'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Coordinate Labels */
