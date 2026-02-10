@@ -2775,7 +2775,6 @@ const Chess = {
                 if (piece) {
                     const pieceEl = document.createElement('div');
                     pieceEl.className = `chess-piece ${piece.color}`;
-                    pieceEl.textContent = this.pieces[piece.color][piece.type];
                     pieceEl.dataset.piece = piece.type;
                     pieceEl.draggable = true;
 
