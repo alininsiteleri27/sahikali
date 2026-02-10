@@ -2663,7 +2663,11 @@ const Chess = {
     currentTurn: 'white',
     gameStatus: 'waiting',
     moveHistory: [],
+    fullMoveHistory: [], // Complete history for undo
     capturedPieces: { white: [], black: [] },
+    draggedPiece: null,
+    draggedFrom: null,
+    pendingPromotion: null, // {fromRow, fromCol, toRow, toCol}
 
     // Track special moves
     castlingRights: {
@@ -2773,8 +2777,23 @@ const Chess = {
                     pieceEl.className = `chess-piece ${piece.color}`;
                     pieceEl.textContent = this.pieces[piece.color][piece.type];
                     pieceEl.dataset.piece = piece.type;
+                    pieceEl.draggable = true;
+
+                    // Drag events
+                    pieceEl.addEventListener('dragstart', (e) => this.handleDragStart(e, row, col));
+                    pieceEl.addEventListener('dragend', (e) => this.handleDragEnd(e));
+
+                    // Touch events for mobile
+                    pieceEl.addEventListener('touchstart', (e) => this.handleTouchStart(e, row, col));
+                    pieceEl.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+                    pieceEl.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+
                     square.appendChild(pieceEl);
                 }
+
+                // Drop events
+                square.addEventListener('dragover', (e) => e.preventDefault());
+                square.addEventListener('drop', (e) => this.handleDrop(e, row, col));
 
                 square.addEventListener('click', () => this.handleSquareClick(row, col));
                 boardEl.appendChild(square);
@@ -2789,6 +2808,109 @@ const Chess = {
         }
     },
 
+    // Drag and Drop handlers
+    handleDragStart(e, row, col) {
+        const piece = this.board[row][col];
+        if (!piece || piece.color !== this.role || this.currentTurn !== this.role) {
+            e.preventDefault();
+            return;
+        }
+
+        this.draggedPiece = piece;
+        this.draggedFrom = { row, col };
+
+        e.dataTransfer.effectAllowed = 'move';
+        e.target.classList.add('dragging');
+
+        setTimeout(() => this.selectPiece(row, col), 0);
+    },
+
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+        this.draggedPiece = null;
+        this.draggedFrom = null;
+    },
+
+    handleDrop(e, row, col) {
+        e.preventDefault();
+
+        if (!this.draggedFrom) return;
+
+        if (this.isValidMove(this.draggedFrom.row, this.draggedFrom.col, row, col)) {
+            this.attemptMove(this.draggedFrom.row, this.draggedFrom.col, row, col);
+        }
+
+        this.clearHighlights();
+        this.draggedFrom = null;
+        this.draggedPiece = null;
+    },
+
+    // Touch handlers for mobile
+    handleTouchStart(e, row, col) {
+        const piece = this.board[row][col];
+        if (!piece || piece.color !== this.role || this.currentTurn !== this.role) {
+            return;
+        }
+
+        e.preventDefault();
+        this.draggedFrom = { row, col };
+        this.draggedPiece = piece;
+
+        this.selectPiece(row, col);
+
+        const touch = e.touches[0];
+        const pieceEl = e.target;
+        pieceEl.classList.add('dragging');
+
+        // Store initial touch position
+        this.touchStartX = touch.clientX;
+        this.touchStartY = touch.clientY;
+    },
+
+    handleTouchMove(e) {
+        if (!this.draggedPiece) return;
+        e.preventDefault();
+
+        const touch = e.touches[0];
+        const pieceEl = e.target;
+
+        // Move piece with finger
+        pieceEl.style.position = 'fixed';
+        pieceEl.style.zIndex = '1000';
+        pieceEl.style.left = (touch.clientX - 25) + 'px';
+        pieceEl.style.top = (touch.clientY - 25) + 'px';
+    },
+
+    handleTouchEnd(e) {
+        if (!this.draggedFrom) return;
+        e.preventDefault();
+
+        const touch = e.changedTouches[0];
+        const elementAtTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        // Reset piece style
+        const pieceEl = e.target;
+        pieceEl.style.position = '';
+        pieceEl.style.left = '';
+        pieceEl.style.top = '';
+        pieceEl.classList.remove('dragging');
+
+        // Find target square
+        const square = elementAtTouch?.closest('.chess-square');
+        if (square) {
+            const row = parseInt(square.dataset.row);
+            const col = parseInt(square.dataset.col);
+
+            if (this.isValidMove(this.draggedFrom.row, this.draggedFrom.col, row, col)) {
+                this.attemptMove(this.draggedFrom.row, this.draggedFrom.col, row, col);
+            }
+        }
+
+        this.clearHighlights();
+        this.draggedFrom = null;
+        this.draggedPiece = null;
+    },
+
     handleSquareClick(row, col) {
         if (this.gameStatus !== 'playing') return;
         if (this.currentTurn !== this.role) return;
@@ -2798,7 +2920,7 @@ const Chess = {
         if (this.selectedPiece) {
             // Try to move
             if (this.isValidMove(this.selectedPiece.row, this.selectedPiece.col, row, col)) {
-                this.makeMove(this.selectedPiece.row, this.selectedPiece.col, row, col);
+                this.attemptMove(this.selectedPiece.row, this.selectedPiece.col, row, col);
                 this.selectedPiece = null;
                 this.clearHighlights();
             } else {
@@ -2816,6 +2938,72 @@ const Chess = {
                 this.selectPiece(row, col);
             }
         }
+    },
+
+    attemptMove(fromRow, fromCol, toRow, toCol) {
+        const piece = this.board[fromRow][fromCol];
+
+        // Check for pawn promotion
+        if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
+            // Store move for after promotion choice
+            this.pendingPromotion = { fromRow, fromCol, toRow, toCol };
+            this.showPromotionModal(piece.color);
+            return;
+        }
+
+        // Execute move
+        this.makeMove(fromRow, fromCol, toRow, toCol);
+    },
+
+    showPromotionModal(color) {
+        // Create promotion modal if not exists
+        let modal = document.getElementById('chess-promotion-modal');
+
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'chess-promotion-modal';
+            modal.className = 'modal-overlay active';
+            modal.innerHTML = `
+                <div class="modal-content modal-sm">
+                    <div class="modal-header">
+                        <h3>Piyon Terfi</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p style="text-align: center; margin-bottom: 1rem;">Bir taş seçin:</p>
+                        <div class="promotion-choices" id="promotion-choices"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        } else {
+            modal.classList.add('active');
+        }
+
+        const choicesEl = document.getElementById('promotion-choices');
+        choicesEl.innerHTML = '';
+
+        const pieces = ['queen', 'rook', 'bishop', 'knight'];
+        pieces.forEach(pieceType => {
+            const btn = document.createElement('button');
+            btn.className = 'promotion-choice';
+            btn.textContent = this.pieces[color][pieceType];
+            btn.onclick = () => this.completePawnPromotion(pieceType);
+            choicesEl.appendChild(btn);
+        });
+    },
+
+    completePawnPromotion(pieceType) {
+        if (!this.pendingPromotion) return;
+
+        const { fromRow, fromCol, toRow, toCol } = this.pendingPromotion;
+
+        // Close modal
+        const modal = document.getElementById('chess-promotion-modal');
+        if (modal) modal.classList.remove('active');
+
+        // Make move with promotion
+        this.makeMove(fromRow, fromCol, toRow, toCol, pieceType);
+        this.pendingPromotion = null;
     },
 
     selectPiece(row, col) {
@@ -3046,22 +3234,35 @@ const Chess = {
         return false;
     },
 
-    async makeMove(fromRow, fromCol, toRow, toCol) {
+    async makeMove(fromRow, fromCol, toRow, toCol, promotionPiece = null) {
         const piece = this.board[fromRow][fromCol];
         const captured = this.board[toRow][toCol];
         let specialMove = null;
 
+        // Save complete board state for undo
+        const previousState = {
+            board: this.board.map(row => row.map(cell => cell ? { ...cell } : null)),
+            currentTurn: this.currentTurn,
+            castlingRights: JSON.parse(JSON.stringify(this.castlingRights)),
+            enPassantTarget: this.enPassantTarget ? { ...this.enPassantTarget } : null,
+            kingPositions: JSON.parse(JSON.stringify(this.kingPositions)),
+            capturedPieces: JSON.parse(JSON.stringify(this.capturedPieces))
+        };
+        this.fullMoveHistory.push(previousState);
+
         // Handle en passant capture
+        let enPassantCaptured = null;
         if (piece.type === 'pawn' && this.enPassantTarget &&
             toRow === this.enPassantTarget.row && toCol === this.enPassantTarget.col) {
             const capturedPawnRow = piece.color === 'white' ? toRow + 1 : toRow - 1;
-            const capturedPawn = this.board[capturedPawnRow][toCol];
+            enPassantCaptured = this.board[capturedPawnRow][toCol];
             this.board[capturedPawnRow][toCol] = null;
-            this.capturedPieces[piece.color].push(capturedPawn);
+            this.capturedPieces[piece.color].push(enPassantCaptured);
             specialMove = 'en-passant';
         }
 
         // Handle castling
+        let rookMove = null;
         if (piece.type === 'king' && Math.abs(toCol - fromCol) === 2) {
             const kingSide = toCol > fromCol;
             const rookFromCol = kingSide ? 7 : 0;
@@ -3073,6 +3274,7 @@ const Chess = {
             this.board[fromRow][rookFromCol] = null;
             rook.moved = true;
 
+            rookMove = { from: rookFromCol, to: rookToCol };
             specialMove = kingSide ? 'castle-kingside' : 'castle-queenside';
         }
 
@@ -3113,10 +3315,10 @@ const Chess = {
             };
         }
 
-        // Pawn promotion (auto-queen for now)
+        // Pawn promotion with user choice
         if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
-            piece.type = 'queen';
-            specialMove = 'promotion';
+            piece.type = promotionPiece || 'queen';
+            specialMove = 'promotion-' + piece.type;
         }
 
         // Record move
@@ -3125,6 +3327,8 @@ const Chess = {
             to: { row: toRow, col: toCol },
             piece: this.board[toRow][toCol].type,
             captured: captured ? captured.type : null,
+            enPassantCaptured: enPassantCaptured ? enPassantCaptured.type : null,
+            rookMove: rookMove,
             special: specialMove
         };
         this.moveHistory.push(move);
@@ -3288,12 +3492,75 @@ const Chess = {
             board: this.board,
             currentTurn: this.currentTurn,
             moveHistory: this.moveHistory,
+            fullMoveHistory: this.fullMoveHistory,
             capturedPieces: this.capturedPieces,
             castlingRights: this.castlingRights,
             enPassantTarget: this.enPassantTarget,
             kingPositions: this.kingPositions
         });
     },
+
+    undoLastMove() {
+        if (this.fullMoveHistory.length === 0) {
+            alert('Geri alınacak hamle yok!');
+            return;
+        }
+
+        // Restore previous state
+        const previousState = this.fullMoveHistory.pop();
+        this.board = previousState.board;
+        this.currentTurn = previousState.currentTurn;
+        this.castlingRights = previousState.castlingRights;
+        this.enPassantTarget = previousState.enPassantTarget;
+        this.kingPositions = previousState.kingPositions;
+        this.capturedPieces = previousState.capturedPieces;
+
+        // Remove last move from history
+        this.moveHistory.pop();
+
+        // Update UI
+        this.renderBoard();
+        this.updateMoveHistory();
+        this.updateCapturedPieces();
+        this.updateTurnIndicator();
+
+        // Sync to Firebase
+        this.syncGameState();
+    },
+
+    newGame() {
+        if (!window.confirm('Yeni oyun başlatmak istediğinizden emin misiniz?')) {
+            return;
+        }
+
+        this.currentTurn = 'white';
+        this.gameStatus = 'playing';
+        this.moveHistory = [];
+        this.fullMoveHistory = [];
+        this.capturedPieces = { white: [], black: [] };
+        this.selectedPiece = null;
+
+        this.initBoard();
+        this.renderBoard();
+        this.updateMoveHistory();
+        this.updateCapturedPieces();
+        this.updateTurnIndicator();
+
+        this.syncGameState();
+    },
+
+    resetGame() {
+        // Same as newGame
+        this.newGame();
+    },
+
+    switchPlayer() {
+        // For testing - allows current player to switch
+        this.currentTurn = this.currentTurn === 'white' ? 'black' : 'white';
+        this.updateTurnIndicator();
+        this.renderBoard();
+    },
+
 
     prepareGame(gameId, role) {
         this.gameId = gameId;
@@ -3302,6 +3569,7 @@ const Chess = {
         this.gameStatus = 'playing';
         this.currentTurn = 'white';
         this.moveHistory = [];
+        this.fullMoveHistory = [];
         this.capturedPieces = { white: [], black: [] };
 
         // Initialize board
